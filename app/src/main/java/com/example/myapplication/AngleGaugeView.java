@@ -28,13 +28,16 @@ public class AngleGaugeView extends View {
         super(context, attrs, defStyleAttr);
 
         labelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        labelPaint.setColor(Color.parseColor("#AAAAAA"));
+        labelPaint.setColor(Color.parseColor("#FFFFFF"));
+        labelPaint.setStrokeWidth(2f);
+        labelPaint.setShadowLayer(10f, 0f, 0f, Color.BLACK);
         labelPaint.setTextAlign(Paint.Align.CENTER);
         labelPaint.setTypeface(Typeface.DEFAULT_BOLD);
 
         valuePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         valuePaint.setColor(Color.WHITE);
         valuePaint.setTextAlign(Paint.Align.CENTER);
+        valuePaint.setColor(Color.parseColor("#FFD700"));
         valuePaint.setTypeface(Typeface.DEFAULT_BOLD);
     }
 

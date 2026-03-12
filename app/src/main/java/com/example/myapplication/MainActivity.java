@@ -43,12 +43,6 @@ import com.skydroid.fpvplayer.ReConnectInterceptor;
 import com.skydroid.fpvplayer.RtspTransport;
 import android.widget.RelativeLayout;
 
-import org.maplibre.android.MapLibre;
-import org.maplibre.android.camera.CameraPosition;
-import org.maplibre.android.geometry.LatLng;
-import org.maplibre.android.maps.MapView;
-import org.maplibre.android.maps.Style;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -165,13 +159,11 @@ public class MainActivity extends AppCompatActivity {
         
         // 设置全屏模式
         setFullScreenMode();
-        
-        MapLibre.getInstance(this);
-        
+
         setContentView(R.layout.activity_main);
         
         initViews();
-        initMap(savedInstanceState);
+        initMap();
         initAngleSets();
 //        initButtons();
         initSDK();
@@ -208,42 +200,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (mapView != null) mapView.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mapView != null) mapView.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mapView != null) mapView.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mapView != null) mapView.onStop();
-    }
-
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        if (mapView != null) mapView.onLowMemory();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mapView != null) mapView.onSaveInstanceState(outState);
-    }
-
     private void initViews() {
         tvBoomAngle = findViewById(R.id.tvBoomAngle);
         tvStickAngle = findViewById(R.id.tvStickAngle);
@@ -298,33 +254,11 @@ public class MainActivity extends AppCompatActivity {
         if (gaugeBucket != null) gaugeBucket.setLabel("BUCKET:");
     }
 
-    private void initMap(Bundle savedInstanceState) {
+    private void initMap() {
         if (mapView == null) return;
-
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(mapLibreMap -> {
-            mapLibreMap.getUiSettings().setRotateGesturesEnabled(false);
-            mapLibreMap.getUiSettings().setTiltGesturesEnabled(false);
-            mapLibreMap.getUiSettings().setCompassEnabled(false);
-            mapLibreMap.getUiSettings().setLogoEnabled(false);
-            mapLibreMap.getUiSettings().setAttributionEnabled(false);
-
-            String darkStyleJson = "{\"version\":8,\"name\":\"Dark\",\"sources\":{},"
-                    + "\"layers\":[{\"id\":\"background\",\"type\":\"background\","
-                    + "\"paint\":{\"background-color\":\"rgba(0,0,0,0)\"}}]}";
-
-            mapLibreMap.setStyle(new Style.Builder().fromJson(darkStyleJson), style -> {
-                double lat = 22.4269593;
-                double lng = 114.2089099;
-
-                mapLibreMap.setCameraPosition(new CameraPosition.Builder()
-                        .target(new LatLng(lat, lng))
-                        .zoom(16.0)
-                        .build());
-
-                OverpassMapHelper.loadOverpassData(mapLibreMap, style, lat, lng, 150);
-            });
-        });
+        // Fixed GPS location (requirement #1)
+        mapView.setFixedLocation(22.7372757, 113.5264751);
+        OverpassMapHelper.loadOfflineMap(this, mapView);
     }
 
     private void initAngleSets() {
@@ -858,11 +792,6 @@ public class MainActivity extends AppCompatActivity {
         // 停止视频播放
         if (fpvWidget != null) {
             fpvWidget.stop();
-        }
-        
-        // 销毁地图
-        if (mapView != null) {
-            mapView.onDestroy();
         }
         
         // 停止主数据更新

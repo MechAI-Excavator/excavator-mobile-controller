@@ -45,8 +45,6 @@ dependencies {
     implementation files('libs/isoparser-1.1.9.jar')
     // Kotlin 标准库（FPVWidget 是 Kotlin 类，需要运行时支持）
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.0'
-    // MapLibre GL Native for Android
-    implementation 'org.maplibre.gl:android-sdk:11.8.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
