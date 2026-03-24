@@ -260,6 +260,80 @@
 
         </LinearLayout>
 
+        <!-- 相对角度数值显示 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="170dp"
+            android:paddingEnd="170dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/tvBoomAngle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="BOOM: --"
+                android:textColor="#ff0000ff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvStickAngle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="STICK: --"
+                android:textColor="#ff0000ff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvBucketAngle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="BUCKET: --"
+                android:textColor="#ff0000ff"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- 座舱姿态数值显示 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="170dp"
+            android:paddingEnd="170dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/tvCabinPitchAngle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="CABIN PITCH: --"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvCabinRollAngle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="CABIN ROLL: --"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
         <!-- 底部单行：LIVE + 重连 | 状态数据居中 | 摇杆示意 -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -571,30 +645,6 @@
             android:layout_marginStart="4dp"
             android:text="更新"
             android:textSize="12sp" />
-
-    </LinearLayout>
-
-    <!-- ==================== 隐藏 ID（供 Java 代码使用） ==================== -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/tvBoomAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvStickAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvBucketAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

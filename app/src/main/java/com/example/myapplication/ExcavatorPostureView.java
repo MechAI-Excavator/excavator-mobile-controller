@@ -19,10 +19,12 @@ public class ExcavatorPostureView extends View {
     private float boomAngle = 0f;  // 初始角度0度
     private float stickAngle = 0f;  // 初始角度0度
     private float bucketAngle = 0f;  // 初始角度0度
+    private float cabinPitchAngle = 0f;  // pitch对应y轴，y轴对应w_x
     
     private float boomLength = 0.35f;  //大臂
     private float stickLength = 0.2f;
     private float bucketLength = 0.18f;
+    private float bucketAngleOffsetDeg = 0f;
     
     public ExcavatorPostureView(Context context) {
         super(context);
@@ -48,10 +50,30 @@ public class ExcavatorPostureView extends View {
         borderPaint.setStrokeCap(Paint.Cap.ROUND);
     }
     
-    public void setAngles(float boom, float stick, float bucket) {
+    public void setAngles(float cabinPitch, float boom, float stick, float bucket) {
+        this.cabinPitchAngle = cabinPitch;
         this.boomAngle = boom;
         this.stickAngle = stick;
         this.bucketAngle = bucket;
+        invalidate();
+    }
+
+    public void setAngles(float boom, float stick, float bucket) {
+        setAngles(0f, boom, stick, bucket);
+    }
+
+    public void setArmLengthsFromMm(double boomMm, double stickMm, double bucketMm) {
+        if (boomMm <= 0.0 || stickMm <= 0.0 || bucketMm <= 0.0) {
+            return;
+        }
+        float base = this.boomLength;
+        this.stickLength = (float) (base * (stickMm / boomMm));
+        this.bucketLength = (float) (base * (bucketMm / boomMm));
+        invalidate();
+    }
+
+    public void setBucketAngleOffsetDeg(float offsetDeg) {
+        this.bucketAngleOffsetDeg = offsetDeg;
         invalidate();
     }
     
@@ -80,14 +102,15 @@ public class ExcavatorPostureView extends View {
         
         // 绘制大臂（0度垂直向上，正值继续向上，负值向下）
         // 由于机械臂在车身左边，需要加90度偏移使0度时垂直向上
-        float boomAngleTotal = - boomAngle - 180f -25f;  // 0度时垂直向上
+        // float boomAngleTotal = - boomAngle - 180f - 25f;  // canvas angle for boom (relative input)
+        float boomAngleTotal =   - boomAngle + 90f; 
         float boomEndX = centerX + (float) (Math.cos(Math.toRadians(boomAngleTotal)) * boomLength * scale);
         float boomEndY = centerY - scale * 0.05f - (float) (Math.sin(Math.toRadians(boomAngleTotal)) * boomLength * scale);
         drawBoomCartoon(canvas, centerX, centerY - scale * 0.05f, boomEndX, boomEndY, scale);
         
         // 绘制小臂（0度=向上，负值=逆时针向左转，正值=顺时针向右转，±180度=向下）
         // 转换为Canvas坐标系：用户的0度（向上）对应Canvas的-90度
-        float stickAngleTotal = stickAngle + 90f;
+        float stickAngleTotal =   - stickAngle + 90f;
         float stickStartX = boomEndX;
         float stickStartY = boomEndY;
         float stickEndX = stickStartX + (float) (Math.cos(Math.toRadians(stickAngleTotal)) * stickLength * scale);
@@ -95,8 +118,7 @@ public class ExcavatorPostureView extends View {
         drawStickCartoon(canvas, stickStartX, stickStartY, stickEndX, stickEndY, scale);
         
         // 绘制铲斗（IMU角度系统：0度=向上，负值=逆时针向左转，正值=顺时针向右转，±180度=向下）
-        float offsetAngle = 90f;
-        float bucketAngleTotal = bucketAngle+offsetAngle;
+        float bucketAngleTotal = -bucketAngle + 90f + bucketAngleOffsetDeg;
         float bucketStartX = stickEndX;
         float bucketStartY = stickEndY;
         drawBucketCartoon(canvas, bucketStartX, bucketStartY, bucketAngleTotal, scale);
@@ -365,7 +387,7 @@ public class ExcavatorPostureView extends View {
     private void drawBucketCartoon(Canvas canvas, float startX, float startY, float angle, float scale) {
         // 铲斗：像挖掘机铲斗，前端尖，不那么扁
         float bucketLen = bucketLength * scale;
-        float bucketHeight = scale * 0.4f;  // 整体增大一点（从0.35f改为0.4f）
+        float bucketHeight = bucketLen * 3f;  // 高度与长度联动，形状更接近真实挖机铲斗
         
         // 保存canvas状态
         canvas.save();
@@ -471,8 +493,11 @@ public class ExcavatorPostureView extends View {
         canvas.drawLine(boomEndX, boomEndY, stickEndX, stickEndY, paint);
         
         // 小臂到铲斗的液压线（稍微短一点）
-        float bucketConnX = stickEndX + (float)(Math.cos(Math.toRadians(boomAngle + stickAngle + bucketAngle)) * scale * 0.05f);
-        float bucketConnY = stickEndY - (float)(Math.sin(Math.toRadians(boomAngle + stickAngle + bucketAngle)) * scale * 0.05f);
+        float boomAngleTotal = -boomAngle - 180f - 25f;
+        float stickAngleTotal = boomAngleTotal - stickAngle;
+        float bucketAngleTotal = stickAngleTotal - bucketAngle;
+        float bucketConnX = stickEndX + (float)(Math.cos(Math.toRadians(bucketAngleTotal)) * scale * 0.05f);
+        float bucketConnY = stickEndY - (float)(Math.sin(Math.toRadians(bucketAngleTotal)) * scale * 0.05f);
         canvas.drawLine(stickEndX, stickEndY, bucketConnX, bucketConnY, paint);
     }
 }
