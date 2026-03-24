@@ -2,165 +2,184 @@ package com.example.myapplication;
 
 import android.util.Log;
 
-/**
- * IMU数据解析类
- * 解析TCU发送的14字节IMU数据包
- * 数据格式：2字节帧头(0xFA 0xFA) + 9字节数据(3个角度各3字节) + 2字节CRC + 1字节帧尾(0xFF)
- */
 public class IMUDataParser {
-    
+
     private static final String TAG = "IMUDataParser";
-    
-    // 数据包常量
-    private static final int PACKET_SIZE = 14;
+
+    // Frame format: 0xFA 0xFA + bytes 3-44 + CRC(2 bytes) + 0xFF
+    private static final int PACKET_SIZE = 47;
     private static final byte FRAME_HEADER_1 = (byte) 0xFA;
     private static final byte FRAME_HEADER_2 = (byte) 0xFA;
     private static final byte FRAME_TAIL = (byte) 0xFF;
-    
-    // 数据位置常量
+
     private static final int HEADER_START = 0;
-    private static final int DATA_START = 2;        // 字节3开始（索引2）
-    private static final int DATA_LENGTH = 9;       // 9字节数据
-    private static final int CRC_START = 11;       // 字节12开始（索引11）
-    private static final int TAIL_POS = 13;        // 字节14（索引13）
-    
-    // 角度数据位置
-    private static final int BOOM_START = 2;       // 字节3-5（索引2-4）
-    private static final int STICK_START = 5;      // 字节6-8（索引5-7）
-    private static final int BUCKET_START = 8;     // 字节9-11（索引8-10）
-    
-    /**
-     * 解析结果回调接口
-     */
+    private static final int DATA_START = 2;   // bytes 3-44
+    private static final int DATA_LENGTH = 42; // bytes 3-44
+    private static final int CRC_START = 44;   // bytes 45-46
+    private static final int TAIL_POS = 46;    // byte 47
+
+    // IMU (BCD) offsets
+    private static final int BOOM_START = 2;         // bytes 3-5
+    private static final int STICK_START = 5;        // bytes 6-8
+    private static final int BUCKET_START = 8;       // bytes 9-11
+    private static final int CABIN_PITCH_START = 11; // bytes 12-14
+    private static final int CABIN_ROLL_START = 14;  // bytes 15-17
+
+    // Encoder (BCD)
+    private static final int ENCODER_START = 17;     // bytes 18-20
+
+    // RTK (int32, 1e-7)
+    private static final int RTK_START = 20;         // bytes 21-44
+
     public interface ParseResultCallback {
         void onParseSuccess(float boomAngle, float stickAngle, float bucketAngle);
         void onParseError(String error);
     }
-    
-    /**
-     * 解析14字节IMU数据包
-     * @param data 接收到的数据包（14字节）
-     * @param callback 解析结果回调
-     * @return 是否解析成功
-     */
+
+    public static class ParsedData {
+        public final float boomAngle;
+        public final float stickAngle;
+        public final float bucketAngle;
+        public final float cabinPitchAngle;
+        public final float cabinRollAngle;
+        public final float encoderAngle;
+        public final double rtkX;
+        public final double rtkY;
+        public final double rtkZ;
+        public final double rtkYaw;
+        public final double rtkPitch;
+        public final double rtkRoll;
+
+        public ParsedData(float boomAngle, float stickAngle, float bucketAngle,
+                          float cabinPitchAngle, float cabinRollAngle, float encoderAngle,
+                          double rtkX, double rtkY, double rtkZ,
+                          double rtkYaw, double rtkPitch, double rtkRoll) {
+            this.boomAngle = boomAngle;
+            this.stickAngle = stickAngle;
+            this.bucketAngle = bucketAngle;
+            this.cabinPitchAngle = cabinPitchAngle;
+            this.cabinRollAngle = cabinRollAngle;
+            this.encoderAngle = encoderAngle;
+            this.rtkX = rtkX;
+            this.rtkY = rtkY;
+            this.rtkZ = rtkZ;
+            this.rtkYaw = rtkYaw;
+            this.rtkPitch = rtkPitch;
+            this.rtkRoll = rtkRoll;
+        }
+    }
+
+    public interface ParseResultCallbackV2 {
+        void onParseSuccess(ParsedData data);
+        void onParseError(String error);
+    }
+
     public static boolean parseData(byte[] data, ParseResultCallback callback) {
+        try {
+            ParsedData parsed = parseDataInternal(data);
+            if (callback != null) {
+                callback.onParseSuccess(parsed.boomAngle, parsed.stickAngle, parsed.bucketAngle);
+            }
+            return true;
+        } catch (ParseException e) {
+            if (callback != null) {
+                callback.onParseError(e.getMessage());
+            }
+            Log.e(TAG, e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean parseData(byte[] data, ParseResultCallbackV2 callback) {
+        try {
+            ParsedData parsed = parseDataInternal(data);
+            if (callback != null) {
+                callback.onParseSuccess(parsed);
+            }
+            return true;
+        } catch (ParseException e) {
+            if (callback != null) {
+                callback.onParseError(e.getMessage());
+            }
+            Log.e(TAG, e.getMessage());
+            return false;
+        }
+    }
+
+    private static class ParseException extends Exception {
+        ParseException(String message) {
+            super(message);
+        }
+    }
+
+    private static ParsedData parseDataInternal(byte[] data) throws ParseException {
         if (data == null || data.length != PACKET_SIZE) {
-            if (callback != null) {
-                callback.onParseError("数据包长度错误，期望14字节，实际: " + 
-                    (data == null ? "null" : data.length));
-            }
-            Log.e(TAG, "数据包长度错误: " + (data == null ? "null" : data.length));
-            return false;
+            throw new ParseException("Invalid packet length, expected 47 bytes, got " + (data == null ? "null" : data.length));
         }
-        
-        // 1. 验证帧头
         if (data[HEADER_START] != FRAME_HEADER_1 || data[HEADER_START + 1] != FRAME_HEADER_2) {
-            String error = String.format("帧头错误: 0x%02X 0x%02X", 
-                data[HEADER_START] & 0xFF, data[HEADER_START + 1] & 0xFF);
-            if (callback != null) {
-                callback.onParseError(error);
-            }
-            Log.e(TAG, error);
-            return false;
+            throw new ParseException(String.format("Invalid header: 0x%02X 0x%02X", data[HEADER_START] & 0xFF, data[HEADER_START + 1] & 0xFF));
         }
-        
-        // 2. 验证帧尾
         if (data[TAIL_POS] != FRAME_TAIL) {
-            String error = String.format("帧尾错误: 0x%02X", data[TAIL_POS] & 0xFF);
-            if (callback != null) {
-                callback.onParseError(error);
-            }
-            Log.e(TAG, error);
-            return false;
+            throw new ParseException(String.format("Invalid tail: 0x%02X", data[TAIL_POS] & 0xFF));
         }
-        
-        // 3. CRC校验（对字节3-11，即索引2-10的9字节数据进行校验）
+
         byte[] dataForCrc = new byte[DATA_LENGTH];
         System.arraycopy(data, DATA_START, dataForCrc, 0, DATA_LENGTH);
         int calculatedCrc = CRC16Modbus.calculateCRC16Modbus(dataForCrc);
         int receivedCrc = CRC16Modbus.bytesToCRC(data, CRC_START);
-        
         if (calculatedCrc != receivedCrc) {
-            String error = String.format("CRC校验失败: 计算值=0x%04X, 接收值=0x%04X", 
-                calculatedCrc, receivedCrc);
-            if (callback != null) {
-                callback.onParseError(error);
-            }
-            Log.e(TAG, error);
-            return false;
+            throw new ParseException(String.format("CRC mismatch: calc=0x%04X, recv=0x%04X", calculatedCrc, receivedCrc));
         }
-        
-        
-        // 4. 解析角度数据
+
         try {
             float boomAngle = parseBCDAngle(data, BOOM_START);
             float stickAngle = parseBCDAngle(data, STICK_START);
             float bucketAngle = parseBCDAngle(data, BUCKET_START);
-            
-            Log.d(TAG, String.format("解析成功 - 大臂: %.2f°, 小臂: %.2f°, 铲斗: %.2f°", 
-                boomAngle, stickAngle, bucketAngle));
-            
-            if (callback != null) {
-                callback.onParseSuccess(boomAngle, stickAngle, bucketAngle);
-            }
-            return true;
-            
+            float cabinPitchAngle = parseBCDAngle(data, CABIN_PITCH_START);
+            float cabinRollAngle = parseBCDAngle(data, CABIN_ROLL_START);
+            float encoderAngle = parseBCDAngle(data, ENCODER_START);
+
+            double rtkX = parseRtkValue(data, RTK_START);
+            double rtkY = parseRtkValue(data, RTK_START + 4);
+            double rtkZ = parseRtkValue(data, RTK_START + 8);
+            double rtkYaw = parseRtkValue(data, RTK_START + 12);
+            double rtkPitch = parseRtkValue(data, RTK_START + 16);
+            double rtkRoll = parseRtkValue(data, RTK_START + 20);
+
+            return new ParsedData(
+                    boomAngle, stickAngle, bucketAngle,
+                    cabinPitchAngle, cabinRollAngle, encoderAngle,
+                    rtkX, rtkY, rtkZ, rtkYaw, rtkPitch, rtkRoll
+            );
         } catch (Exception e) {
-            String error = "角度解析失败: " + e.getMessage();
-            if (callback != null) {
-                callback.onParseError(error);
-            }
-            Log.e(TAG, error, e);
-            return false;
+            throw new ParseException("Angle/RTK parse error: " + e.getMessage());
         }
     }
-    
-    /**
-     * 解析BCD编码的角度值
-     * 格式：3字节 BCD码
-     * - 字节1: 高4位（bit 7-4）为符号位（0000=正，0001=负），低4位（bit 3-0）为整数高位（0-9）
-     * - 字节2: XX（整数部分，BCD码，0-99）
-     * - 字节3: xx（小数部分，BCD码，0-99）
-     * 
-     * @param data 数据包
-     * @param offset 角度数据在数据包中的起始位置
-     * @return 解析后的角度值（浮点数）
-     */
+
+    private static double parseRtkValue(byte[] data, int offset) {
+        int value = ((data[offset] & 0xFF) << 24)
+                | ((data[offset + 1] & 0xFF) << 16)
+                | ((data[offset + 2] & 0xFF) << 8)
+                | (data[offset + 3] & 0xFF);
+        return value * 1e-7;
+    }
+
     private static float parseBCDAngle(byte[] data, int offset) {
-        // 字节1: 高4位符号位 + 低4位数字
         byte byte1 = data[offset];
-        
-        // 先转换为无符号整数（0-255），确保位运算正确
         int byte1Unsigned = byte1 & 0xFF;
-        
-        // 提取高4位（bit 7-4）用于符号判断
-        // 0000 = 正数，0001 = 负数
         int high4Bits = (byte1Unsigned >> 4) & 0x0F;
-        boolean isNegative = (high4Bits == 0x01);  // 高4位为0001表示负数
-        
-        // 提取低4位（bit 3-0）作为整数高位（0-9）
+        boolean isNegative = (high4Bits == 0x01);
+
         int integerHigh = byte1Unsigned & 0x0F;
-        
-        // 字节2: XX（BCD码，例如0x35表示35，范围0-99）
         byte byte2 = data[offset + 1];
         int integerLow = ((byte2 >> 4) & 0x0F) * 10 + (byte2 & 0x0F);
-        
-        // 字节3: xx（BCD码，例如0x36表示36，范围0-99）
+
         byte byte3 = data[offset + 2];
         int decimal = ((byte3 >> 4) & 0x0F) * 10 + (byte3 & 0x0F);
-        
-        // 组合整数部分：X * 100 + XX
-        // integerHigh范围0-9，所以最大是9*100+99=999度
+
         int integerPart = integerHigh * 100 + integerLow;
-        
-        // 组合小数部分：xx / 100.0
         float decimalPart = decimal / 100.0f;
-        
-        // 最终角度值
         float angle = integerPart + decimalPart;
-        
-        // 应用符号：高4位0000=正，0001=负
         return isNegative ? -angle : angle;
     }
 }
-
