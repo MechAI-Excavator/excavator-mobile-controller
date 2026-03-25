@@ -64,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvDigDepth;
     private TextView tvVideoLink;
     private TextView tvRcSignal;
+    // RTK信息显示（东北天坐标、姿态角、经纬度）
+    private TextView tvRtkLatLon;
     
     // private ProgressBar progressDigDepth;
     
@@ -122,6 +124,10 @@ public class MainActivity extends AppCompatActivity {
     private float realBucketAngle = 0f;
     private float realCabinPitchAngle = 0f;
     private float realCabinRollAngle = 0f;
+    // RTK?????????
+    private double realRtkLat = 0.0;
+    private double realRtkLon = 0.0;
+
     private float relativeBoomAngle = 0f; // 结算后角度
     private float relativeStickAngle = 0f;
     private float relativeBucketAngle = 0f;
@@ -220,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
         tvDigDepth = findViewById(R.id.tvDigDepth);
         tvVideoLink = findViewById(R.id.tvVideoLink);
         tvRcSignal = findViewById(R.id.tvRcSignal);
+        tvRtkLatLon = findViewById(R.id.tvRtkLatLon);
         
         // progressDigDepth = findViewById(R.id.progressDigDepth);
         
@@ -270,7 +277,8 @@ public class MainActivity extends AppCompatActivity {
     private void initMap() {
         if (mapView == null) return;
         // Fixed GPS location (requirement #1)
-        mapView.setFixedLocation(22.7372757, 113.5264751);
+        //
+        mapView.setFixedLocation(22.87502952106135, 113.48885581740602);
         OverpassMapHelper.loadOfflineMap(this, mapView);
     }
 
@@ -594,7 +602,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 updateAllData();
-                handler.postDelayed(this, 500); // 每秒更新一次
+                handler.postDelayed(this, 50); // 每秒更新一次
             }
         };
         
@@ -607,7 +615,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 updateJoystickValues(); // 只更新摇杆值
-                joystickHandler.postDelayed(this, 100); // 每100ms更新一次
+                joystickHandler.postDelayed(this, 50); // 每50ms更新一次
             }
         };
         
@@ -715,12 +723,29 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updatePositioning() {
-        // 经纬度在小范围内波动
-        double lat = 22.4269593;
-        double lng = 114.2089099;
+        // RTK
+        double lat;
+        double lon;
 
+        if (useRealData) {
+            lat = realRtkLat;
+            lon = realRtkLon;
+        } else {
+            // RTK默认位置
+            lat = 22.87501502452617;
+            lon = 113.4883490760387;
+        }
+
+        if (mapView != null) {
+            mapView.setFixedLocation(lat, lon);
+        }
+
+        // 
+        if (tvRtkLatLon != null) {
+            tvRtkLatLon.setText(String.format(Locale.getDefault(), "LAT/LON: %.6f, %.6f", lat, lon));
+        }
     }
-    
+
     private void updateDigDepth() {
         // 挖掘深度在3.0-3.5米之间波动
         double depth = 3.0 + random.nextDouble() * 0.5;
@@ -870,11 +895,11 @@ public class MainActivity extends AppCompatActivity {
                 
                 @Override
                 public void onReadData(byte[] data) {
-                    // 接收到的UDP数据（47字节）
+                    // 接收到的UDP数据（33字节）
                     if (data != null) {
                         Log.d("UDP", "收到数据，长度: " + data.length);
                         
-                        if (data.length == 47) {
+                        if (data.length == 33) {
                             // 更新最后接收数据的时间
                             lastDataReceiveTime = System.currentTimeMillis();
                             
@@ -896,21 +921,23 @@ public class MainActivity extends AppCompatActivity {
                             IMUDataParser.parseData(data, new IMUDataParser.ParseResultCallbackV2() {
                                 @Override
                                 public void onParseSuccess(IMUDataParser.ParsedData parsed) {
-                                    // 保存原始IMU角度与座舱姿态（解析线程）
+                                    // ????IMU?????????????
                                     realBoomAngle = parsed.boomAngle;
                                     realStickAngle = parsed.stickAngle;
                                     realBucketAngle = parsed.bucketAngle;
                                     realCabinPitchAngle = parsed.cabinPitchAngle;
                                     realCabinRollAngle = parsed.cabinRollAngle;
+                                    // ??RTK?????????
+                                    realRtkLat = parsed.rtkLat;
+                                    realRtkLon = parsed.rtkLon;
                                 }
-
                                 @Override
                                 public void onParseError(String error) {
                                     Log.e("UDP", "数据解析失败: " + error);
                                 }
                             });
                         } else {
-                            Log.w("UDP", "数据长度不正确，期望47字节，实际: " + data.length);
+                            Log.w("UDP", "数据长度不正确，期望33字节，实际: " + data.length);
                         }
                     }
                 }

@@ -38,8 +38,8 @@ public class OverpassMapHelper {
     }
 
     private static InputStream openLocalMap(Context context) {
-        Log.d(TAG, "Loading OSM from res/raw/nansha.osm");
-        return context.getResources().openRawResource(R.raw.nansha);
+        Log.d(TAG, "Loading OSM from res/raw/nansha_changdi.osm");
+        return context.getResources().openRawResource(R.raw.nansha_changdi);
     }
 
     static MapData buildMapData(OSMData osmData) {

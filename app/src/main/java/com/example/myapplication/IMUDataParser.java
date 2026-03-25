@@ -6,30 +6,30 @@ public class IMUDataParser {
 
     private static final String TAG = "IMUDataParser";
 
-    // Frame format: 0xFA 0xFA + bytes 3-44 + CRC(2 bytes) + 0xFF
-    private static final int PACKET_SIZE = 47;
+    // 帧格式：0xFA 0xFA + 3-30字节数据 + CRC(2字节) + 0xFF
+    private static final int PACKET_SIZE = 33;
     private static final byte FRAME_HEADER_1 = (byte) 0xFA;
     private static final byte FRAME_HEADER_2 = (byte) 0xFA;
     private static final byte FRAME_TAIL = (byte) 0xFF;
 
     private static final int HEADER_START = 0;
-    private static final int DATA_START = 2;   // bytes 3-44
-    private static final int DATA_LENGTH = 42; // bytes 3-44
-    private static final int CRC_START = 44;   // bytes 45-46
-    private static final int TAIL_POS = 46;    // byte 47
+    private static final int DATA_START = 2;   // 3-30字节
+    private static final int DATA_LENGTH = 28; // 3-30字节
+    private static final int CRC_START = 30;   // 31-32字节
+    private static final int TAIL_POS = 32;    // 33字节
 
-    // IMU (BCD) offsets
+    // IMU（BCD）起始位置
     private static final int BOOM_START = 2;         // bytes 3-5
     private static final int STICK_START = 5;        // bytes 6-8
     private static final int BUCKET_START = 8;       // bytes 9-11
     private static final int CABIN_PITCH_START = 11; // bytes 12-14
     private static final int CABIN_ROLL_START = 14;  // bytes 15-17
 
-    // Encoder (BCD)
+    // 编码器（BCD）
     private static final int ENCODER_START = 17;     // bytes 18-20
 
-    // RTK (int32, 1e-7)
-    private static final int RTK_START = 20;         // bytes 21-44
+    // RTK（int40，1e-9）：纬度 + 经度
+    private static final int RTK_START = 20;         // bytes 21-30
 
     public interface ParseResultCallback {
         void onParseSuccess(float boomAngle, float stickAngle, float bucketAngle);
@@ -43,29 +43,20 @@ public class IMUDataParser {
         public final float cabinPitchAngle;
         public final float cabinRollAngle;
         public final float encoderAngle;
-        public final double rtkX;
-        public final double rtkY;
-        public final double rtkZ;
-        public final double rtkYaw;
-        public final double rtkPitch;
-        public final double rtkRoll;
+        public final double rtkLat;
+        public final double rtkLon;
 
         public ParsedData(float boomAngle, float stickAngle, float bucketAngle,
                           float cabinPitchAngle, float cabinRollAngle, float encoderAngle,
-                          double rtkX, double rtkY, double rtkZ,
-                          double rtkYaw, double rtkPitch, double rtkRoll) {
+                          double rtkLat, double rtkLon) {
             this.boomAngle = boomAngle;
             this.stickAngle = stickAngle;
             this.bucketAngle = bucketAngle;
             this.cabinPitchAngle = cabinPitchAngle;
             this.cabinRollAngle = cabinRollAngle;
             this.encoderAngle = encoderAngle;
-            this.rtkX = rtkX;
-            this.rtkY = rtkY;
-            this.rtkZ = rtkZ;
-            this.rtkYaw = rtkYaw;
-            this.rtkPitch = rtkPitch;
-            this.rtkRoll = rtkRoll;
+            this.rtkLat = rtkLat;
+            this.rtkLon = rtkLon;
         }
     }
 
@@ -114,7 +105,7 @@ public class IMUDataParser {
 
     private static ParsedData parseDataInternal(byte[] data) throws ParseException {
         if (data == null || data.length != PACKET_SIZE) {
-            throw new ParseException("Invalid packet length, expected 47 bytes, got " + (data == null ? "null" : data.length));
+            throw new ParseException("Invalid packet length, expected 33 bytes, got " + (data == null ? "null" : data.length));
         }
         if (data[HEADER_START] != FRAME_HEADER_1 || data[HEADER_START + 1] != FRAME_HEADER_2) {
             throw new ParseException(String.format("Invalid header: 0x%02X 0x%02X", data[HEADER_START] & 0xFF, data[HEADER_START + 1] & 0xFF));
@@ -139,29 +130,30 @@ public class IMUDataParser {
             float cabinRollAngle = parseBCDAngle(data, CABIN_ROLL_START);
             float encoderAngle = parseBCDAngle(data, ENCODER_START);
 
-            double rtkX = parseRtkValue(data, RTK_START);
-            double rtkY = parseRtkValue(data, RTK_START + 4);
-            double rtkZ = parseRtkValue(data, RTK_START + 8);
-            double rtkYaw = parseRtkValue(data, RTK_START + 12);
-            double rtkPitch = parseRtkValue(data, RTK_START + 16);
-            double rtkRoll = parseRtkValue(data, RTK_START + 20);
+            double rtkLat = parseRtkInt40(data, RTK_START);
+            double rtkLon = parseRtkInt40(data, RTK_START + 5);
 
             return new ParsedData(
                     boomAngle, stickAngle, bucketAngle,
                     cabinPitchAngle, cabinRollAngle, encoderAngle,
-                    rtkX, rtkY, rtkZ, rtkYaw, rtkPitch, rtkRoll
+                    rtkLat, rtkLon
             );
         } catch (Exception e) {
             throw new ParseException("Angle/RTK parse error: " + e.getMessage());
         }
     }
 
-    private static double parseRtkValue(byte[] data, int offset) {
-        int value = ((data[offset] & 0xFF) << 24)
-                | ((data[offset + 1] & 0xFF) << 16)
-                | ((data[offset + 2] & 0xFF) << 8)
-                | (data[offset + 3] & 0xFF);
-        return value * 1e-7;
+    // RTK经纬度：5字节int40，最高位为符号位，剩余39位为数值，单位1e-9度
+    private static double parseRtkInt40(byte[] data, int offset) {
+        int b0 = data[offset] & 0xFF;
+        boolean negative = (b0 & 0x80) != 0;
+        long magnitude = ((long) (b0 & 0x7F) << 32)
+                | ((long) (data[offset + 1] & 0xFF) << 24)
+                | ((long) (data[offset + 2] & 0xFF) << 16)
+                | ((long) (data[offset + 3] & 0xFF) << 8)
+                | (long) (data[offset + 4] & 0xFF);
+        long signedValue = negative ? -magnitude : magnitude;
+        return signedValue * 1e-9;
     }
 
     private static float parseBCDAngle(byte[] data, int offset) {
