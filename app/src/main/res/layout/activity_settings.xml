@@ -96,6 +96,60 @@
                     android:singleLine="true"
                     android:layout_marginBottom="14dp" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
+                    android:textColor="#AAAAAA"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="大臂比例"
+                    android:textColor="#CCCCCC"
+                    android:textSize="11sp" />
+
+                <EditText
+                    android:id="@+id/etArmBoomScale"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="默认 1.0"
+                    android:text="1"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FF666666"
+                    android:background="@drawable/edittext_dark_bg"
+                    android:padding="12dp"
+                    android:textSize="14sp"
+                    android:inputType="numberDecimal"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="小臂比例"
+                    android:textColor="#CCCCCC"
+                    android:textSize="11sp" />
+
+                <EditText
+                    android:id="@+id/etArmStickScale"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="默认 1.0"
+                    android:text="1"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FF666666"
+                    android:background="@drawable/edittext_dark_bg"
+                    android:padding="12dp"
+                    android:textSize="14sp"
+                    android:inputType="numberDecimal"
+                    android:imeOptions="actionDone"
+                    android:singleLine="true"
+                    android:layout_marginBottom="14dp" />
+
                 <Button
                     android:id="@+id/btnSaveVideoUrl"
                     android:layout_width="match_parent"

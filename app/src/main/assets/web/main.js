@@ -28,6 +28,20 @@ sun.position.set(8, 12, 6);
 sun.castShadow = true;
 scene.add(sun);
 
+// Thin reference plane (always on): light gray so roll/pitch reads clearly vs transparent embed.
+const groundSize = 40;
+const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0xeeeeee,
+  roughness: 0.92,
+  metalness: 0
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.02;
+ground.receiveShadow = true;
+scene.add(ground);
+
 if (isDevPanelEnabled) {
   const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
   grid.position.y = -0.001;
@@ -54,6 +68,37 @@ const state = {
     bucket: { x: 0, y: 0, z: 0 }
   }
 };
+
+const LENGTHS_STORAGE_KEY = "excavator_arm_lengths";
+
+function loadLengthsFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(LENGTHS_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.boom === "number" && Number.isFinite(parsed.boom)) {
+      state.lengths.boom = Math.max(0.1, parsed.boom);
+    }
+    if (typeof parsed.stick === "number" && Number.isFinite(parsed.stick)) {
+      state.lengths.stick = Math.max(0.1, parsed.stick);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function persistLengthsToLocalStorage() {
+  try {
+    localStorage.setItem(
+      LENGTHS_STORAGE_KEY,
+      JSON.stringify({ boom: state.lengths.boom, stick: state.lengths.stick })
+    );
+  } catch {
+    // ignore (e.g. private mode)
+  }
+}
+
+loadLengthsFromLocalStorage();
 
 const nodes = {
   main: null,
@@ -282,6 +327,12 @@ window.excavatorController = {
 function applyExternalPayload(payload) {
   if (!payload || typeof payload !== "object") return false;
   window.excavatorController.setAll(payload);
+  if (
+    payload.lengths &&
+    (typeof payload.lengths.boom === "number" || typeof payload.lengths.stick === "number")
+  ) {
+    persistLengthsToLocalStorage();
+  }
   return true;
 }
 

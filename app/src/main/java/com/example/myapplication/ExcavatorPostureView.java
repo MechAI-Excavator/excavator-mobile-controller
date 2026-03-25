@@ -3,8 +3,13 @@ package com.example.myapplication;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Outline;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -12,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
 
 import org.json.JSONException;
@@ -21,6 +27,9 @@ public class ExcavatorPostureView extends FrameLayout {
     private static final String WEB_ENTRY_URL =
             "https://appassets.androidplatform.net/assets/web/index.html";
 
+    /** 与 gauge_card_bg 一致，便于与主界面侧栏卡片统一 */
+    private static final float CORNER_RADIUS_DP = 10f;
+
     private final WebView webView;
     private final WebViewAssetLoader assetLoader;
 
@@ -28,6 +37,7 @@ public class ExcavatorPostureView extends FrameLayout {
     private float stickAngle = 0f;
     private float bucketAngle = 0f;
     private float cabinPitchAngle = 0f;
+    private float cabinRollAngle = 0f;
 
     private float boomLengthScale = 1f;
     private float stickLengthScale = 1f;
@@ -44,7 +54,30 @@ public class ExcavatorPostureView extends FrameLayout {
 
     public ExcavatorPostureView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setBackgroundColor(Color.TRANSPARENT);
+
+        float cornerRadiusPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                CORNER_RADIUS_DP,
+                context.getResources().getDisplayMetrics()
+        );
+        Drawable cardBg = ContextCompat.getDrawable(context, R.drawable.gauge_card_bg);
+        if (cardBg != null) {
+            setBackground(cardBg.mutate());
+        } else {
+            setBackgroundColor(Color.TRANSPARENT);
+        }
+        setClipToOutline(true);
+        setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                int w = view.getWidth();
+                int h = view.getHeight();
+                if (w <= 0 || h <= 0) {
+                    return;
+                }
+                outline.setRoundRect(0, 0, w, h, cornerRadiusPx);
+            }
+        });
 
         assetLoader = new WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(context))
@@ -88,25 +121,49 @@ public class ExcavatorPostureView extends FrameLayout {
         webView.loadUrl(WEB_ENTRY_URL);
     }
 
-    public void setAngles(float cabinPitch, float boom, float stick, float bucket) {
-        this.cabinPitchAngle = cabinPitch;
+    /**
+     * 只更新动臂相对角度；座舱 pitch/roll 保持当前值（默认均为 0）。
+     */
+    public void setAngles(float boom, float stick, float bucket) {
         this.boomAngle = boom;
         this.stickAngle = stick;
         this.bucketAngle = bucket;
         postCurrentPayload();
     }
 
-    public void setAngles(float boom, float stick, float bucket) {
-        setAngles(0f, boom, stick, bucket);
+    /**
+     * 座舱姿态（IMU）+ 动臂相对角度，与 {@link MainActivity#updateAngles()} 入参顺序一致。
+     */
+    public void setAngles(float cabinPitch, float cabinRoll, float boom, float stick, float bucket) {
+        this.cabinPitchAngle = cabinPitch;
+        this.cabinRollAngle = cabinRoll;
+        this.boomAngle = boom;
+        this.stickAngle = stick;
+        this.bucketAngle = bucket;
+        postCurrentPayload();
     }
 
     public void setArmLengthsFromMm(double boomMm, double stickMm, double bucketMm) {
         if (boomMm <= 0.0 || stickMm <= 0.0 || bucketMm <= 0.0) {
             return;
         }
-        boomLengthScale = 1f;
-        stickLengthScale = (float) (stickMm / boomMm);
+        setLengthScales(1f, (float) (stickMm / boomMm));
+    }
+
+    /**
+     * 与 Web 端 {@code state.lengths} 一致（对应 {@code setLengths} / {@code applyExcavatorPayload}）。
+     */
+    public void setLengthScales(float boomScale, float stickScale) {
+        boomLengthScale = clampLengthScale(boomScale);
+        stickLengthScale = clampLengthScale(stickScale);
         postCurrentPayload();
+    }
+
+    private static float clampLengthScale(float v) {
+        if (!Float.isFinite(v)) {
+            return 1f;
+        }
+        return Math.max(0.1f, Math.min(10f, v));
     }
 
     public void setBucketAngleOffsetDeg(float offsetDeg) {
@@ -126,6 +183,7 @@ public class ExcavatorPostureView extends FrameLayout {
         try {
             JSONObject main = new JSONObject();
             main.put("pitch", cabinPitchAngle);
+            main.put("roll", cabinRollAngle);
             payload.put("main", main);
 
             JSONObject lengths = new JSONObject();
