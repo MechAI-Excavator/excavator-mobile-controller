@@ -181,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initMap();
         initImuAngleConfig();
+        applyStoredArmLengthScalesToWebView();
         initAngleSets();
 //        initButtons();
         initSDK();
@@ -450,13 +451,18 @@ public class MainActivity extends AppCompatActivity {
         offsets.bucketImuOffsetDeg = 0.0;
 
         if (excavatorPostureView != null) {
-            excavatorPostureView.setArmLengthsFromMm(
-                    dim.boomLength,
-                    dim.stickLength,
-                    dim.bucketLength
-            );
             excavatorPostureView.setBucketAngleOffsetDeg((float) dim.bucketAngleOffsetDeg);
         }
+    }
+
+    /** 从 SharedPreferences 恢复臂长比例，WebView onPageFinished 后会随 payload 下发。 */
+    private void applyStoredArmLengthScalesToWebView() {
+        if (excavatorPostureView == null) {
+            return;
+        }
+        float boom = ArmLengthPreferences.getBoomScale(this);
+        float stick = ArmLengthPreferences.getStickScale(this);
+        excavatorPostureView.setLengthScales(boom, stick);
     }
 
     /**
@@ -668,10 +674,6 @@ public class MainActivity extends AppCompatActivity {
             rawCabinPitch = realCabinPitchAngle;
             rawCabinRoll = realCabinRollAngle;
         } else {
-            // 模拟数据没有座舱姿态，先用0占位
-            rawCabinPitch = 0f;
-            rawCabinRoll = 0f;
-
             if (angleSets.isEmpty()) {
                 return;
             }
@@ -687,6 +689,11 @@ public class MainActivity extends AppCompatActivity {
             rawBoom = currentSet.boom;
             rawStick = currentSet.stick;
             rawBucket = currentSet.bucket;
+
+            // 模拟座舱 IMU：与 angleIndex 同步平滑变化，幅值不超过 ±45°（再大易像翻车）
+            double phase = angleIndex * 0.18;
+            rawCabinPitch = (float) (45.0 * Math.sin(phase));
+            rawCabinRoll = (float) (45.0 * Math.cos(phase * 1.07));
         }
 
         // 解算相对角度（统一入口，模拟/真实都使用）
@@ -703,8 +710,13 @@ public class MainActivity extends AppCompatActivity {
         relativeBucketAngle = relative.bucketDeg;
 
         // 更新挖机姿态（使用相对角度）
-        excavatorPostureView.setAngles(0f, relativeBoomAngle, relativeStickAngle, relativeBucketAngle);
-
+        excavatorPostureView.setAngles(
+                rawCabinPitch,
+                rawCabinRoll,
+                relativeBoomAngle,
+                relativeStickAngle,
+                relativeBucketAngle
+        );
         // 更新文本显示（相对角度 + 座舱姿态）
         tvBoomAngle.setText(String.format(Locale.getDefault(), "BOOM: %.2f°", relativeBoomAngle));
         tvStickAngle.setText(String.format(Locale.getDefault(), "STICK: %.2f°", relativeStickAngle));
@@ -997,6 +1009,7 @@ public class MainActivity extends AppCompatActivity {
             if (newUrl != null && !newUrl.isEmpty()) {
                 updateVideoUrl(newUrl);
             }
+            applyStoredArmLengthScalesToWebView();
         }
     }
     
