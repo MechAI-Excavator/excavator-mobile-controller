@@ -78,6 +78,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvLiveStatus;
     private TextView btnReconnect;
     private View videoPlaceholder;
+
+    // 底部 Bar 折叠/展开
+    private android.widget.LinearLayout bottomBarContainer;
+    private TextView btnToggleBar;
+    private TextView btnFloatingToggle;
+    private boolean isBarExpanded = true;
     
     // 角度仪表盘
     private AngleGaugeView gaugeBoom;
@@ -238,11 +244,6 @@ public class MainActivity extends AppCompatActivity {
         // 视频地址编辑相关
         etVideoUrl = findViewById(R.id.etVideoUrl);
         btnUpdateVideoUrl = findViewById(R.id.btnUpdateVideoUrl);
-        
-        // 角度仪表盘
-        gaugeBoom = findViewById(R.id.gaugeBoom);
-        gaugeStick = findViewById(R.id.gaugeStick);
-        gaugeBucket = findViewById(R.id.gaugeBucket);
 
         // 摇杆示意图
         joystickLeft = findViewById(R.id.joystickLeft);
@@ -258,6 +259,26 @@ public class MainActivity extends AppCompatActivity {
         }
         // 初始状态设为未连接，等播放器回调后再更新
         setVideoConnected(false);
+
+        // 底部 Bar 折叠/展开
+        bottomBarContainer = findViewById(R.id.bottomBarContainer);
+        btnToggleBar = findViewById(R.id.btnToggleBar);
+        btnFloatingToggle = findViewById(R.id.btnFloatingToggle);
+        android.view.View.OnClickListener barToggleListener = v -> {
+            isBarExpanded = !isBarExpanded;
+            if (bottomBarContainer != null) {
+                bottomBarContainer.setVisibility(isBarExpanded ? android.view.View.VISIBLE : android.view.View.GONE);
+            }
+            if (btnFloatingToggle != null) {
+                btnFloatingToggle.setVisibility(isBarExpanded ? android.view.View.GONE : android.view.View.VISIBLE);
+            }
+        };
+        if (btnToggleBar != null) {
+            btnToggleBar.setOnClickListener(barToggleListener);
+        }
+        if (btnFloatingToggle != null) {
+            btnFloatingToggle.setOnClickListener(barToggleListener);
+        }
 
         // 设置按钮
         View btnSettings = findViewById(R.id.btnSettings);
@@ -718,14 +739,14 @@ public class MainActivity extends AppCompatActivity {
                 relativeBucketAngle
         );
         // 更新文本显示（相对角度 + 座舱姿态）
-        tvBoomAngle.setText(String.format(Locale.getDefault(), "BOOM: %.2f°", relativeBoomAngle));
-        tvStickAngle.setText(String.format(Locale.getDefault(), "STICK: %.2f°", relativeStickAngle));
-        tvBucketAngle.setText(String.format(Locale.getDefault(), "BUCKET: %.2f°", relativeBucketAngle));
+        tvBoomAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeBoomAngle));
+        tvStickAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeStickAngle));
+        tvBucketAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeBucketAngle));
         if (tvCabinPitchAngle != null) {
-            tvCabinPitchAngle.setText(String.format(Locale.getDefault(), "CABIN PITCH: %.2f°", rawCabinPitch));
+            tvCabinPitchAngle.setText(String.format(Locale.getDefault(), "%.2f°", rawCabinPitch));
         }
         if (tvCabinRollAngle != null) {
-            tvCabinRollAngle.setText(String.format(Locale.getDefault(), "CABIN ROLL: %.2f°", rawCabinRoll));
+            tvCabinRollAngle.setText(String.format(Locale.getDefault(), "%.2f°", rawCabinRoll));
         }
 
         // 更新角度仪表盘（仍使用原始IMU角度）
@@ -754,7 +775,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 
         if (tvRtkLatLon != null) {
-            tvRtkLatLon.setText(String.format(Locale.getDefault(), "LAT/LON: %.6f, %.6f", lat, lon));
+            tvRtkLatLon.setText(String.format(Locale.getDefault(), "%.6f, %.6f", lat, lon));
         }
     }
 

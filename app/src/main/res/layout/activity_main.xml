@@ -14,7 +14,7 @@
 
         <!-- 视频画面（16:9 居中全屏） -->
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
+            android:layout_width="730dp"
             android:layout_height="match_parent">
 
             <com.skydroid.fpvplayer.FPVWidget
@@ -75,86 +75,13 @@
 
     </FrameLayout>
 
-    <!-- ==================== 顶部覆盖层 ==================== -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:orientation="vertical">
-        
-        <!-- ????Logo / ?? / ?? / ?? -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingEnd="10dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Smart Excavator"
-                android:textColor="#FFD700"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/tvVideoLink"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/chip_bg"
-                android:paddingStart="8dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="4dp"
-                android:text="Delay: 46ms"
-                android:textColor="#CCFFFFFF"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvRcSignal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/chip_bg"
-                android:paddingStart="8dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="4dp"
-                android:text="Signal: 100%"
-                android:textColor="#CCFFFFFF"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/btnSettings"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:background="@drawable/chip_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="SET"
-                android:textColor="#CCFFFFFF"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
     <!-- ==================== 左侧覆盖层：姿态可视化器 ==================== -->
     <LinearLayout
         android:layout_width="165dp"
         android:layout_height="wrap_content"
         android:layout_gravity="start|top"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical"
         android:paddingStart="10dp"
         android:paddingTop="10dp"
@@ -173,7 +100,7 @@
         android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical"
         android:paddingStart="10dp"
         android:paddingTop="10dp"
@@ -198,192 +125,266 @@
 
     <!-- ==================== 底部覆盖层 ==================== -->
     <LinearLayout
+        android:id="@+id/bottomBarContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical">
 
-        <!-- 角度仪表盘（无背景，叠在视频上，两侧留空避开 side panels） -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingStart="170dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="170dp"
-            android:paddingBottom="4dp">
-
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/gauge_card_bg"
-                android:padding="4dp">
-
-                <com.example.myapplication.AngleGaugeView
-                    android:id="@+id/gaugeBoom"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/gauge_card_bg"
-                android:padding="4dp">
-
-                <com.example.myapplication.AngleGaugeView
-                    android:id="@+id/gaugeStick"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/gauge_card_bg"
-                android:padding="4dp">
-
-                <com.example.myapplication.AngleGaugeView
-                    android:id="@+id/gaugeBucket"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-            </FrameLayout>
-
-        </LinearLayout>
-
-        <!-- 相对角度数值显示 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#66000000"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingStart="170dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="170dp"
-            android:paddingBottom="4dp"
-            android:layout_marginBottom="2dp">
-
-            <TextView
-                android:id="@+id/tvBoomAngle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="BOOM: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvStickAngle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="STICK: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvBucketAngle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="BUCKET: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-        <!-- 座舱姿态数值显示 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#66000000"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingStart="170dp"
-            android:paddingEnd="170dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:layout_marginBottom="2dp">
-
-            <TextView
-                android:id="@+id/tvCabinPitchAngle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="CABIN PITCH: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvCabinRollAngle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="CABIN ROLL: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-        
-        <!-- RTK????????? -->
-        <LinearLayout
-            android:id="@+id/rtkInfoContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#66000000"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingStart="170dp"
-            android:paddingEnd="170dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:layout_marginBottom="4dp">
-
-            <TextView
-                android:id="@+id/tvRtkLatLon"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="LAT/LON: --"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-        <!-- ?????LIVE + ?? | ?????? | ???? -->
+        <!-- 统一底部 Bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#383838"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp">
+            android:orientation="vertical">
 
+            <!-- 传感器信息行：BOOM | STICK | BUCKET | CABIN PITCH | CABIN ROLL | LAT/LON -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
+
+                <!-- BOOM -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="BOOM"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvBoomAngle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#FFD580"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="#33FFFFFF" />
+
+                <!-- STICK -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="STICK"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvStickAngle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#FFD580"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="#33FFFFFF" />
+
+                <!-- BUCKET -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="BUCKET"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvBucketAngle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#FFD580"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="#33FFFFFF" />
+
+                <!-- CABIN PITCH -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="CABIN PITCH"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvCabinPitchAngle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#80CFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="#33FFFFFF" />
+
+                <!-- CABIN ROLL -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="CABIN ROLL"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvCabinRollAngle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#80CFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="#33FFFFFF" />
+
+                <!-- LAT/LON -->
+                <LinearLayout
+                    android:id="@+id/rtkInfoContainer"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="1dp"
+                        android:letterSpacing="0.1"
+                        android:text="LAT / LON"
+                        android:textColor="#88FFFFFF"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvRtkLatLon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="#66FF99"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- 分割线 -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF" />
+
+            <!-- 控制行：品牌 + LIVE + 状态数据 + 摇杆 + 芯片组 + 折叠 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingEnd="6dp">
+
+                <!-- Smart Excavator 品牌 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="Smart Excavator"
+                    android:textColor="#FFD700"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <!-- LIVE 状态 -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/chip_bg"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="10dp"
+                    android:paddingStart="8dp"
                     android:paddingTop="5dp"
-                    android:paddingEnd="10dp"
+                    android:paddingEnd="8dp"
                     android:paddingBottom="5dp">
 
                     <View
@@ -399,11 +400,12 @@
                         android:layout_height="wrap_content"
                         android:text="OFFLINE"
                         android:textColor="#FF6B6B"
-                        android:textSize="14sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
 
+                <!-- 重连按钮 -->
                 <TextView
                     android:id="@+id/btnReconnect"
                     android:layout_width="wrap_content"
@@ -421,216 +423,293 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
-
-            <!-- 状态数据：深度 / 速度 / 电池 / 连接（居中，weight撑开） -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <!-- 挖掘深度 -->
+                <!-- 状态数据：深度 / 速度 / 电池 / 连接（居中，weight撑开） -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="2dp"
+                    android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
+                    android:orientation="horizontal">
 
-                    <TextView
+                    <!-- 挖掘深度 -->
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="1dp"
-                        android:letterSpacing="0.1"
-                        android:text="DEPTH"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="12sp" />
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
 
-                    <TextView
-                        android:id="@+id/tvDigDepth"
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="1dp"
+                            android:letterSpacing="0.1"
+                            android:text="DEPTH"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="9sp" />
+
+                        <TextView
+                            android:id="@+id/tvDigDepth"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3.48 m"
+                            android:textColor="#FFB347"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="#44FFFFFF" />
+
+                    <!-- 速度 -->
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="3.48 m"
-                        android:textColor="#FFB347"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="1dp"
+                            android:letterSpacing="0.1"
+                            android:text="SPEED"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="9sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.5 km/h"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="#44FFFFFF" />
+
+                    <!-- 电池 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="1dp"
+                            android:letterSpacing="0.1"
+                            android:text="BATTERY"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="9sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="80% ⚡"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="#44FFFFFF" />
+
+                    <!-- 连接状态 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="1dp"
+                            android:letterSpacing="0.1"
+                            android:text="CONNECTION"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="9sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="STABLE"
+                            android:textColor="#44FF44"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
+                <!-- 摇杆示意图 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="6dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="3dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <com.example.myapplication.JoystickIndicatorView
+                            android:id="@+id/joystickLeft"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="L"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <com.example.myapplication.JoystickIndicatorView
+                            android:id="@+id/joystickRight"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="R"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- 分隔线 -->
                 <View
                     android:layout_width="1dp"
                     android:layout_height="28dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginLeft="2dp"
-                    android:layout_marginRight="2dp"
+                    android:layout_marginStart="4dp"
                     android:background="#44FFFFFF" />
 
-                <!-- 速度 -->
-                <LinearLayout
+                <!-- 延迟芯片 -->
+                <TextView
+                    android:id="@+id/tvVideoLink"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/chip_bg"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
+                    android:paddingTop="4dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="Delay: 46ms"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="9sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="1dp"
-                        android:letterSpacing="0.1"
-                        android:text="SPEED"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0.5 km/h"
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="#44FFFFFF" />
-
-                <!-- 电池 -->
-                <LinearLayout
+                <!-- 信号芯片 -->
+                <TextView
+                    android:id="@+id/tvRcSignal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="2dp"
-                    android:layout_marginRight="2dp"
-                    android:gravity="center"
-                    android:orientation="vertical"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/chip_bg"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
+                    android:paddingTop="4dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="Signal: 100%"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="9sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="1dp"
-                        android:letterSpacing="0.1"
-                        android:text="BATTERY"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="80% ⚡"
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="center_vertical"
-                    android:background="#44FFFFFF" />
-
-                <!-- 连接状态 -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="2dp"
-                    android:layout_marginRight="2dp"
+                <!-- 设置按钮 -->
+                <TextView
+                    android:id="@+id/btnSettings"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/chip_bg"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp">
+                    android:text="SET"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="10sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="1dp"
-                        android:letterSpacing="0.1"
-                        android:text="CONNECTION"
-                        android:textColor="#88FFFFFF"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="STABLE"
-                        android:textColor="#44FF44"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- 摇杆示意图 -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="3dp">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <com.example.myapplication.JoystickIndicatorView
-                        android:id="@+id/joystickLeft"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:text="L"
-                        android:textColor="#99FFFFFF"
-                        android:textSize="9sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <com.example.myapplication.JoystickIndicatorView
-                        android:id="@+id/joystickRight"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:text="R"
-                        android:textColor="#99FFFFFF"
-                        android:textSize="9sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
+                <!-- 折叠/展开切换按钮 -->
+                <TextView
+                    android:id="@+id/btnToggleBar"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/chip_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="▼"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- ==================== 悬浮展开按钮（bar 收起时显示） ==================== -->
+    <TextView
+        android:id="@+id/btnFloatingToggle"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:background="@drawable/chip_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="▲"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:elevation="6dp"
+        android:visibility="gone" />
 
     <!-- ==================== 隐藏元素（视频地址编辑器） ==================== -->
     <LinearLayout
