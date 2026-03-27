@@ -433,43 +433,45 @@ public class MainActivity extends AppCompatActivity {
         imuAngleConfig.name = "cat303cr";
         imuAngleConfig.type = "cat303cr";
 
+        ImuPreferences.Params p = ImuPreferences.load(this);
+
         ImuAngleConverter.Dimensions dim = imuAngleConfig.dimensions;
-        dim.chassisWidth = 0.0;
+        dim.chassisWidth  = 0.0;
         dim.chassisLength = 0.0;
-        dim.trackWidth = 0.0;
-        dim.boomLength = 2207.86;
-        dim.stickLength = 1261.0;
-        dim.bucketLength = 709.164447;
-        dim.bucketAngleOffsetDeg = Math.toDegrees(-1.566985);
+        dim.trackWidth    = 0.0;
+        dim.boomLength           = p.boomLength;
+        dim.stickLength          = p.stickLength;
+        dim.bucketLength         = p.bucketLength;
+        dim.bucketAngleOffsetDeg = p.bucketAngleOffsetDeg;
 
         ImuAngleConverter.CylinderJointMapDimensions cyl = imuAngleConfig.cylinder;
-        cyl.boomL2 = 1191.0;
-        cyl.boomL3 = 308.0;
-        cyl.boomL4 = 275.0;
-        cyl.boomL5 = 140.0;
-        cyl.boomL6 = 2207.86;
-        cyl.boomL7 = 1079.0;
+        cyl.boomL2 = p.boomL2;
+        cyl.boomL3 = p.boomL3;
+        cyl.boomL4 = p.boomL4;
+        cyl.boomL5 = p.boomL5;
+        cyl.boomL6 = p.boomL6;
+        cyl.boomL7 = p.boomL7;
 
-        cyl.stickL2 = 1104.0;
-        cyl.stickL3 = 286.0;
-        cyl.stickL4 = 1464.0;
-        cyl.stickL5 = 2207.86;
-        cyl.stickL6 = 1261.0;
-        cyl.stickL7 = 1521.37;
+        cyl.stickL2 = p.stickL2;
+        cyl.stickL3 = p.stickL3;
+        cyl.stickL4 = p.stickL4;
+        cyl.stickL5 = p.stickL5;
+        cyl.stickL6 = p.stickL6;
+        cyl.stickL7 = p.stickL7;
 
-        cyl.bucketL2 = 281.0;
-        cyl.bucketL3 = 1082.0;
-        cyl.bucketL4 = 1085.0;
-        cyl.bucketL5 = 261.57;
-        cyl.bucketL6 = 1261.0;
-        cyl.bucketL7 = 176.0;
-        cyl.bucketL9 = 256.0;
-        cyl.bucketL10 = 200.0;
+        cyl.bucketL2  = p.bucketL2;
+        cyl.bucketL3  = p.bucketL3;
+        cyl.bucketL4  = p.bucketL4;
+        cyl.bucketL5  = p.bucketL5;
+        cyl.bucketL6  = p.bucketL6;
+        cyl.bucketL7  = p.bucketL7;
+        cyl.bucketL9  = p.bucketL9;
+        cyl.bucketL10 = p.bucketL10;
 
         ImuAngleConverter.ImuInstallationOffset offsets = imuAngleConfig.imuOffsets;
-        offsets.boomImuOffsetDeg = Math.toDegrees(-0.4578);
-        offsets.stickImuOffsetDeg = 0.0;
-        offsets.bucketImuOffsetDeg = 0.0;
+        offsets.boomImuOffsetDeg   = p.boomImuOffsetDeg;
+        offsets.stickImuOffsetDeg  = p.stickImuOffsetDeg;
+        offsets.bucketImuOffsetDeg = p.bucketImuOffsetDeg;
 
         if (excavatorPostureView != null) {
             excavatorPostureView.setBucketAngleOffsetDeg((float) dim.bucketAngleOffsetDeg);
@@ -1031,6 +1033,8 @@ public class MainActivity extends AppCompatActivity {
                 updateVideoUrl(newUrl);
             }
             applyStoredArmLengthScalesToWebView();
+            // Re-load IMU config from SharedPreferences whenever settings are saved
+            initImuAngleConfig();
         }
     }
     
