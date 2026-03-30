@@ -69,39 +69,9 @@ const state = {
   }
 };
 
-const LENGTHS_STORAGE_KEY = "excavator_arm_lengths";
-
-function loadLengthsFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem(LENGTHS_STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (typeof parsed.boom === "number" && Number.isFinite(parsed.boom)) {
-      state.lengths.boom = Math.max(0.1, parsed.boom);
-    }
-    if (typeof parsed.stick === "number" && Number.isFinite(parsed.stick)) {
-      state.lengths.stick = Math.max(0.1, parsed.stick);
-    }
-  } catch {
-    // ignore
-  }
-}
-
-function persistLengthsToLocalStorage() {
-  try {
-    localStorage.setItem(
-      LENGTHS_STORAGE_KEY,
-      JSON.stringify({ boom: state.lengths.boom, stick: state.lengths.stick })
-    );
-  } catch {
-    // ignore (e.g. private mode)
-  }
-}
-
-loadLengthsFromLocalStorage();
-
 const nodes = {
   main: null,
+  car: null,
   armature: null,
   base: null,
   boom: null,
@@ -123,10 +93,9 @@ const lengthAxis = {
 };
 
 const partColors = {
-  bodyYellow: 0xffc107,
-  brightYellow: 0xffd54f,
-  accentOrange: 0xffa000,
-  black: 0x1c1f24
+  theme: 0x004dff,
+  // Whiter/lighter variant for the car body — same hue, blended toward white.
+  themeBody: 0x80aaff
 };
 
 function degToRad(value) {
@@ -148,7 +117,7 @@ function findByNameCaseInsensitive(root, name) {
   return exact || includes;
 }
 
-function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7) {
+function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7, opacity = 1) {
   if (!target) return;
   target.traverse((obj) => {
     if (!obj.isMesh) return;
@@ -157,21 +126,24 @@ function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7) {
     nextMat.color = new THREE.Color(colorHex);
     if ("metalness" in nextMat) nextMat.metalness = metalness;
     if ("roughness" in nextMat) nextMat.roughness = roughness;
+    nextMat.transparent = opacity < 1;
+    nextMat.opacity = opacity;
     obj.material = nextMat;
   });
 }
 
 function applyExcavatorColors() {
-  // High-visibility scheme: mostly engineering yellow, with dark tracks for contrast.
-  tintMeshes(nodes.main, partColors.bodyYellow, 0.32, 0.72);
-  tintMeshes(nodes.base, partColors.brightYellow, 0.3, 0.74);
-  tintMeshes(nodes.boom, partColors.brightYellow, 0.3, 0.74);
-  tintMeshes(nodes.stick, partColors.bodyYellow, 0.32, 0.72);
-  tintMeshes(nodes.bucket, partColors.accentOrange, 0.4, 0.6);
-
-  tintMeshes(nodes.driverCabin, partColors.bodyYellow, 0.32, 0.72);
-  tintMeshes(nodes.track, partColors.black, 0.5, 0.58);
-  tintMeshes(nodes.diggingBucket, partColors.accentOrange, 0.4, 0.6);
+  // Car body (node: "car"): lighter/whiter #80AAFF, fully opaque.
+  // Armature arms: deeper #004DFF, opacity fades outward from base (80%) to bucket (50%).
+  tintMeshes(nodes.main, partColors.themeBody, 0.25, 0.65, 1.0);
+  tintMeshes(nodes.car, partColors.themeBody, 0.25, 0.65, 1.0);
+  tintMeshes(nodes.driverCabin, partColors.themeBody, 0.25, 0.65, 1.0);
+  tintMeshes(nodes.track, partColors.themeBody, 0.4, 0.6, 1.0);
+  tintMeshes(nodes.base, partColors.theme, 0.3, 0.7, 0.8);
+  tintMeshes(nodes.boom, partColors.theme, 0.3, 0.7, 0.7);
+  tintMeshes(nodes.stick, partColors.theme, 0.3, 0.7, 0.6);
+  tintMeshes(nodes.bucket, partColors.theme, 0.3, 0.7, 0.5);
+  tintMeshes(nodes.diggingBucket, partColors.theme, 0.3, 0.7, 0.5);
 }
 
 function applyStateToModel() {
@@ -212,6 +184,7 @@ loader.load(
     scene.add(root);
 
     nodes.main = findByNameCaseInsensitive(root, "main") || root;
+    nodes.car = findByNameCaseInsensitive(root, "car");
     nodes.armature = findByNameCaseInsensitive(nodes.main, "armature");
     nodes.base = findByNameCaseInsensitive(root, "base");
     nodes.boom = findByNameCaseInsensitive(root, "boom");
@@ -224,6 +197,7 @@ loader.load(
 
     console.log("Excavator nodes:", {
       main: nodes.main,
+      car: nodes.car,
       armature: nodes.armature,
       base: nodes.base,
       boom: nodes.boom,
@@ -327,12 +301,6 @@ window.excavatorController = {
 function applyExternalPayload(payload) {
   if (!payload || typeof payload !== "object") return false;
   window.excavatorController.setAll(payload);
-  if (
-    payload.lengths &&
-    (typeof payload.lengths.boom === "number" || typeof payload.lengths.stick === "number")
-  ) {
-    persistLengthsToLocalStorage();
-  }
   return true;
 }
 
