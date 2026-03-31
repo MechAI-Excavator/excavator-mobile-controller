@@ -21,10 +21,28 @@ public class MapData {
     public static class MapFeature {
         public final double[] mercatorPoints;
         public final boolean closed;
+        public final double bboxMinX;
+        public final double bboxMinY;
+        public final double bboxMaxX;
+        public final double bboxMaxY;
 
         public MapFeature(double[] mercatorPoints, boolean closed) {
             this.mercatorPoints = mercatorPoints;
             this.closed = closed;
+            double x0 = Double.MAX_VALUE, y0 = Double.MAX_VALUE;
+            double x1 = -Double.MAX_VALUE, y1 = -Double.MAX_VALUE;
+            for (int i = 0; i < mercatorPoints.length; i += 2) {
+                double x = mercatorPoints[i];
+                double y = mercatorPoints[i + 1];
+                if (x < x0) x0 = x;
+                if (y < y0) y0 = y;
+                if (x > x1) x1 = x;
+                if (y > y1) y1 = y;
+            }
+            bboxMinX = x0;
+            bboxMinY = y0;
+            bboxMaxX = x1;
+            bboxMaxY = y1;
         }
     }
 
