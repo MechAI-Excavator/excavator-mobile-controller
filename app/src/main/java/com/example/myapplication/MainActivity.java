@@ -767,15 +767,15 @@ public class MainActivity extends AppCompatActivity {
             lon = realRtkLon;
         } else {
             // RTK默认位置
-            lat = 22.87501502452617;
-            lon = 113.4883490760387;
+            lat = 28.2416021;
+            lon = 113.0938459;
         }
 
         if (mapView != null) {
             mapView.setFixedLocation(lat, lon);
         }
 
-        // 
+        //
         if (tvRtkLatLon != null) {
             tvRtkLatLon.setText(String.format(Locale.getDefault(), "%.6f, %.6f", lat, lon));
         }

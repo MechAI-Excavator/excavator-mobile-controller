@@ -56,91 +56,122 @@ public class MapRenderer {
 
     public void draw(Canvas canvas, MapData mapData, MapViewport viewport,
                      double locationMercatorX, double locationMercatorY) {
-        // Slightly transparent background so underlying UI shows through.
         canvas.drawColor(Color.argb(110, 0xF2, 0xEF, 0xE9));
         if (mapData == null) {
             canvas.drawText("Loading map...", 24f, canvas.getHeight() * 0.5f, loadingPaint);
             return;
         }
 
-        drawFilledFeatures(canvas, mapData.waters, viewport, waterFillPaint);
-        drawFilledFeatures(canvas, mapData.forests, viewport, forestFillPaint);
-        drawPolylineFeatures(canvas, mapData.rivers, viewport, riverPaint);
-        drawRoads(canvas, mapData.roads, viewport);
+        // Pre-compute visible Mercator bounds for viewport culling.
+        double ppm = viewport.getPixelsPerMeter();
+        double hw = viewport.getScreenWidth() * 0.5 / ppm;
+        double hh = viewport.getScreenHeight() * 0.5 / ppm;
+        double cx = viewport.getCenterMercatorX();
+        double cy = viewport.getCenterMercatorY();
+        double vLeft = cx - hw;
+        double vRight = cx + hw;
+        double vBottom = cy - hh;
+        double vTop = cy + hh;
+
+        drawFilledFeatures(canvas, mapData.waters, viewport, waterFillPaint, vLeft, vRight, vBottom, vTop);
+        drawFilledFeatures(canvas, mapData.forests, viewport, forestFillPaint, vLeft, vRight, vBottom, vTop);
+        drawPolylineFeatures(canvas, mapData.rivers, viewport, riverPaint, vLeft, vRight, vBottom, vTop);
+        drawRoads(canvas, mapData.roads, viewport, vLeft, vRight, vBottom, vTop);
 
         if (!Double.isNaN(locationMercatorX) && !Double.isNaN(locationMercatorY)) {
             drawLocationMarker(canvas, viewport, locationMercatorX, locationMercatorY);
         }
     }
 
-    private void drawRoads(Canvas canvas, Iterable<MapData.MapFeature> roads, MapViewport viewport) {
-        double pixelsPerMeter = viewport.getPixelsPerMeter();
-        for (MapData.MapFeature feature : roads) {
-            double[] points = feature.mercatorPoints;
-            if (points.length < 4) {
-                continue;
-            }
-            float previousX = (float) ((points[0] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                    + viewport.getScreenWidth() * 0.5f);
-            float previousY = (float) ((viewport.getCenterMercatorY() - points[1]) * pixelsPerMeter
-                    + viewport.getScreenHeight() * 0.5f);
-            for (int i = 2; i < points.length; i += 2) {
-                float currentX = (float) ((points[i] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                        + viewport.getScreenWidth() * 0.5f);
-                float currentY = (float) ((viewport.getCenterMercatorY() - points[i + 1]) * pixelsPerMeter
-                        + viewport.getScreenHeight() * 0.5f);
-                canvas.drawLine(previousX, previousY, currentX, currentY, roadPaint);
-                previousX = currentX;
-                previousY = currentY;
-            }
-        }
+    private static boolean isVisible(MapData.MapFeature f,
+                                     double vLeft, double vRight,
+                                     double vBottom, double vTop) {
+        return f.bboxMaxX >= vLeft && f.bboxMinX <= vRight
+                && f.bboxMaxY >= vBottom && f.bboxMinY <= vTop;
     }
 
-    private void drawPolylineFeatures(Canvas canvas, Iterable<MapData.MapFeature> features,
-                                      MapViewport viewport, Paint paint) {
+    private void drawRoads(Canvas canvas, Iterable<MapData.MapFeature> roads,
+                           MapViewport viewport,
+                           double vLeft, double vRight, double vBottom, double vTop) {
         double pixelsPerMeter = viewport.getPixelsPerMeter();
-        for (MapData.MapFeature feature : features) {
+        double cx = viewport.getCenterMercatorX();
+        double cy = viewport.getCenterMercatorY();
+        float hw = viewport.getScreenWidth() * 0.5f;
+        float hh = viewport.getScreenHeight() * 0.5f;
+        for (MapData.MapFeature feature : roads) {
+            if (!isVisible(feature, vLeft, vRight, vBottom, vTop)) {
+                continue;
+            }
             double[] points = feature.mercatorPoints;
             if (points.length < 4) {
                 continue;
             }
             reusablePath.reset();
-            float startX = (float) ((points[0] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                    + viewport.getScreenWidth() * 0.5f);
-            float startY = (float) ((viewport.getCenterMercatorY() - points[1]) * pixelsPerMeter
-                    + viewport.getScreenHeight() * 0.5f);
-            reusablePath.moveTo(startX, startY);
+            reusablePath.moveTo(
+                    (float) ((points[0] - cx) * pixelsPerMeter + hw),
+                    (float) ((cy - points[1]) * pixelsPerMeter + hh));
             for (int i = 2; i < points.length; i += 2) {
-                float x = (float) ((points[i] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                        + viewport.getScreenWidth() * 0.5f);
-                float y = (float) ((viewport.getCenterMercatorY() - points[i + 1]) * pixelsPerMeter
-                        + viewport.getScreenHeight() * 0.5f);
-                reusablePath.lineTo(x, y);
+                reusablePath.lineTo(
+                        (float) ((points[i] - cx) * pixelsPerMeter + hw),
+                        (float) ((cy - points[i + 1]) * pixelsPerMeter + hh));
+            }
+            canvas.drawPath(reusablePath, roadPaint);
+        }
+    }
+
+    private void drawPolylineFeatures(Canvas canvas, Iterable<MapData.MapFeature> features,
+                                      MapViewport viewport, Paint paint,
+                                      double vLeft, double vRight, double vBottom, double vTop) {
+        double pixelsPerMeter = viewport.getPixelsPerMeter();
+        double cx = viewport.getCenterMercatorX();
+        double cy = viewport.getCenterMercatorY();
+        float hw = viewport.getScreenWidth() * 0.5f;
+        float hh = viewport.getScreenHeight() * 0.5f;
+        for (MapData.MapFeature feature : features) {
+            if (!isVisible(feature, vLeft, vRight, vBottom, vTop)) {
+                continue;
+            }
+            double[] points = feature.mercatorPoints;
+            if (points.length < 4) {
+                continue;
+            }
+            reusablePath.reset();
+            reusablePath.moveTo(
+                    (float) ((points[0] - cx) * pixelsPerMeter + hw),
+                    (float) ((cy - points[1]) * pixelsPerMeter + hh));
+            for (int i = 2; i < points.length; i += 2) {
+                reusablePath.lineTo(
+                        (float) ((points[i] - cx) * pixelsPerMeter + hw),
+                        (float) ((cy - points[i + 1]) * pixelsPerMeter + hh));
             }
             canvas.drawPath(reusablePath, paint);
         }
     }
 
     private void drawFilledFeatures(Canvas canvas, Iterable<MapData.MapFeature> features,
-                                    MapViewport viewport, Paint paint) {
+                                    MapViewport viewport, Paint paint,
+                                    double vLeft, double vRight, double vBottom, double vTop) {
         double pixelsPerMeter = viewport.getPixelsPerMeter();
+        double cx = viewport.getCenterMercatorX();
+        double cy = viewport.getCenterMercatorY();
+        float hw = viewport.getScreenWidth() * 0.5f;
+        float hh = viewport.getScreenHeight() * 0.5f;
         for (MapData.MapFeature feature : features) {
+            if (!isVisible(feature, vLeft, vRight, vBottom, vTop)) {
+                continue;
+            }
             double[] points = feature.mercatorPoints;
             if (points.length < 6) {
                 continue;
             }
             reusablePath.reset();
-            float startX = (float) ((points[0] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                    + viewport.getScreenWidth() * 0.5f);
-            float startY = (float) ((viewport.getCenterMercatorY() - points[1]) * pixelsPerMeter
-                    + viewport.getScreenHeight() * 0.5f);
-            reusablePath.moveTo(startX, startY);
+            reusablePath.moveTo(
+                    (float) ((points[0] - cx) * pixelsPerMeter + hw),
+                    (float) ((cy - points[1]) * pixelsPerMeter + hh));
             for (int i = 2; i < points.length; i += 2) {
-                float x = (float) ((points[i] - viewport.getCenterMercatorX()) * pixelsPerMeter
-                        + viewport.getScreenWidth() * 0.5f);
-                float y = (float) ((viewport.getCenterMercatorY() - points[i + 1]) * pixelsPerMeter
-                        + viewport.getScreenHeight() * 0.5f);
-                reusablePath.lineTo(x, y);
+                reusablePath.lineTo(
+                        (float) ((points[i] - cx) * pixelsPerMeter + hw),
+                        (float) ((cy - points[i + 1]) * pixelsPerMeter + hh));
             }
             if (feature.closed) {
                 reusablePath.close();
