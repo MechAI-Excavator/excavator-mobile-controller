@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 import android.util.Log;
 

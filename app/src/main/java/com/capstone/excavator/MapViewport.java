@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 public class MapViewport {
     private static final double MIN_ZOOM = 2.0;

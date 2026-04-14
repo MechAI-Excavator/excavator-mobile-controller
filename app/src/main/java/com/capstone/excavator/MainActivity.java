@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -181,15 +181,12 @@ public class MainActivity extends AppCompatActivity {
         
         // 设置全屏模式
         setFullScreenMode();
-
         setContentView(R.layout.activity_main);
-        
         initViews();
         initMap();
         initImuAngleConfig();
         applyStoredArmLengthScalesToWebView();
         initAngleSets();
-//        initButtons();
         initSDK();
         startDataUpdates();
         initVideoPlayer();

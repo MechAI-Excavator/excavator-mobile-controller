@@ -88,7 +88,7 @@
         android:paddingEnd="10dp"
         android:paddingBottom="10dp">
 
-        <com.example.myapplication.ExcavatorPostureView
+        <com.capstone.excavator.ExcavatorPostureView
             android:id="@+id/excavatorPostureView"
             android:layout_width="match_parent"
             android:layout_height="170dp" />
@@ -114,7 +114,7 @@
             android:clipToOutline="true"
             android:outlineProvider="background">
 
-            <com.example.myapplication.MapView
+            <com.capstone.excavator.MapView
                 android:id="@+id/mapView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
@@ -582,7 +582,7 @@
                         android:gravity="center_horizontal"
                         android:orientation="vertical">
 
-                        <com.example.myapplication.JoystickIndicatorView
+                        <com.capstone.excavator.JoystickIndicatorView
                             android:id="@+id/joystickLeft"
                             android:layout_width="40dp"
                             android:layout_height="40dp" />
@@ -604,7 +604,7 @@
                         android:gravity="center_horizontal"
                         android:orientation="vertical">
 
-                        <com.example.myapplication.JoystickIndicatorView
+                        <com.capstone.excavator.JoystickIndicatorView
                             android:id="@+id/joystickRight"
                             android:layout_width="40dp"
                             android:layout_height="40dp" />

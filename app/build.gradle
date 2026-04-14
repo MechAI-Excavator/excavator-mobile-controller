@@ -4,12 +4,12 @@ plugins {
 
 android {
     // AGP 8+ 要求在 build.gradle 中显式声明 namespace，对应 AndroidManifest.xml 的 package
-    namespace 'com.example.myapplication'
+    namespace 'com.capstone.excavator'
     // 升级到较新的 Android SDK（Android 14 / API 34）
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.example.myapplication'
+        applicationId 'com.capstone.excavator'
         minSdk 24
         targetSdk 34
         versionCode 1

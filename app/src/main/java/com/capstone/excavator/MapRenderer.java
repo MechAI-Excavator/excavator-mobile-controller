@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 import android.graphics.Canvas;
 import android.graphics.Color;

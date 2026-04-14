@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 /**
  * CRC-16-MODBUS校验工具类

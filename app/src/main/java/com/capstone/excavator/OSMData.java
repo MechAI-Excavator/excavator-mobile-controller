@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 import java.util.ArrayList;
 import java.util.HashMap;

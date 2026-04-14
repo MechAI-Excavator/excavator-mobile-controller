@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 public final class ImuAngleConverter {
     private static final double PI = Math.PI;
