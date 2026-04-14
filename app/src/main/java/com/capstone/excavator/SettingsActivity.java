@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 import android.app.Dialog;
 import android.content.Intent;

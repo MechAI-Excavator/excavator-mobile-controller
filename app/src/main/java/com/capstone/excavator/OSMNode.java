@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.capstone.excavator;
 
 public class OSMNode {
     public final long id;
