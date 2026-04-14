@@ -34,6 +34,9 @@ public class MapView extends View {
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleHandler());
         setFocusable(true);
         setClickable(true);
+        // Software layer ensures the canvas starts transparent and RadialGradient
+        // alpha blending composites correctly over the parent's semi-transparent background.
+        setLayerType(LAYER_TYPE_SOFTWARE, null);
     }
 
     public void setMapData(MapData data) {

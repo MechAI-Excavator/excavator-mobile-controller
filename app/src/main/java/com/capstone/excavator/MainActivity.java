@@ -3,8 +3,6 @@ package com.capstone.excavator;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,7 +11,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.inputmethod.InputMethodManager;
@@ -43,63 +40,25 @@ import com.skydroid.fpvplayer.ReConnectInterceptor;
 import com.skydroid.fpvplayer.RtspTransport;
 import android.widget.RelativeLayout;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     
-    // UI组件
-    private TextView tvBoomAngle;
-    private TextView tvStickAngle;
-    private TextView tvBucketAngle;
-    private TextView tvCabinPitchAngle;
-    private TextView tvCabinRollAngle;
-    private TextView tvLatitude;
-    private TextView tvLongitude;
-    private TextView tvDigDepth;
-    private TextView tvVideoLink;
-    private TextView tvRcSignal;
-    // RTK信息显示（东北天坐标、姿态角、经纬度）
-    private TextView tvRtkLatLon;
-    
-    // private ProgressBar progressDigDepth;
-    
-    private ExcavatorPostureView excavatorPostureView;
+    // ── Components ───────────────────────────────────────────────────
+    private HeaderBarView headerBar;
+    private BottomBarView bottomBar;
+    private CarbinStatusView carbinStatusView;
+
+    // ── Other UI ─────────────────────────────────────────────────────
+    private PostureCardView postureCardView;
     private FPVWidget fpvWidget;
     private MapView mapView;
-
-    // 视频连接状态 UI
-    private View liveIndicatorDot;
-    private TextView tvLiveStatus;
-    private TextView btnReconnect;
     private View videoPlaceholder;
-
-    // 底部 Bar 折叠/展开
-    private android.widget.LinearLayout bottomBarContainer;
-    private TextView btnToggleBar;
     private TextView btnFloatingToggle;
-    private boolean isBarExpanded = true;
-    
-    // 角度仪表盘
-    private AngleGaugeView gaugeBoom;
-    private AngleGaugeView gaugeStick;
-    private AngleGaugeView gaugeBucket;
-    
-    private Button btnLights;
-    private Button btnHorn;
-    private Button btnModeSwitch;
-    private Button btnHome;
-    private Button btnStop;
-    
-    // 视频地址编辑相关
-    private EditText etVideoUrl;
-    private Button btnUpdateVideoUrl;
-    
+
     // 驾驶模式状态
     private boolean isManualMode = true;
     
@@ -150,10 +109,6 @@ public class MainActivity extends AppCompatActivity {
     private int ch3Value = 0; // 左摇杆上下
     private int ch4Value = 0; // 左摇杆左右
 
-    // 摇杆示意图
-    private JoystickIndicatorView joystickLeft;
-    private JoystickIndicatorView joystickRight;
-    
     // 信号强度相关
     private KeyListener<Integer> keySignalQualityListener;
     private int currentSignalStrength = 0; // 当前信号强度（0-100）
@@ -190,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
         initSDK();
         startDataUpdates();
         initVideoPlayer();
-        initVideoUrlEditor();
     }
     
     /**
@@ -222,75 +176,44 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void initViews() {
-        tvBoomAngle = findViewById(R.id.tvBoomAngle);
-        tvStickAngle = findViewById(R.id.tvStickAngle);
-        tvBucketAngle = findViewById(R.id.tvBucketAngle);
-        tvCabinPitchAngle = findViewById(R.id.tvCabinPitchAngle);
-        tvCabinRollAngle = findViewById(R.id.tvCabinRollAngle);
-        tvDigDepth = findViewById(R.id.tvDigDepth);
-        tvVideoLink = findViewById(R.id.tvVideoLink);
-        tvRcSignal = findViewById(R.id.tvRcSignal);
-        tvRtkLatLon = findViewById(R.id.tvRtkLatLon);
-        
-        // progressDigDepth = findViewById(R.id.progressDigDepth);
-        
-        excavatorPostureView = findViewById(R.id.excavatorPostureView);
-        fpvWidget = findViewById(R.id.fpvWidget);
-        mapView = findViewById(R.id.mapView);
-        
-        // 视频地址编辑相关
-        etVideoUrl = findViewById(R.id.etVideoUrl);
-        btnUpdateVideoUrl = findViewById(R.id.btnUpdateVideoUrl);
+        postureCardView = findViewById(R.id.postureCardView);
+        fpvWidget            = findViewById(R.id.fpvWidget);
+        mapView              = findViewById(R.id.mapView);
+        videoPlaceholder     = findViewById(R.id.videoPlaceholder);
 
-        // 摇杆示意图
-        joystickLeft = findViewById(R.id.joystickLeft);
-        joystickRight = findViewById(R.id.joystickRight);
+        // ── Header component ────────────────────────────────────────
+        headerBar = findViewById(R.id.headerBar);
+        headerBar.setMode(isManualMode ? "手动模式" : "自动模式");
 
-        // 视频连接状态 UI
-        liveIndicatorDot = findViewById(R.id.liveIndicatorDot);
-        tvLiveStatus = findViewById(R.id.tvLiveStatus);
-        btnReconnect = findViewById(R.id.btnReconnect);
-        videoPlaceholder = findViewById(R.id.videoPlaceholder);
-        if (btnReconnect != null) {
-            btnReconnect.setOnClickListener(v -> reconnectVideo());
-        }
-        // 初始状态设为未连接，等播放器回调后再更新
-        setVideoConnected(false);
+        carbinStatusView = findViewById(R.id.carbinStatusView);
 
-        // 底部 Bar 折叠/展开
-        bottomBarContainer = findViewById(R.id.bottomBarContainer);
-        btnToggleBar = findViewById(R.id.btnToggleBar);
+        // ── Bottom bar component ─────────────────────────────────────
+        bottomBar = findViewById(R.id.bottomBar);
+
+        bottomBar.setOnReconnectListener(this::reconnectVideo);
+
+        bottomBar.setOnSettingsListener(() -> {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            intent.putExtra("current_url", currentVideoUrl);
+            startActivityForResult(intent, REQUEST_SETTINGS);
+        });
+
         btnFloatingToggle = findViewById(R.id.btnFloatingToggle);
-        android.view.View.OnClickListener barToggleListener = v -> {
-            isBarExpanded = !isBarExpanded;
-            if (bottomBarContainer != null) {
-                bottomBarContainer.setVisibility(isBarExpanded ? android.view.View.VISIBLE : android.view.View.GONE);
-            }
-            if (btnFloatingToggle != null) {
-                btnFloatingToggle.setVisibility(isBarExpanded ? android.view.View.GONE : android.view.View.VISIBLE);
-            }
-        };
-        if (btnToggleBar != null) {
-            btnToggleBar.setOnClickListener(barToggleListener);
-        }
-        if (btnFloatingToggle != null) {
-            btnFloatingToggle.setOnClickListener(barToggleListener);
-        }
 
-        // 设置按钮
-        View btnSettings = findViewById(R.id.btnSettings);
-        if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                intent.putExtra("current_url", currentVideoUrl);
-                startActivityForResult(intent, REQUEST_SETTINGS);
+        bottomBar.setOnBarToggleListener(() -> {
+            bottomBar.setVisibility(View.GONE);
+            if (btnFloatingToggle != null) btnFloatingToggle.setVisibility(View.VISIBLE);
+        });
+
+        if (btnFloatingToggle != null) {
+            btnFloatingToggle.setOnClickListener(v -> {
+                bottomBar.setVisibility(View.VISIBLE);
+                btnFloatingToggle.setVisibility(View.GONE);
             });
         }
 
-        // 设置仪表盘标签
-        if (gaugeBoom != null) gaugeBoom.setLabel("BOOM:");
-        if (gaugeStick != null) gaugeStick.setLabel("STICK:");
-        if (gaugeBucket != null) gaugeBucket.setLabel("BUCKET:");
+        // 初始状态：未连接
+        setVideoConnected(false);
     }
 
     private void initMap() {
@@ -470,19 +393,19 @@ public class MainActivity extends AppCompatActivity {
         offsets.stickImuOffsetDeg  = p.stickImuOffsetDeg;
         offsets.bucketImuOffsetDeg = p.bucketImuOffsetDeg;
 
-        if (excavatorPostureView != null) {
-            excavatorPostureView.setBucketAngleOffsetDeg((float) dim.bucketAngleOffsetDeg);
+        if (postureCardView != null) {
+            postureCardView.setBucketAngleOffsetDeg((float) dim.bucketAngleOffsetDeg);
         }
     }
 
     /** 从 SharedPreferences 恢复臂长比例，WebView onPageFinished 后会随 payload 下发。 */
     private void applyStoredArmLengthScalesToWebView() {
-        if (excavatorPostureView == null) {
+        if (postureCardView == null) {
             return;
         }
         float boom = ArmLengthPreferences.getBoomScale(this);
         float stick = ArmLengthPreferences.getStickScale(this);
-        excavatorPostureView.setLengthScales(boom, stick);
+        postureCardView.setLengthScales(boom, stick);
     }
 
     /**
@@ -520,19 +443,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setVideoConnected(boolean connected) {
-        if (tvLiveStatus != null) {
-            tvLiveStatus.setText(connected ? "LIVE" : "OFFLINE");
-            tvLiveStatus.setTextColor(connected ? Color.WHITE : Color.parseColor("#FF6B6B"));
-        }
-        if (liveIndicatorDot != null) {
-            GradientDrawable dot = new GradientDrawable();
-            dot.setShape(GradientDrawable.OVAL);
-            dot.setColor(connected ? Color.parseColor("#00E676") : Color.parseColor("#FF6B6B"));
-            liveIndicatorDot.setBackground(dot);
-        }
-        if (videoPlaceholder != null) {
+        if (bottomBar != null) bottomBar.setLiveStatus(connected);
+        if (headerBar != null) headerBar.setConnected(connected);
+        if (videoPlaceholder != null)
             videoPlaceholder.setVisibility(connected ? View.GONE : View.VISIBLE);
-        }
     }
 
     private void reconnectVideo() {
@@ -543,44 +457,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "正在重新连接...", Toast.LENGTH_SHORT).show();
     }
     
-    /**
-     * 初始化视频地址编辑器
-     */
-    private void initVideoUrlEditor() {
-        // 设置初始地址
-        if (etVideoUrl != null) {
-            etVideoUrl.setText("rtsp://192.168.144.100:554/stream1");
-        }
-        
-        // 更新按钮点击事件
-        if (btnUpdateVideoUrl != null) {
-            btnUpdateVideoUrl.setOnClickListener(v -> {
-                String newUrl = etVideoUrl.getText().toString().trim();
-                if (!newUrl.isEmpty()) {
-                    updateVideoUrl(newUrl);
-                    // 隐藏键盘
-                    hideKeyboard();
-                } else {
-                    Toast.makeText(this, "请输入有效的RTSP地址", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-        
-        // EditText输入完成事件（按回车或完成键）
-        if (etVideoUrl != null) {
-            etVideoUrl.setOnEditorActionListener((v, actionId, event) -> {
-                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                    String newUrl = etVideoUrl.getText().toString().trim();
-                    if (!newUrl.isEmpty()) {
-                        updateVideoUrl(newUrl);
-                        hideKeyboard();
-                    }
-                    return true;
-                }
-                return false;
-            });
-        }
-    }
     
     /**
      * 更新视频地址
@@ -603,18 +479,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 Log.e("MainActivity", "更新视频地址失败: " + e.getMessage(), e);
                 Toast.makeText(this, "更新失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-    
-    /**
-     * 隐藏键盘
-     */
-    private void hideKeyboard() {
-        if (etVideoUrl != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(etVideoUrl.getWindowToken(), 0);
             }
         }
     }
@@ -665,18 +529,15 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updateConnectionInfo() {
-        // 连接延迟: 45-60ms之间波动
         int delay = 45 + random.nextInt(15);
-        tvVideoLink.setText("⏱ Delay: " + delay + "ms");
+        if (bottomBar != null) bottomBar.setDelay(delay);
     }
     
     /**
      * 更新信号强度显示
      */
     private void updateSignalDisplay() {
-        if (tvRcSignal != null) {
-            tvRcSignal.setText("📶 Signal: " + currentSignalStrength + "%");
-        }
+        if (bottomBar != null) bottomBar.setSignal(currentSignalStrength);
     }
 
     private void updateAngles() {
@@ -730,28 +591,24 @@ public class MainActivity extends AppCompatActivity {
         relativeBucketAngle = relative.bucketDeg;
 
         // 更新挖机姿态（使用相对角度）
-        excavatorPostureView.setAngles(
-                rawCabinPitch,
-                rawCabinRoll,
-                relativeBoomAngle,
-                relativeStickAngle,
-                relativeBucketAngle
-        );
-        // 更新文本显示（相对角度 + 座舱姿态）
-        tvBoomAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeBoomAngle));
-        tvStickAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeStickAngle));
-        tvBucketAngle.setText(String.format(Locale.getDefault(), "%.2f°", relativeBucketAngle));
-        if (tvCabinPitchAngle != null) {
-            tvCabinPitchAngle.setText(String.format(Locale.getDefault(), "%.2f°", rawCabinPitch));
+        if (postureCardView != null) {
+            postureCardView.setAngles(
+                    rawCabinPitch,
+                    rawCabinRoll,
+                    relativeBoomAngle,
+                    relativeStickAngle,
+                    relativeBucketAngle
+            );
         }
-        if (tvCabinRollAngle != null) {
-            tvCabinRollAngle.setText(String.format(Locale.getDefault(), "%.2f°", rawCabinRoll));
+        // 推送到 BottomBarView 组件
+        if (bottomBar != null) {
+            bottomBar.setAngles(relativeBoomAngle, relativeStickAngle, relativeBucketAngle,
+                    rawCabinPitch, rawCabinRoll);
         }
-
-        // 更新角度仪表盘（仍使用原始IMU角度）
-        if (gaugeBoom != null) gaugeBoom.setAngle(rawBoom);
-        if (gaugeStick != null) gaugeStick.setAngle(rawStick);
-        if (gaugeBucket != null) gaugeBucket.setAngle(rawBucket);
+        // 推送到驾驶舱卡片
+        if (carbinStatusView != null) {
+            carbinStatusView.setCabinAngles(rawCabinPitch, rawCabinRoll);
+        }
     }
     
     private void updatePositioning() {
@@ -768,24 +625,14 @@ public class MainActivity extends AppCompatActivity {
             lon = 113.0938459;
         }
 
-        if (mapView != null) {
-            mapView.setFixedLocation(lat, lon);
-        }
-
-        //
-        if (tvRtkLatLon != null) {
-            tvRtkLatLon.setText(String.format(Locale.getDefault(), "%.6f, %.6f", lat, lon));
-        }
+        if (mapView != null) mapView.setFixedLocation(lat, lon);
+        if (bottomBar != null) bottomBar.setRtkLatLon(lat, lon);
+        if (carbinStatusView != null) carbinStatusView.setCabinLatLon(lat, lon);
     }
 
     private void updateDigDepth() {
-        // 挖掘深度在3.0-3.5米之间波动
         double depth = 3.0 + random.nextDouble() * 0.5;
-        tvDigDepth.setText(String.format(Locale.getDefault(), "%.2f m", depth));
-        
-        // 进度条（0-10米范围）
-        int progress = (int) (depth * 100); // 转换为整数进度
-//        progressDigDepth.setProgress(progress);
+        if (bottomBar != null) bottomBar.setDepth(depth);
     }
     
     /**
@@ -805,10 +652,11 @@ public class MainActivity extends AppCompatActivity {
                         ch3Value = value[2] - 1500; // 左摇杆上下
                         ch4Value = value[3] - 1500; // 左摇杆左右
 
-                        // 更新摇杆示意图（切换回主线程绘制）
                         runOnUiThread(() -> {
-                            if (joystickLeft != null) joystickLeft.setValues(ch4Value, ch3Value);
-                            if (joystickRight != null) joystickRight.setValues(ch1Value, -ch2Value);
+                            if (bottomBar != null) {
+                                bottomBar.setJoystickLeft(ch4Value, ch3Value);
+                                bottomBar.setJoystickRight(ch1Value, -ch2Value);
+                            }
                         });
                     }
                 }

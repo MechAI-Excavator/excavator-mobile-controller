@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SmartExcavator RC</string>
+    <string name="app_name">Capstone Controller</string>
     
     <!-- 状态栏 -->
     <string name="title_smartdig">SMARTDIG</string>
@@ -24,7 +24,15 @@
     <string name="boom">BOOM:</string>
     <string name="stick">STICK:</string>
     <string name="bucket">BUCKET:</string>
+
+    <!-- 姿态可视化器 -->
+    <string name="posture_visualizer_title">机械臂姿态</string>
+    <string name="posture_card_title">机械臂状态</string>
     
+    <!-- 地图 -->
+    <string name="map_title">位置地图</string>
+    <!-- 驾驶舱状态 -->
+    <string name="carbin_status_title">驾驶舱状态</string>
     <!-- 定位 -->
     <string name="latitude">LAT:</string>
     <string name="longitude">LNG:</string>

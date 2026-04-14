@@ -208,6 +208,27 @@ public class ExcavatorPostureView extends FrameLayout {
         webView.post(() -> webView.evaluateJavascript(js, null));
     }
 
+    /**
+     * 嵌入卡片时调用，禁用自身的卡片背景和圆角裁切，由父容器统一提供。
+     */
+    public void setEmbedded(boolean embedded) {
+        if (embedded) {
+            setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            setClipToOutline(false);
+            setOutlineProvider(null);
+        }
+    }
+
+    /**
+     * 切换 2D/3D 显示模式。若 Web 页面实现了 {@code window.setDisplayMode(mode)} 则生效。
+     */
+    public void setDisplayMode(boolean is3D) {
+        if (!pageReady) return;
+        String mode = is3D ? "3d" : "2d";
+        String js = "window.setDisplayMode && window.setDisplayMode('" + mode + "');";
+        webView.post(() -> webView.evaluateJavascript(js, null));
+    }
+
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();

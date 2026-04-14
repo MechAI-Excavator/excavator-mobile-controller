@@ -5,50 +5,72 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.graphics.RadialGradient;
+import android.graphics.Rect;
+import android.graphics.Shader;
 
 public class MapRenderer {
     private final Paint roadPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint riverPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint waterFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint forestFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint markerFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint markerStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint locationDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint locationDotStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint locationHaloPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint locationGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint compassFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint compassStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint compassTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Rect reusableTextBounds = new Rect();
     private final Paint loadingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path reusablePath = new Path();
     private final PointF reusablePoint = new PointF();
 
     public MapRenderer() {
         roadPaint.setStyle(Paint.Style.STROKE);
-        roadPaint.setColor(Color.parseColor("#7A7A7A"));
-        roadPaint.setStrokeWidth(3f);
+        roadPaint.setColor(Color.parseColor("#E6FFFFFF"));
+        roadPaint.setStrokeWidth(0.8f);
         roadPaint.setStrokeCap(Paint.Cap.ROUND);
         roadPaint.setStrokeJoin(Paint.Join.ROUND);
 
         riverPaint.setStyle(Paint.Style.STROKE);
-        riverPaint.setColor(Color.parseColor("#4A90E2"));
-        riverPaint.setStrokeWidth(3f);
+        // Render all polylines in the same light style (matches contour-like look).
+        riverPaint.setColor(Color.parseColor("#E6FFFFFF"));
+        riverPaint.setStrokeWidth(2.0f);
         riverPaint.setStrokeCap(Paint.Cap.ROUND);
         riverPaint.setStrokeJoin(Paint.Join.ROUND);
 
         waterFillPaint.setStyle(Paint.Style.FILL);
-        waterFillPaint.setColor(Color.parseColor("#8FCBFF"));
+        waterFillPaint.setColor(Color.TRANSPARENT);
 
         forestFillPaint.setStyle(Paint.Style.FILL);
-        forestFillPaint.setColor(Color.parseColor("#9CCB7F"));
+        forestFillPaint.setColor(Color.TRANSPARENT);
 
         // Overall map transparency (0..255). Lower = more transparent.
-        int mapAlpha = 170;
+        int mapAlpha = 150;
         roadPaint.setAlpha(mapAlpha);
         riverPaint.setAlpha(mapAlpha);
-        waterFillPaint.setAlpha(140);
-        forestFillPaint.setAlpha(140);
+        waterFillPaint.setAlpha(0);
+        forestFillPaint.setAlpha(0);
 
-        markerFillPaint.setStyle(Paint.Style.FILL);
-        markerFillPaint.setColor(Color.parseColor("#FF9800"));
+        locationDotPaint.setStyle(Paint.Style.FILL);
+        locationDotPaint.setColor(Color.parseColor("#1E7BFF"));
 
-        markerStrokePaint.setStyle(Paint.Style.STROKE);
-        markerStrokePaint.setColor(Color.WHITE);
-        markerStrokePaint.setStrokeWidth(2f);
+        locationDotStrokePaint.setStyle(Paint.Style.STROKE);
+        locationDotStrokePaint.setColor(Color.parseColor("#B3FFFFFF"));
+        locationDotStrokePaint.setStrokeWidth(2f);
+
+        locationHaloPaint.setStyle(Paint.Style.FILL);
+        locationGlowPaint.setStyle(Paint.Style.FILL);
+
+        compassFillPaint.setStyle(Paint.Style.FILL);
+        compassFillPaint.setColor(Color.parseColor("#66000000"));
+        compassStrokePaint.setStyle(Paint.Style.STROKE);
+        compassStrokePaint.setColor(Color.parseColor("#66FFFFFF"));
+        compassStrokePaint.setStrokeWidth(1.5f);
+        compassTextPaint.setColor(Color.WHITE);
+        compassTextPaint.setTextSize(26f);
+        compassTextPaint.setFakeBoldText(true);
 
         loadingPaint.setColor(Color.parseColor("#7A7A7A"));
         loadingPaint.setTextSize(28f);
@@ -56,7 +78,7 @@ public class MapRenderer {
 
     public void draw(Canvas canvas, MapData mapData, MapViewport viewport,
                      double locationMercatorX, double locationMercatorY) {
-        canvas.drawColor(Color.argb(110, 0xF2, 0xEF, 0xE9));
+        // Don't paint an opaque/bright base color here; let the parent card background show through.
         if (mapData == null) {
             canvas.drawText("Loading map...", 24f, canvas.getHeight() * 0.5f, loadingPaint);
             return;
@@ -81,6 +103,8 @@ public class MapRenderer {
         if (!Double.isNaN(locationMercatorX) && !Double.isNaN(locationMercatorY)) {
             drawLocationMarker(canvas, viewport, locationMercatorX, locationMercatorY);
         }
+
+        drawNorthCompass(canvas);
     }
 
     private static boolean isVisible(MapData.MapFeature f,
@@ -183,8 +207,51 @@ public class MapRenderer {
     private void drawLocationMarker(Canvas canvas, MapViewport viewport,
                                     double mercatorX, double mercatorY) {
         MapProjection.mercatorToScreen(mercatorX, mercatorY, viewport, reusablePoint);
-        float radius = 10f; // bigger dot
-        canvas.drawCircle(reusablePoint.x, reusablePoint.y, radius, markerFillPaint);
-        canvas.drawCircle(reusablePoint.x, reusablePoint.y, radius, markerStrokePaint);
+
+        // A soft outer halo (very faint) plus a tighter glow around the dot.
+        float haloRadius = 58f;
+        locationHaloPaint.setShader(new RadialGradient(
+                reusablePoint.x, reusablePoint.y,
+                haloRadius,
+                new int[]{
+                        Color.argb(70, 0x1E, 0x7B, 0xFF),
+                        Color.argb(0, 0x1E, 0x7B, 0xFF)
+                },
+                new float[]{0f, 1f},
+                Shader.TileMode.CLAMP
+        ));
+        canvas.drawCircle(reusablePoint.x, reusablePoint.y, haloRadius, locationHaloPaint);
+
+        float glowRadius = 34f;
+        locationGlowPaint.setShader(new RadialGradient(
+                reusablePoint.x, reusablePoint.y,
+                glowRadius,
+                new int[]{
+                        Color.argb(140, 0x1E, 0x7B, 0xFF),
+                        Color.argb(0, 0x1E, 0x7B, 0xFF)
+                },
+                new float[]{0f, 1f},
+                Shader.TileMode.CLAMP
+        ));
+        canvas.drawCircle(reusablePoint.x, reusablePoint.y, glowRadius, locationGlowPaint);
+
+        float dotRadius = 12f;
+        canvas.drawCircle(reusablePoint.x, reusablePoint.y, dotRadius, locationDotPaint);
+        canvas.drawCircle(reusablePoint.x, reusablePoint.y, dotRadius, locationDotStrokePaint);
+    }
+
+    private void drawNorthCompass(Canvas canvas) {
+        float cx = canvas.getWidth() - 34f;
+        float cy = 34f;
+        float r = 22f;
+
+        canvas.drawCircle(cx, cy, r, compassFillPaint);
+        canvas.drawCircle(cx, cy, r, compassStrokePaint);
+
+        String n = "N";
+        compassTextPaint.getTextBounds(n, 0, n.length(), reusableTextBounds);
+        float textX = cx - reusableTextBounds.width() * 0.5f - reusableTextBounds.left;
+        float textY = cy + reusableTextBounds.height() * 0.5f - reusableTextBounds.bottom;
+        canvas.drawText(n, textX, textY, compassTextPaint);
     }
 }

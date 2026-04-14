@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ── 顶部标题行：标题 + 2D/3D 切换 ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="17dp"
+        >
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/posture_card_title"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="normal" />
+
+        <!-- 2D / 3D 切换胶囊按钮 -->
+        <LinearLayout
+            android:id="@+id/modeToggleContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:orientation="horizontal"
+            android:background="@drawable/mode_toggle_bg"
+            android:padding="2dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/btn2D"
+                android:layout_width="32dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="2D"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:background="@drawable/mode_toggle_selected_bg"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn3D"
+                android:layout_width="32dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="3D"
+                android:textColor="#80FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ── 机械臂 WebView 示意图（125dp × 93dp） ── -->
+    <com.capstone.excavator.ExcavatorPostureView
+        android:id="@+id/excavatorPostureView"
+        android:layout_width="match_parent"
+        android:layout_height="93dp"
+        android:layout_marginBottom="6dp" />
+
+    <!-- ── 分隔线 ── -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0.5pt"
+        android:src="@drawable/cabin_line"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- ── 大臂 ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="7dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="大臂"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/tvPostureBoomAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#5C87FF"
+            android:textSize="12sp"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <!-- ── 斗杆 ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="7dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="斗杆"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/tvPostureStickAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#3EC4A2"
+            android:textSize="12sp"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <!-- ── 铲斗 ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="17dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="铲斗"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/tvPostureBucketAngle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#FBBF24"
+            android:textSize="12sp"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+</merge>
