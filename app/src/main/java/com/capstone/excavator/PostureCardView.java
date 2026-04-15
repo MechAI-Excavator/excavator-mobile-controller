@@ -2,6 +2,7 @@ package com.capstone.excavator;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -30,9 +31,18 @@ import java.util.Locale;
 public class PostureCardView extends LinearLayout {
 
     private ExcavatorPostureView excavatorPostureView;
+
+    // 底部三行角度文字
     private TextView tvBoom;
     private TextView tvStick;
     private TextView tvBucket;
+
+    // 2D 示意图叠加角度文字
+    private View    view2D;
+    private TextView tvOverlay2DBoom;
+    private TextView tvOverlay2DStick;
+    private TextView tvOverlay2DBucket;
+
     private TextView btn2D;
     private TextView btn3D;
 
@@ -69,11 +79,18 @@ public class PostureCardView extends LinearLayout {
         btn2D                = findViewById(R.id.btn2D);
         btn3D                = findViewById(R.id.btn3D);
 
+        view2D           = findViewById(R.id.view2D);
+        tvOverlay2DBoom   = findViewById(R.id.tvOverlay2DBoom);
+        tvOverlay2DStick  = findViewById(R.id.tvOverlay2DStick);
+        tvOverlay2DBucket = findViewById(R.id.tvOverlay2DBucket);
+
         // ExcavatorPostureView 已嵌入卡片，不需要自己的卡片背景和圆角裁切
         if (excavatorPostureView != null) {
             excavatorPostureView.setEmbedded(true);
         }
 
+        // 初始状态：2D 可见，3D 隐藏
+        applyModeVisibility();
         setupToggle();
     }
 
@@ -112,14 +129,23 @@ public class PostureCardView extends LinearLayout {
     // ── Internal ────────────────────────────────────────────────────
 
     private void updateAngleText(float boom, float stick, float bucket) {
-        if (tvBoom   != null) tvBoom.setText(String.format(Locale.getDefault(),   "%.2f°", boom));
-        if (tvStick  != null) tvStick.setText(String.format(Locale.getDefault(),  "%.2f°", stick));
-        if (tvBucket != null) tvBucket.setText(String.format(Locale.getDefault(), "%.2f°", bucket));
+        String boomStr   = String.format(Locale.getDefault(), "%.2f°", boom);
+        String stickStr  = String.format(Locale.getDefault(), "%.2f°", stick);
+        String bucketStr = String.format(Locale.getDefault(), "%.2f°", bucket);
+
+        // 底部三行
+        if (tvBoom   != null) tvBoom.setText(boomStr);
+        if (tvStick  != null) tvStick.setText(stickStr);
+        if (tvBucket != null) tvBucket.setText(bucketStr);
+
+        // 2D 叠加层（同步更新，无论当前是否在 2D 模式）
+        if (tvOverlay2DBoom   != null) tvOverlay2DBoom.setText(boomStr);
+        if (tvOverlay2DStick  != null) tvOverlay2DStick.setText(stickStr);
+        if (tvOverlay2DBucket != null) tvOverlay2DBucket.setText(bucketStr);
     }
 
     private void setupToggle() {
         if (btn2D == null || btn3D == null) return;
-
         btn2D.setOnClickListener(v -> setMode(false));
         btn3D.setOnClickListener(v -> setMode(true));
         applyToggleStyle();
@@ -130,7 +156,18 @@ public class PostureCardView extends LinearLayout {
         if (excavatorPostureView != null) {
             excavatorPostureView.setDisplayMode(is3D);
         }
+        applyModeVisibility();
         applyToggleStyle();
+    }
+
+    /** 切换 2D FrameLayout 和 3D WebView 的可见性 */
+    private void applyModeVisibility() {
+        if (view2D != null) {
+            view2D.setVisibility(is3D ? View.GONE : View.VISIBLE);
+        }
+        if (excavatorPostureView != null) {
+            excavatorPostureView.setVisibility(is3D ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void applyToggleStyle() {

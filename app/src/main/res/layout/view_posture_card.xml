@@ -57,12 +57,70 @@
 
     </LinearLayout>
 
-    <!-- ── 机械臂 WebView 示意图（125dp × 93dp） ── -->
+    <!-- ── 2D 模式：posture.png 底图 + 角度叠加文字 ── -->
+    <FrameLayout
+        android:id="@+id/view2D"
+        android:layout_width="match_parent"
+        android:layout_height="93dp"
+        android:layout_marginBottom="6dp"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/posture"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null" />
+
+        <!-- 大臂角度：左侧居中 -->
+        <TextView
+            android:id="@+id/tvOverlay2DBoom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="-12dp"
+            android:text="--"
+            android:textColor="#5C87FF"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+
+        <!-- 斗杆角度：顶部居中（关节处） -->
+        <TextView
+            android:id="@+id/tvOverlay2DStick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="2dp"
+            android:layout_marginLeft="36dp"
+            android:text="--"
+            android:textColor="#3EC4A2"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+
+        <!-- 铲斗角度：右侧中下 -->
+        <TextView
+            android:id="@+id/tvOverlay2DBucket"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="1dp"
+            android:text="--"
+            android:textColor="#FBBF24"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+
+    <!-- ── 3D 模式：WebView（2D 时隐藏，切换后显示） ── -->
     <com.capstone.excavator.ExcavatorPostureView
         android:id="@+id/excavatorPostureView"
         android:layout_width="match_parent"
         android:layout_height="93dp"
-        android:layout_marginBottom="6dp" />
+        android:layout_marginBottom="6dp"
+        android:visibility="gone" />
 
     <!-- ── 分隔线 ── -->
     <ImageView

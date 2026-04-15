@@ -17,6 +17,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -132,8 +133,9 @@ public class MainActivity extends AppCompatActivity {
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-        
+
         // 设置全屏模式
         setFullScreenMode();
         setContentView(R.layout.activity_main);
