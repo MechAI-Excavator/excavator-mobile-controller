@@ -18,7 +18,6 @@ import java.util.Locale;
  *   setLiveStatus(), setJoystickLeft(), setJoystickRight()
  *
  * Events out (implement interfaces and pass in):
- *   setOnReconnectListener()  – user tapped ↻
  *   setOnSettingsListener()   – user tapped SET
  *   setOnBarToggleListener()  – user tapped ▼ to collapse
  *
@@ -128,9 +127,14 @@ public class BottomBarView extends LinearLayout {
             tvDigDepth.setText(String.format(Locale.getDefault(), "%.2f m", depth));
     }
 
-    /** 更新视频延迟（单位 ms） */
+    /** 更新链路延迟（单位 ms；传 -1 表示暂无数据） */
     public void setDelay(int ms) {
-        if (tvVideoLink != null) tvVideoLink.setText("⏱ Delay: " + ms + "ms");
+        if (tvVideoLink == null) return;
+        if (ms < 0) {
+            tvVideoLink.setText("⏱ Delay: --");
+        } else {
+            tvVideoLink.setText("⏱ Delay: " + ms + "ms");
+        }
     }
 
     /** 更新遥控信号强度（0‑100） */

@@ -103,6 +103,15 @@ public class MainActivity extends AppCompatActivity {
     private Runnable udpTimeoutRunnable;
     private static final long UDP_TIMEOUT_MS = 5000; // 5秒没收到数据就切换回模拟数据
     private long lastDataReceiveTime = 0;
+    // 心跳 RTT 测量相关
+    private Handler heartbeatHandler;
+    private Runnable heartbeatRunnable;
+    private long heartbeatSendTime = 0;           // 最近一次心跳的发送时间戳
+    private static final long HEARTBEAT_INTERVAL_MS = 1000; // 心跳间隔 1 秒
+    // 心跳帧格式：0xFB 0xFB + 1字节类型(0x01) + 8字节时间戳 + 19字节填充 + CRC(2字节) + 0xFF = 33字节
+    private static final byte HEARTBEAT_HEADER_1 = (byte) 0xFB;
+    private static final byte HEARTBEAT_HEADER_2 = (byte) 0xFB;
+    private static final byte HEARTBEAT_TYPE     = (byte) 0x01;
     
     // 摇杆值
     private int ch1Value = 0; // 右摇杆左右
@@ -531,8 +540,10 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updateConnectionInfo() {
-        int delay = 45 + random.nextInt(15);
-        if (bottomBar != null) bottomBar.setDelay(delay);
+        // 真实数据模式下延迟由 onReadData 的包间隔实时更新，无需在此覆盖
+        if (!useRealData) {
+            if (bottomBar != null) bottomBar.setDelay(-1);
+        }
     }
     
     /**
@@ -747,6 +758,7 @@ public class MainActivity extends AppCompatActivity {
                             // useRealData 保持 false，直到收到第一个数据包
                             lastDataReceiveTime = System.currentTimeMillis();
                             Toast.makeText(MainActivity.this, "UDP连接成功，等待数据...", Toast.LENGTH_SHORT).show();
+                            startHeartbeat(); // 开始定时发送心跳帧测量 RTT
                         }
                     });
                 }
@@ -766,6 +778,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDisconnect() {
                     Log.d("UDP", "UDP管道断开连接");
+                    stopHeartbeat();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -780,10 +793,31 @@ public class MainActivity extends AppCompatActivity {
                     // 接收到的UDP数据（33字节）
                     if (data != null) {
                         Log.d("UDP", "收到数据，长度: " + data.length);
+
+                        // 优先判断是否为心跳回包（header = 0xFB 0xFB）
+                        if (data.length == 33
+                                && data[0] == HEARTBEAT_HEADER_1
+                                && data[1] == HEARTBEAT_HEADER_2
+                                && data[2] == HEARTBEAT_TYPE) {
+                            // 从帧中还原发送时间戳（big-endian，frame[3..10]）
+                            long sendTs = 0;
+                            for (int i = 0; i < 8; i++) {
+                                sendTs = (sendTs << 8) | (data[3 + i] & 0xFF);
+                            }
+                            if (sendTs > 0) {
+                                int rtt = (int) (System.currentTimeMillis() - sendTs);
+                                Log.d("RTT", "收到心跳回包，RTT=" + rtt + "ms");
+                                runOnUiThread(() -> {
+                                    if (bottomBar != null) bottomBar.setDelay(rtt);
+                                });
+                            }
+                            return; // 心跳回包不进入业务数据解析
+                        }
                         
                         if (data.length == 33) {
                             // 更新最后接收数据的时间
-                            lastDataReceiveTime = System.currentTimeMillis();
+                            long now = System.currentTimeMillis();
+                            lastDataReceiveTime = now;
                             
                             // 如果之前是模拟数据，切换到真实数据
                             if (!useRealData) {
@@ -835,6 +869,64 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 构建心跳帧（33字节）。
+     * 格式：0xFB 0xFB | type(1) | timestamp(8, big-endian) | padding(19) | CRC16(2) | 0xFF
+     * 机载端识别到 header=0xFB 0xFB 且 type=0x01 时，原样将整帧回传给 App。
+     */
+    private byte[] buildHeartbeatFrame(long timestamp) {
+        byte[] frame = new byte[33];
+        frame[0] = HEARTBEAT_HEADER_1;
+        frame[1] = HEARTBEAT_HEADER_2;
+        // data 区（28字节，偏移2~29）
+        frame[2] = HEARTBEAT_TYPE;
+        // 8字节时间戳（big-endian），放在 data[1..8]（即 frame[3..10]）
+        for (int i = 0; i < 8; i++) {
+            frame[3 + i] = (byte) ((timestamp >> (56 - 8 * i)) & 0xFF);
+        }
+        // 剩余 19 字节填充 0（frame[11..29] 已为 0）
+        // CRC 计算范围：data 区 28 字节（frame[2..29]）
+        byte[] dataForCrc = new byte[28];
+        System.arraycopy(frame, 2, dataForCrc, 0, 28);
+        int crc = CRC16Modbus.calculateCRC16Modbus(dataForCrc);
+        byte[] crcBytes = CRC16Modbus.crcToBytes(crc);
+        frame[30] = crcBytes[0];
+        frame[31] = crcBytes[1];
+        frame[32] = (byte) 0xFF;
+        return frame;
+    }
+
+    /**
+     * 启动心跳定时器，每秒向机载端发送一次心跳帧。
+     * 机载端收到后原样回传，App 在 onReadData 中计算 RTT。
+     */
+    private void startHeartbeat() {
+        if (heartbeatHandler == null) {
+            heartbeatHandler = new Handler(Looper.getMainLooper());
+        }
+        stopHeartbeat();
+        heartbeatRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (udpPipeline != null && udpPipeline.isConnected()) {
+                    heartbeatSendTime = System.currentTimeMillis();
+                    udpPipeline.writeData(buildHeartbeatFrame(heartbeatSendTime));
+                    Log.d("RTT", "心跳已发送，时间戳: " + heartbeatSendTime);
+                }
+                heartbeatHandler.postDelayed(this, HEARTBEAT_INTERVAL_MS);
+            }
+        };
+        heartbeatHandler.postDelayed(heartbeatRunnable, HEARTBEAT_INTERVAL_MS);
+    }
+
+    /** 停止心跳定时器并清零发送时间戳 */
+    private void stopHeartbeat() {
+        if (heartbeatHandler != null && heartbeatRunnable != null) {
+            heartbeatHandler.removeCallbacks(heartbeatRunnable);
+        }
+        heartbeatSendTime = 0;
+    }
+
+    /**
      * 启动UDP数据接收超时检查
      * 如果长时间没收到数据，自动切换回模拟数据
      */
@@ -854,6 +946,7 @@ public class MainActivity extends AppCompatActivity {
                 if (useRealData && (currentTime - lastDataReceiveTime) > UDP_TIMEOUT_MS) {
                     // 超过5秒没收到数据，切换回模拟数据
                     useRealData = false;
+                    stopHeartbeat(); // 停止心跳，不再测量延迟
                     Log.w("UDP", "UDP数据接收超时，切换回模拟数据");
                     runOnUiThread(new Runnable() {
                         @Override
@@ -908,6 +1001,9 @@ public class MainActivity extends AppCompatActivity {
         if (udpTimeoutHandler != null && udpTimeoutRunnable != null) {
             udpTimeoutHandler.removeCallbacks(udpTimeoutRunnable);
         }
+
+        // 停止心跳
+        stopHeartbeat();
         
         // 断开UDP管道
         if (udpPipeline != null) {
