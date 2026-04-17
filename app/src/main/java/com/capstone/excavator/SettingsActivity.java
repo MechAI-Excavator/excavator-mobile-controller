@@ -35,7 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText etSettingsVideoUrl;
     private EditText etArmBoomScale;
     private EditText etArmStickScale;
-    private Button btnSaveVideoUrl;
+    private android.view.View btnSaveVideoUrl;
     private TextView btnBack;
 
     // IMU preview labels on the card

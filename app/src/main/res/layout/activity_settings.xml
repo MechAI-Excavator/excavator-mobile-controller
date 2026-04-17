@@ -1,197 +1,600 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FF1A1A1A">
+    android:background="#FFF0F2F5">
 
-    <!-- 顶部标题栏 -->
+    <!-- ─── 顶部标题栏 ─────────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:background="#FF222222">
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:background="#FFFFFFFF"
+        android:elevation="2dp">
 
+        <!-- CAPSTONE logo (same as view_header_bar.xml) -->
+        <ImageView
+            android:layout_width="116dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:scaleType="centerCrop"
+            android:src="@drawable/black_logo"
+            tools:ignore="ContentDescription" />
+
+        <!-- "参数设置" label -->
         <TextView
-            android:id="@+id/btnBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="← 返回"
-            android:textColor="#FFD700"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="4dp" />
+            android:layout_marginStart="10dp"
+            android:text="参数设置"
+            android:textColor="#FF374151"
+            android:textSize="14sp" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="⚙ 设置"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center" />
-
-        <!-- 占位，平衡返回按钮 -->
+        <!-- Spacer -->
         <View
-            android:layout_width="60dp"
-            android:layout_height="1dp" />
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- 保存配置 button (top-right, blue gradient + icon) -->
+        <LinearLayout
+            android:id="@+id/btnSaveVideoUrl"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/button_blue_bg"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/save_icon"
+                android:scaleType="centerInside"
+                android:layout_marginEnd="6dp"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存配置"
+                android:textColor="#FFFFFFFF"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-    <ScrollView
+    <!-- ─── 主体：左侧导航 + 右侧内容 ─────────────────────────── -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:orientation="horizontal">
 
+        <!-- ── 左侧导航面板 ──────────────────────────────────────── -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_width="205dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#FFFFFFFF"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:elevation="1dp">
 
-            <!-- 视频流设置卡片 -->
+            <!-- 返回按钮 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/card_dark_bg"
-                android:padding="16dp"
-                android:layout_marginBottom="12dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="12dp">
+
+    
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/setting_back"
+                    android:layout_marginEnd="6dp"
+                    tools:ignore="ContentDescription" />
 
                 <TextView
+                    android:id="@+id/btnBack"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📹 视频流设置"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="RTSP 视频流地址"
-                    android:textColor="#AAAAAA"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="6dp" />
-
-                <EditText
-                    android:id="@+id/etSettingsVideoUrl"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="例如 rtsp://192.168.144.100:554/stream1"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#FF666666"
-                    android:background="@drawable/edittext_dark_bg"
-                    android:padding="12dp"
-                    android:textSize="14sp"
-                    android:inputType="textUri"
-                    android:imeOptions="actionDone"
-                    android:singleLine="true"
-                    android:layout_marginBottom="14dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
-                    android:textColor="#AAAAAA"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="6dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="大臂比例"
-                    android:textColor="#CCCCCC"
-                    android:textSize="11sp" />
-
-                <EditText
-                    android:id="@+id/etArmBoomScale"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="默认 1.0"
-                    android:text="1"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#FF666666"
-                    android:background="@drawable/edittext_dark_bg"
-                    android:padding="12dp"
-                    android:textSize="14sp"
-                    android:inputType="numberDecimal"
-                    android:imeOptions="actionNext"
-                    android:singleLine="true"
-                    android:layout_marginBottom="10dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="小臂比例"
-                    android:textColor="#CCCCCC"
-                    android:textSize="11sp" />
-
-                <EditText
-                    android:id="@+id/etArmStickScale"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="默认 1.0"
-                    android:text="1"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#FF666666"
-                    android:background="@drawable/edittext_dark_bg"
-                    android:padding="12dp"
-                    android:textSize="14sp"
-                    android:inputType="numberDecimal"
-                    android:imeOptions="actionDone"
-                    android:singleLine="true"
-                    android:layout_marginBottom="14dp" />
-
-                <Button
-                    android:id="@+id/btnSaveVideoUrl"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:text="保存并应用"
-                    android:textColor="#1A1A1A"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:background="@drawable/button_gold_bg" />
+                    android:text="返回"
+                    android:textColor="#004DFF"
+                    android:textSize="13sp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp" />
             </LinearLayout>
 
-            <!-- IMU 数值设置卡片 -->
+
+            <!-- 导航项 1：IMU 安装角度（选中高亮） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:background="@drawable/nav_item_selected_bg"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="⊙"
+                    android:textSize="18sp"
+                    android:textColor="#FF2563EB"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IMU 安装角度"
+                        android:textColor="#FF1D4ED8"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="偏差校准"
+                        android:textColor="#FF6B7280"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 导航项 2：尺寸信息 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="✏"
+                    android:textSize="16sp"
+                    android:textColor="#FF9CA3AF"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="尺寸信息"
+                        android:textColor="#FF374151"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="机械臂参数"
+                        android:textColor="#FF9CA3AF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 导航项 3：摇杆通道映射 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="☻"
+                    android:textSize="16sp"
+                    android:textColor="#FF9CA3AF"
+                    android:layout_marginEnd="10dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="摇杆通道映射"
+                        android:textColor="#FF374151"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="控制方向配置"
+                        android:textColor="#FF9CA3AF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 弹性空白 -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- 重置为默认值 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/card_dark_bg"
-                android:padding="16dp"
-                android:layout_marginBottom="12dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📐 IMU 数值设置"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
+                    android:text="↺"
+                    android:textSize="14sp"
+                    android:textColor="#FF9CA3AF"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="重置为默认值"
+                    android:textColor="#FF9CA3AF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ── 右侧内容区 ──────────────────────────────────────────── -->
+        <ScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="480dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- 内容标题 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IMU 安装角度偏差"
+                    android:textColor="#FF111827"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="6dp" />
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="配置大臂、小臂、铲斗的油缸尺寸及 IMU 安装偏移角，参数保存后立即生效。"
-                    android:textColor="#AAAAAA"
+                    android:text="校正各关节IMU传感器的安装物理偏移量。正值为顺时针，负值为逆时针。"
+                    android:textColor="#FF6B7280"
                     android:textSize="12sp"
-                    android:layout_marginBottom="14dp" />
+                    android:layout_marginBottom="16dp" />
 
+                <!-- ── 大臂卡片 ─────────────────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_light_bg"
+                    android:padding="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:elevation="1dp">
+
+                    <!-- 标题行 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="大臂"
+                            android:textColor="#FF111827"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="传感器ID: IMU-01"
+                            android:textColor="#FF9CA3AF"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- 字段行 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="安装偏移角度"
+                                android:textColor="#FF374151"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="大臂IMU相对于设计位置的安装偏差"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- 当前偏移值预览 + 单位 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvImuBoomOffsetPreview"
+                                android:layout_width="80dp"
+                                android:layout_height="40dp"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp"
+                                android:background="@drawable/edittext_light_bg" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="°"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp"
+                                android:layout_marginStart="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ── 小臂卡片 ─────────────────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_light_bg"
+                    android:padding="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:elevation="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="小臂"
+                            android:textColor="#FF111827"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="传感器ID: IMU-02"
+                            android:textColor="#FF9CA3AF"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="安装偏移角度"
+                                android:textColor="#FF374151"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="小臂IMU相对于设计位置的安装偏差"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvImuStickOffsetPreview"
+                                android:layout_width="80dp"
+                                android:layout_height="40dp"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp"
+                                android:background="@drawable/edittext_light_bg" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="°"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp"
+                                android:layout_marginStart="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ── 铲斗卡片 ─────────────────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_light_bg"
+                    android:padding="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:elevation="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="铲斗"
+                            android:textColor="#FF111827"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="传感器ID: IMU-03"
+                            android:textColor="#FF9CA3AF"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="安装偏移角度"
+                                android:textColor="#FF374151"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="2dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="铲斗IMU相对于设计位置的安装偏差"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvImuBucketOffsetPreview"
+                                android:layout_width="80dp"
+                                android:layout_height="40dp"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp"
+                                android:background="@drawable/edittext_light_bg" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="°"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp"
+                                android:layout_marginStart="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ── IMU 详细配置入口 ────────────────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:background="@drawable/card_light_bg"
+                    android:padding="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:elevation="1dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -202,81 +605,212 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="大臂偏移"
-                            android:textColor="#AAAAAA"
+                            android:text="IMU 详细参数 &amp; 油缸尺寸"
+                            android:textColor="#FF374151"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="配置各关节油缸尺寸及详细安装偏移角，参数保存后立即生效"
+                            android:textColor="#FF9CA3AF"
                             android:textSize="11sp" />
 
-                        <TextView
-                            android:id="@+id/tvImuBoomOffsetPreview"
-                            android:layout_width="wrap_content"
+                        <!-- IMU 偏移数值摘要行 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="#FFD580"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:orientation="horizontal"
+                            android:layout_marginTop="8dp">
 
-                    </LinearLayout>
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="大臂偏移"
+                                    android:textColor="#FF9CA3AF"
+                                    android:textSize="10sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="小臂偏移"
-                            android:textColor="#AAAAAA"
-                            android:textSize="11sp" />
+                            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/tvImuStickOffsetPreview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="#FFD580"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
-                    </LinearLayout>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="小臂偏移"
+                                    android:textColor="#FF9CA3AF"
+                                    android:textSize="10sp" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                            </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="铲斗偏移"
-                            android:textColor="#AAAAAA"
-                            android:textSize="11sp" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tvImuBucketOffsetPreview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="#FFD580"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="铲斗偏移"
+                                    android:textColor="#FF9CA3AF"
+                                    android:textSize="10sp" />
 
+                            </LinearLayout>
+                        </LinearLayout>
                     </LinearLayout>
 
                     <Button
                         android:id="@+id/btnOpenImuDialog"
                         android:layout_width="wrap_content"
                         android:layout_height="40dp"
-                        android:background="@drawable/button_gold_bg"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:background="@drawable/button_blue_bg"
+                        android:backgroundTint="@null"
                         android:text="配置 →"
-                        android:textColor="#1A1A1A"
-                        android:textSize="13sp"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp"
                         android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- ── 视频流 & 臂长比例 ────────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_light_bg"
+                    android:padding="18dp"
+                    android:layout_marginBottom="12dp"
+                    android:elevation="1dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="视频流 &amp; 臂长比例"
+                        android:textColor="#FF111827"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RTSP 视频流地址"
+                        android:textColor="#FF6B7280"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="6dp" />
+
+                    <EditText
+                        android:id="@+id/etSettingsVideoUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="例如 rtsp://192.168.144.100:554/stream1"
+                        android:textColor="#FF111827"
+                        android:textColorHint="#FFAAAAAA"
+                        android:background="@drawable/edittext_light_bg"
+                        android:padding="10dp"
+                        android:textSize="13sp"
+                        android:inputType="textUri"
+                        android:imeOptions="actionDone"
+                        android:singleLine="true"
+                        android:layout_marginBottom="14dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
+                        android:textColor="#FF6B7280"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="大臂比例"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="11sp"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/etArmBoomScale"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:hint="1.0"
+                                android:text="1"
+                                android:textColor="#FF111827"
+                                android:textColorHint="#FFAAAAAA"
+                                android:background="@drawable/edittext_light_bg"
+                                android:padding="8dp"
+                                android:textSize="13sp"
+                                android:gravity="center"
+                                android:inputType="numberDecimal"
+                                android:imeOptions="actionNext"
+                                android:singleLine="true" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="小臂比例"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="11sp"
+                                android:layout_marginBottom="4dp" />
+
+                            <EditText
+                                android:id="@+id/etArmStickScale"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:hint="1.0"
+                                android:text="1"
+                                android:textColor="#FF111827"
+                                android:textColorHint="#FFAAAAAA"
+                                android:background="@drawable/edittext_light_bg"
+                                android:padding="8dp"
+                                android:textSize="13sp"
+                                android:gravity="center"
+                                android:inputType="numberDecimal"
+                                android:imeOptions="actionDone"
+                                android:singleLine="true" />
+                        </LinearLayout>
+                    </LinearLayout>
 
                 </LinearLayout>
 
             </LinearLayout>
+        </ScrollView>
 
-        </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
 </LinearLayout>
