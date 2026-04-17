@@ -102,6 +102,26 @@ function degToRad(value) {
   return THREE.MathUtils.degToRad(value);
 }
 
+// IMU protocol (per embedded team):
+//  - Each IMU already reports the LOCAL angle relative to its parent segment
+//    (boom vs cab, stick vs boom, bucket vs stick). No subtraction needed.
+//  - Cab is the reference at 0°, everything downstream is derived from it,
+//    so no rest-pose calibration offset is required either.
+//  - Range: -180° ~ +180°, right-hand rule.
+// Per-joint config: only a sign flip in case Three.js axis points opposite
+// to IMU's right-hand-rule positive direction.  rotZ = sign * imuValue
+const IMU_CONFIG = {
+  boom:   { sign: -1 },
+  stick:  { sign: -1 },
+  bucket: { sign: -1 }
+};
+
+function imuToLocalAngle(jointName, imuValue) {
+  const cfg = IMU_CONFIG[jointName];
+  if (!cfg) return imuValue;
+  return cfg.sign * imuValue;
+}
+
 function findByNameCaseInsensitive(root, name) {
   const nameLower = name.toLowerCase();
   let exact = null;
@@ -295,11 +315,34 @@ window.excavatorController = {
     }
     applyStateToModel();
     refreshGui();
+  },
+  // Accept raw IMU readings (already local/relative angles per embedded protocol).
+  // Usage: window.excavatorController.setImu({ boom: -60, stick: -175, bucket: 19.2 })
+  setImu({ boom: imuBoom, stick: imuStick, bucket: imuBucket } = {}) {
+    if (typeof imuBoom === "number")   state.joints.boom.z   = imuToLocalAngle("boom",   imuBoom);
+    if (typeof imuStick === "number")  state.joints.stick.z  = imuToLocalAngle("stick",  imuStick);
+    if (typeof imuBucket === "number") state.joints.bucket.z = imuToLocalAngle("bucket", imuBucket);
+    applyStateToModel();
+    refreshGui();
+  },
+  // Runtime tuning, e.g.:
+  //   setImuConfig({ boom: { sign: 1 } })
+  //   setImuConfig({ stick: { offset: -30 } })
+  setImuConfig(partial = {}) {
+    Object.keys(partial).forEach((joint) => {
+      if (!IMU_CONFIG[joint]) return;
+      Object.assign(IMU_CONFIG[joint], partial[joint]);
+    });
   }
 };
 
 function applyExternalPayload(payload) {
   if (!payload || typeof payload !== "object") return false;
+  // IMU payload: { imu: { boom, stick, bucket } }
+  if (payload.imu) {
+    window.excavatorController.setImu(payload.imu);
+    return true;
+  }
   window.excavatorController.setAll(payload);
   return true;
 }
