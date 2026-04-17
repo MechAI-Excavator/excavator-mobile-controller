@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import android.util.Log;
 import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
 
@@ -94,11 +95,13 @@ public class ExcavatorPostureView extends FrameLayout {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initWebView() {
+        webView.clearCache(true);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         webView.setBackgroundColor(Color.TRANSPARENT);
         webView.setOverScrollMode(OVER_SCROLL_NEVER);
@@ -118,7 +121,7 @@ public class ExcavatorPostureView extends FrameLayout {
             }
         });
 
-        webView.loadUrl(WEB_ENTRY_URL);
+        webView.loadUrl(WEB_ENTRY_URL + "?v=" + System.currentTimeMillis());
     }
 
     /**
@@ -196,6 +199,7 @@ public class ExcavatorPostureView extends FrameLayout {
             joints.put("stick", new JSONObject().put("z", stickAngle));
             joints.put("bucket", new JSONObject().put("z", bucketAngle + bucketAngleOffsetDeg));
             payload.put("joints", joints);
+            Log.d("ExcavatorPostureView", "payload: " + payload.toString());
         } catch (JSONException ignored) {
             return;
         }

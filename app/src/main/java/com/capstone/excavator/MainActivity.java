@@ -306,121 +306,13 @@ public class MainActivity extends AppCompatActivity {
         // 0度=水平，正值=向上，负值=向下
         // 铲斗：正值=展开，负值=收回
 
-        angleSets.add(new AngleSet(- 27.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 37.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 47.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 57.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 67.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 77.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 87.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 97.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-107.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-117.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-127.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-137.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-147.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-157.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-167.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-177.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 177.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 167.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 157.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 147.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 137.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 127.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 117.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 107.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  97.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  87.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  77.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  67.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  57.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  47.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  37.85f, -158.33f, -95.09f));
-
-        angleSets.add(new AngleSet(- 58.33f,- 27.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 37.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 47.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 57.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 67.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 77.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 87.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 97.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-107.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-117.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-127.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-137.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-147.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-157.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-167.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-177.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 177.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 167.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 157.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 147.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 137.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 127.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 117.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 107.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  97.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  87.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  77.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  67.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  57.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  47.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  37.85f,  -95.09f));
-
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 27.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 37.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 47.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 57.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 67.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 77.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 87.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 97.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-107.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-117.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-127.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-137.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-147.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-157.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-167.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-177.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 177.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 167.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 157.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 147.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 137.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 127.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 117.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 107.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  97.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  87.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  77.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  67.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  57.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  47.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  37.85f));
+        // angleSets.add(new AngleSet(- 27.85f, -158.33f, -95.09f));
         
         // angleSets.add(new AngleSet(0f, 0f, 0f));        // 第1组：初始位置（所有角度0度）
         
         // // 挖掘动作（向下时铲斗展开）
-        // angleSets.add(new AngleSet(-25f, -40f, 25f));   // 第2组：挖掘位置（大臂向下25度，小臂向下40度，铲斗展开25度）
-        // angleSets.add(new AngleSet(-30f, -50f, 30f));   // 第3组：深挖位置（大臂向下30度，小臂向下50度，铲斗展开30度）
-        // angleSets.add(new AngleSet(-15f, -30f, 20f));   // 第4组：浅挖位置（大臂向下15度，小臂向下30度，铲斗展开20度）
-        // angleSets.add(new AngleSet(-20f, -35f, 28f));   // 第5组：挖掘并展开（大臂向下20度，小臂向下35度，铲斗展开28度）
-        
-        // // 举升动作（向上时铲斗收回）
-        // angleSets.add(new AngleSet(15f, 20f, -15f));    // 第6组：举升位置（大臂向上15度，小臂向上20度，铲斗收回15度）
-        // angleSets.add(new AngleSet(10f, 25f, -10f));    // 第7组：伸展位置（大臂向上10度，小臂向上25度，铲斗收回10度）
-        // angleSets.add(new AngleSet(20f, 15f, -20f));    // 第8组：高举位置（大臂向上20度，小臂向上15度，铲斗收回20度）
-        // angleSets.add(new AngleSet(5f, 30f, -5f));      // 第9组：前伸位置（大臂向上5度，小臂向上30度，铲斗收回5度）
-        
-        // // 过渡动作
-        // angleSets.add(new AngleSet(-10f, -20f, 15f));   // 第10组：准备挖掘（大臂向下10度，小臂向下20度，铲斗展开15度）
-        // angleSets.add(new AngleSet(8f, 18f, -12f));     // 第11组：准备倾倒（大臂向上8度，小臂向上18度，铲斗收回12度）
-        // angleSets.add(new AngleSet(-18f, -32f, 22f));   // 第12组：持续挖掘（大臂向下18度，小臂向下32度，铲斗展开22度）
-        // angleSets.add(new AngleSet(12f, 22f, -18f));    // 第13组：举升倾倒（大臂向上12度，小臂向上22度，铲斗收回18度）
+       
+        angleSets.add(new AngleSet(-60f, 22f, -50f));    // 第13组：举升倾倒（大臂向上12度，小臂向上22度，铲斗收回18度）
     }
     
     /**
@@ -712,8 +604,8 @@ public class MainActivity extends AppCompatActivity {
 
             // 模拟座舱 IMU：与 angleIndex 同步平滑变化，幅值不超过 ±45°（再大易像翻车）
             double phase = angleIndex * 0.18;
-            rawCabinPitch = (float) (45.0 * Math.sin(phase));
-            rawCabinRoll = (float) (45.0 * Math.cos(phase * 1.07));
+            rawCabinPitch = 0;
+            rawCabinRoll = 0;
         }
 
         // 解算相对角度（统一入口，模拟/真实都使用）

@@ -113,7 +113,7 @@ function degToRad(value) {
 const IMU_CONFIG = {
   boom:   { sign: -1 },
   stick:  { sign: -1 },
-  bucket: { sign: -1 }
+  bucket: { sign: 1 }
 };
 
 function imuToLocalAngle(jointName, imuValue) {
@@ -121,6 +121,38 @@ function imuToLocalAngle(jointName, imuValue) {
   if (!cfg) return imuValue;
   return cfg.sign * imuValue;
 }
+
+// Visible on-screen debug overlay (enable with ?debug=1).
+// Shows the latest raw IMU input and the resulting rotZ actually being applied.
+const isDebugOverlayEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+const debugOverlay = (() => {
+  if (!isDebugOverlayEnabled) return { update() {}, setSource() {} };
+  const el = document.createElement("div");
+  el.style.cssText = [
+    "position:fixed", "top:8px", "left:8px", "z-index:9999",
+    "padding:8px 10px", "background:rgba(0,0,0,0.72)", "color:#fff",
+    "font:12px/1.4 ui-monospace,Menlo,monospace", "border-radius:6px",
+    "pointer-events:none", "white-space:pre", "max-width:50vw"
+  ].join(";");
+  el.textContent = "waiting for data...";
+  document.body.appendChild(el);
+  let lastSource = "-";
+  return {
+    setSource(src) { lastSource = src; },
+    update(imu) {
+      const fmt = (n) => (typeof n === "number" ? n.toFixed(2) : "-");
+      const rot = state?.joints || {};
+      const imuLine = imu
+        ? `IMU in   boom=${fmt(imu.boom)}  stick=${fmt(imu.stick)}  bucket=${fmt(imu.bucket)}`
+        : `IMU in   (n/a)`;
+      el.textContent =
+        `source: ${lastSource}\n` +
+        `${imuLine}\n` +
+        `rotZ     boom=${fmt(rot.boom?.z)}  stick=${fmt(rot.stick?.z)}  bucket=${fmt(rot.bucket?.z)}\n` +
+        `sign     boom=${IMU_CONFIG.boom.sign}  stick=${IMU_CONFIG.stick.sign}  bucket=${IMU_CONFIG.bucket.sign}`;
+    }
+  };
+})();
 
 function findByNameCaseInsensitive(root, name) {
   const nameLower = name.toLowerCase();
@@ -291,7 +323,16 @@ window.excavatorController = {
   },
   setJoint(jointName, partialJoint = {}) {
     if (!state.joints[jointName]) return;
-    Object.assign(state.joints[jointName], partialJoint);
+    // Arm joints (boom/stick/bucket) treat incoming .z as IMU reading,
+    // so sign conversion is applied consistently with setImu / postMessage.
+    const converted = { ...partialJoint };
+    if ((jointName === "boom" || jointName === "stick" || jointName === "bucket") &&
+        typeof converted.z === "number") {
+      converted.z = imuToLocalAngle(jointName, converted.z);
+    }
+    Object.assign(state.joints[jointName], converted);
+    debugOverlay.setSource(`setJoint(${jointName})`);
+    debugOverlay.update();
     applyStateToModel();
     refreshGui();
   },
@@ -310,9 +351,17 @@ window.excavatorController = {
     if (nextState.joints) {
       Object.keys(nextState.joints).forEach((jointName) => {
         if (!state.joints[jointName]) return;
-        Object.assign(state.joints[jointName], nextState.joints[jointName]);
+        const incoming = nextState.joints[jointName];
+        const converted = { ...incoming };
+        if ((jointName === "boom" || jointName === "stick" || jointName === "bucket") &&
+            incoming && typeof incoming.z === "number") {
+          converted.z = imuToLocalAngle(jointName, incoming.z);
+        }
+        Object.assign(state.joints[jointName], converted);
       });
     }
+    debugOverlay.setSource("setAll");
+    debugOverlay.update();
     applyStateToModel();
     refreshGui();
   },
@@ -322,6 +371,7 @@ window.excavatorController = {
     if (typeof imuBoom === "number")   state.joints.boom.z   = imuToLocalAngle("boom",   imuBoom);
     if (typeof imuStick === "number")  state.joints.stick.z  = imuToLocalAngle("stick",  imuStick);
     if (typeof imuBucket === "number") state.joints.bucket.z = imuToLocalAngle("bucket", imuBucket);
+    debugOverlay.update({ boom: imuBoom, stick: imuStick, bucket: imuBucket });
     applyStateToModel();
     refreshGui();
   },
@@ -338,11 +388,32 @@ window.excavatorController = {
 
 function applyExternalPayload(payload) {
   if (!payload || typeof payload !== "object") return false;
-  // IMU payload: { imu: { boom, stick, bucket } }
+  console.log(`[applyExternalPayload] received: ${JSON.stringify(payload, null, 2)}`);//"[applyExternalPayload] received:", payload
+
+  // Explicit IMU payload: { imu: { boom, stick, bucket } }
   if (payload.imu) {
+    debugOverlay.setSource("postMessage → imu");
     window.excavatorController.setImu(payload.imu);
     return true;
   }
+
+  // Shorthand: top-level boom/stick/bucket are treated as IMU readings too.
+  // Accepts both { boom: -60 } and { boom: { z: -60 } } styles.
+  const hasShorthandArm =
+    ("boom" in payload || "stick" in payload || "bucket" in payload) &&
+    !("joints" in payload);
+  if (hasShorthandArm) {
+    const pickAngle = (v) => (typeof v === "number" ? v : v && typeof v.z === "number" ? v.z : undefined);
+    debugOverlay.setSource("postMessage → shorthand");
+    window.excavatorController.setImu({
+      boom: pickAngle(payload.boom),
+      stick: pickAngle(payload.stick),
+      bucket: pickAngle(payload.bucket)
+    });
+    return true;
+  }
+
+  debugOverlay.setSource("postMessage → setAll");
   window.excavatorController.setAll(payload);
   return true;
 }
