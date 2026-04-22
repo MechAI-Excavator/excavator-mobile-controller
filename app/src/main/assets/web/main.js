@@ -9,32 +9,62 @@ const isDevPanelEnabled = new URLSearchParams(window.location.search).get("dev")
 const scene = new THREE.Scene();
 scene.background = null;
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(6, 3.5, 7);
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+// Default view: oblique ~45° looking at the ground.
+camera.position.set(-35, 25, 40); 
+camera.lookAt(-2,0, -20);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.target.set(0, 1.2, 0);
+// Lock camera interaction unless dev mode is enabled (?dev=1).
+const controls = isDevPanelEnabled ? new OrbitControls(camera, renderer.domElement) : null;
+if (controls) {
+  controls.enableDamping = true;
+  controls.target.set(0, 0.6, 0);
+}
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.2));
-const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-sun.position.set(8, 12, 6);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.35));
+const sun = new THREE.DirectionalLight(0xffffff, 1.05);
+// Placeholder until GLB loads; then aligned to model center + overhead offset.
+sun.position.set(0, 18, 2);
 sun.castShadow = true;
+// Shadow "square" edge appears when the ortho shadow frustum is too small and its
+// boundary becomes visible on the ground. Start with a generous extent, then
+// fit it to the model after GLB loads.
+let shadowExtent = 60;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 0.4;
+sun.shadow.camera.far = 140;
+sun.shadow.camera.left = -shadowExtent;
+sun.shadow.camera.right = shadowExtent;
+sun.shadow.camera.top = shadowExtent;
+sun.shadow.camera.bottom = -shadowExtent;
+sun.shadow.bias = -0.00025;
+sun.shadow.normalBias = 0.035;
+sun.shadow.radius = 3.5;
 scene.add(sun);
+scene.add(sun.target);
 
-// Thin reference plane (always on): light gray so roll/pitch reads clearly vs transparent embed.
-const groundSize = 40;
+// Grid floor: frosted-glass-ish dark gray plane + subtle grid lines.
+// Plane exists mainly to receive shadows; grid provides the "raster" look.
+// Ground "map" size (plane + grid). Increase to show more area.
+const groundSize = 80;
 const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
-const groundMat = new THREE.MeshStandardMaterial({
-  color: 0xeeeeee,
+const groundMat = new THREE.MeshPhysicalMaterial({
+  color: 0x76684a,
   roughness: 0.92,
-  metalness: 0
+  metalness: 0,
+  transparent: true,
+  opacity: 0.28,
+  transmission: 0.25,
+  thickness: 0.8,
+  ior: 1.35
 });
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
@@ -42,11 +72,15 @@ ground.position.y = -0.02;
 ground.receiveShadow = true;
 scene.add(ground);
 
-if (isDevPanelEnabled) {
-  const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
-  grid.position.y = -0.001;
-  scene.add(grid);
+// Keep grid cell density roughly consistent when scaling groundSize.
+const grid = new THREE.GridHelper(groundSize, 160, 0x6f7886, 0x404652);
+grid.position.y = -0.019; // slightly above plane to avoid z-fighting
+grid.material.transparent = true;
+grid.material.opacity = 0.45;
+grid.material.depthWrite = false;
+scene.add(grid);
 
+if (isDevPanelEnabled) {
   const axes = new THREE.AxesHelper(2.5);
   scene.add(axes);
 }
@@ -102,6 +136,58 @@ function degToRad(value) {
   return THREE.MathUtils.degToRad(value);
 }
 
+// IMU protocol (per embedded team):
+//  - Each IMU already reports the LOCAL angle relative to its parent segment
+//    (boom vs cab, stick vs boom, bucket vs stick). No subtraction needed.
+//  - Cab is the reference at 0°, everything downstream is derived from it,
+//    so no rest-pose calibration offset is required either.
+//  - Range: -180° ~ +180°, right-hand rule.
+// Per-joint config: only a sign flip in case Three.js axis points opposite
+// to IMU's right-hand-rule positive direction.  rotZ = sign * imuValue
+const IMU_CONFIG = {
+  boom:   { sign: -1 },
+  stick:  { sign: -1 },
+  bucket: { sign: 1 }
+};
+
+function imuToLocalAngle(jointName, imuValue) {
+  const cfg = IMU_CONFIG[jointName];
+  if (!cfg) return imuValue;
+  return cfg.sign * imuValue;
+}
+
+// Visible on-screen debug overlay (enable with ?debug=1).
+// Shows the latest raw IMU input and the resulting rotZ actually being applied.
+const isDebugOverlayEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+const debugOverlay = (() => {
+  if (!isDebugOverlayEnabled) return { update() {}, setSource() {} };
+  const el = document.createElement("div");
+  el.style.cssText = [
+    "position:fixed", "top:8px", "left:8px", "z-index:9999",
+    "padding:8px 10px", "background:rgba(0,0,0,0.72)", "color:#fff",
+    "font:12px/1.4 ui-monospace,Menlo,monospace", "border-radius:6px",
+    "pointer-events:none", "white-space:pre", "max-width:50vw"
+  ].join(";");
+  el.textContent = "waiting for data...";
+  document.body.appendChild(el);
+  let lastSource = "-";
+  return {
+    setSource(src) { lastSource = src; },
+    update(imu) {
+      const fmt = (n) => (typeof n === "number" ? n.toFixed(2) : "-");
+      const rot = state?.joints || {};
+      const imuLine = imu
+        ? `IMU in   boom=${fmt(imu.boom)}  stick=${fmt(imu.stick)}  bucket=${fmt(imu.bucket)}`
+        : `IMU in   (n/a)`;
+      el.textContent =
+        `source: ${lastSource}\n` +
+        `${imuLine}\n` +
+        `rotZ     boom=${fmt(rot.boom?.z)}  stick=${fmt(rot.stick?.z)}  bucket=${fmt(rot.bucket?.z)}\n` +
+        `sign     boom=${IMU_CONFIG.boom.sign}  stick=${IMU_CONFIG.stick.sign}  bucket=${IMU_CONFIG.bucket.sign}`;
+    }
+  };
+})();
+
 function findByNameCaseInsensitive(root, name) {
   const nameLower = name.toLowerCase();
   let exact = null;
@@ -115,6 +201,13 @@ function findByNameCaseInsensitive(root, name) {
   });
 
   return exact || includes;
+}
+
+function enableExcavatorCastShadows(root) {
+  if (!root) return;
+  root.traverse((obj) => {
+    if (obj.isMesh) obj.castShadow = true;
+  });
 }
 
 function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7, opacity = 1) {
@@ -133,17 +226,17 @@ function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7, opacity
 }
 
 function applyExcavatorColors() {
-  // Car body (node: "car"): lighter/whiter #80AAFF, fully opaque.
-  // Armature arms: deeper #004DFF, opacity fades outward from base (80%) to bucket (50%).
+  // Car body: lighter #80AAFF; arm segments: solid theme blue #004DFF (no along-arm fade).
   tintMeshes(nodes.main, partColors.themeBody, 0.25, 0.65, 1.0);
   tintMeshes(nodes.car, partColors.themeBody, 0.25, 0.65, 1.0);
   tintMeshes(nodes.driverCabin, partColors.themeBody, 0.25, 0.65, 1.0);
   tintMeshes(nodes.track, partColors.themeBody, 0.4, 0.6, 1.0);
-  tintMeshes(nodes.base, partColors.theme, 0.3, 0.7, 0.8);
-  tintMeshes(nodes.boom, partColors.theme, 0.3, 0.7, 0.7);
-  tintMeshes(nodes.stick, partColors.theme, 0.3, 0.7, 0.6);
-  tintMeshes(nodes.bucket, partColors.theme, 0.3, 0.7, 0.5);
-  tintMeshes(nodes.diggingBucket, partColors.theme, 0.3, 0.7, 0.5);
+  const armMat = [partColors.theme, 0.3, 0.7, 1.0];
+  tintMeshes(nodes.base, ...armMat);
+  tintMeshes(nodes.boom, ...armMat);
+  tintMeshes(nodes.stick, ...armMat);
+  tintMeshes(nodes.bucket, ...armMat);
+  tintMeshes(nodes.diggingBucket, ...armMat);
 }
 
 function applyStateToModel() {
@@ -182,6 +275,7 @@ loader.load(
   (gltf) => {
     const root = gltf.scene;
     scene.add(root);
+    enableExcavatorCastShadows(root);
 
     nodes.main = findByNameCaseInsensitive(root, "main") || root;
     nodes.car = findByNameCaseInsensitive(root, "car");
@@ -214,8 +308,22 @@ loader.load(
 
     const box = new THREE.Box3().setFromObject(root);
     const center = box.getCenter(new THREE.Vector3());
-    controls.target.copy(center);
-    camera.lookAt(center);
+    const size = box.getSize(new THREE.Vector3());
+    // Fit shadow frustum to model size so the shadow-map boundary stays offscreen.
+    shadowExtent = Math.max(60, Math.max(size.x, size.z) * 3.0);
+    sun.shadow.camera.left = -shadowExtent;
+    sun.shadow.camera.right = shadowExtent;
+    sun.shadow.camera.top = shadowExtent;
+    sun.shadow.camera.bottom = -shadowExtent;
+    sun.shadow.camera.far = Math.max(140, size.y * 12);
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.needsUpdate = true;
+    sun.target.position.copy(center);
+    // Sun sits above the cab / upper body so light and shadow read as “overhead”.
+    const sunOverhead = new THREE.Vector3(1.2, 14, 1.5);
+    sun.position.copy(center).add(sunOverhead);
+    if (controls) controls.target.copy(center);
+    if (isDevPanelEnabled) camera.lookAt(center);
 
     applyStateToModel();
   },
@@ -271,7 +379,16 @@ window.excavatorController = {
   },
   setJoint(jointName, partialJoint = {}) {
     if (!state.joints[jointName]) return;
-    Object.assign(state.joints[jointName], partialJoint);
+    // Arm joints (boom/stick/bucket) treat incoming .z as IMU reading,
+    // so sign conversion is applied consistently with setImu / postMessage.
+    const converted = { ...partialJoint };
+    if ((jointName === "boom" || jointName === "stick" || jointName === "bucket") &&
+        typeof converted.z === "number") {
+      converted.z = imuToLocalAngle(jointName, converted.z);
+    }
+    Object.assign(state.joints[jointName], converted);
+    debugOverlay.setSource(`setJoint(${jointName})`);
+    debugOverlay.update();
     applyStateToModel();
     refreshGui();
   },
@@ -290,16 +407,69 @@ window.excavatorController = {
     if (nextState.joints) {
       Object.keys(nextState.joints).forEach((jointName) => {
         if (!state.joints[jointName]) return;
-        Object.assign(state.joints[jointName], nextState.joints[jointName]);
+        const incoming = nextState.joints[jointName];
+        const converted = { ...incoming };
+        if ((jointName === "boom" || jointName === "stick" || jointName === "bucket") &&
+            incoming && typeof incoming.z === "number") {
+          converted.z = imuToLocalAngle(jointName, incoming.z);
+        }
+        Object.assign(state.joints[jointName], converted);
       });
     }
+    debugOverlay.setSource("setAll");
+    debugOverlay.update();
     applyStateToModel();
     refreshGui();
+  },
+  // Accept raw IMU readings (already local/relative angles per embedded protocol).
+  // Usage: window.excavatorController.setImu({ boom: -60, stick: -175, bucket: 19.2 })
+  setImu({ boom: imuBoom, stick: imuStick, bucket: imuBucket } = {}) {
+    if (typeof imuBoom === "number")   state.joints.boom.z   = imuToLocalAngle("boom",   imuBoom);
+    if (typeof imuStick === "number")  state.joints.stick.z  = imuToLocalAngle("stick",  imuStick);
+    if (typeof imuBucket === "number") state.joints.bucket.z = imuToLocalAngle("bucket", imuBucket);
+    debugOverlay.update({ boom: imuBoom, stick: imuStick, bucket: imuBucket });
+    applyStateToModel();
+    refreshGui();
+  },
+  // Runtime tuning, e.g.:
+  //   setImuConfig({ boom: { sign: 1 } })
+  //   setImuConfig({ stick: { offset: -30 } })
+  setImuConfig(partial = {}) {
+    Object.keys(partial).forEach((joint) => {
+      if (!IMU_CONFIG[joint]) return;
+      Object.assign(IMU_CONFIG[joint], partial[joint]);
+    });
   }
 };
 
 function applyExternalPayload(payload) {
   if (!payload || typeof payload !== "object") return false;
+  console.log(`[applyExternalPayload] received: ${JSON.stringify(payload, null, 2)}`);//"[applyExternalPayload] received:", payload
+
+  // Explicit IMU payload: { imu: { boom, stick, bucket } }
+  if (payload.imu) {
+    debugOverlay.setSource("postMessage → imu");
+    window.excavatorController.setImu(payload.imu);
+    return true;
+  }
+
+  // Shorthand: top-level boom/stick/bucket are treated as IMU readings too.
+  // Accepts both { boom: -60 } and { boom: { z: -60 } } styles.
+  const hasShorthandArm =
+    ("boom" in payload || "stick" in payload || "bucket" in payload) &&
+    !("joints" in payload);
+  if (hasShorthandArm) {
+    const pickAngle = (v) => (typeof v === "number" ? v : v && typeof v.z === "number" ? v.z : undefined);
+    debugOverlay.setSource("postMessage → shorthand");
+    window.excavatorController.setImu({
+      boom: pickAngle(payload.boom),
+      stick: pickAngle(payload.stick),
+      bucket: pickAngle(payload.bucket)
+    });
+    return true;
+  }
+
+  debugOverlay.setSource("postMessage → setAll");
   window.excavatorController.setAll(payload);
   return true;
 }
@@ -323,7 +493,7 @@ window.addEventListener("message", (event) => {
 
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
+  if (controls) controls.update();
   renderer.render(scene, camera);
 }
 animate();

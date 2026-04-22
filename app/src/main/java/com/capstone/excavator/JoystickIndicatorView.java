@@ -7,14 +7,19 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
+/**
+ * 摇杆方向指示器：透明圆环 + 中心白色光点。
+ * 由外层容器（{@code joystick_glass_bg}）提供毛玻璃圆角矩形背景，
+ * 本视图只负责绘制圆环和指示点。
+ */
 public class JoystickIndicatorView extends View {
 
     private static final int MAX_VALUE = 450;
 
-    private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint crossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ringFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint dotGlowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private int xValue = 0; // -450 ~ 450, 右正左负
     private int yValue = 0; // -450 ~ 450, 上正下负
@@ -30,18 +35,21 @@ public class JoystickIndicatorView extends View {
     }
 
     private void init() {
-        // 80% 不透明白色圆形背景
-        bgPaint.setStyle(Paint.Style.FILL);
-        bgPaint.setColor(Color.argb(204, 255, 255, 255));
+        // 圆环：半透明白色描边
+        ringPaint.setStyle(Paint.Style.STROKE);
+        ringPaint.setColor(Color.argb(180, 255, 255, 255));
 
-        // 箭头文字（深色）
-        arrowPaint.setStyle(Paint.Style.FILL);
-        arrowPaint.setColor(Color.argb(160, 30, 30, 30));
-        arrowPaint.setTextAlign(Paint.Align.CENTER);
+        // 圆环内填充：极轻微的高亮，营造"透亮"感
+        ringFillPaint.setStyle(Paint.Style.FILL);
+        ringFillPaint.setColor(Color.argb(40, 255, 255, 255));
 
-        // 移动指示点（橙色实心）
+        // 指示光点
         dotPaint.setStyle(Paint.Style.FILL);
-        dotPaint.setColor(Color.argb(230, 255, 120, 0));
+        dotPaint.setColor(Color.WHITE);
+
+        // 光点外侧的柔光
+        dotGlowPaint.setStyle(Paint.Style.FILL);
+        dotGlowPaint.setColor(Color.argb(80, 255, 255, 255));
     }
 
     /** 外部调用：更新摇杆值，x 左右，y 上下（上正） */
@@ -59,32 +67,17 @@ public class JoystickIndicatorView extends View {
         float h = getHeight();
         float cx = w / 2f;
         float cy = h / 2f;
-        float radius = Math.min(w, h) / 2f * 0.88f;
+        float radius = Math.min(w, h) / 2f * 0.78f;
 
-        // ① 半透明白色圆形背景
-        canvas.drawCircle(cx, cy, radius, bgPaint);
+        ringPaint.setStrokeWidth(Math.max(1.5f, radius * 0.04f));
+        canvas.drawCircle(cx, cy, radius, ringFillPaint);
+        canvas.drawCircle(cx, cy, radius, ringPaint);
 
-        // ② 十字辅助线
-        // canvas.drawLine(cx, cy - radius * 0.75f, cx, cy + radius * 0.75f, crossPaint);
-        // canvas.drawLine(cx - radius * 0.75f, cy, cx + radius * 0.75f, cy, crossPaint);
-
-        // ③ 四向箭头（放在圆周内侧）
-        float arrowSize = radius * 0.38f;
-        arrowPaint.setTextSize(arrowSize);
-        arrowPaint.setColor(Color.WHITE);
-        float offset = radius * 0.62f;
-        // 竖排文字基线偏移修正
-        float baselineAdj = arrowSize * 0.3f;
-        canvas.drawText("^", cx, cy - offset + baselineAdj, arrowPaint);
-        canvas.drawText("v", cx, cy + offset + baselineAdj, arrowPaint);
-        canvas.drawText("<", cx - offset, cy + baselineAdj, arrowPaint);
-        canvas.drawText(">", cx + offset, cy + baselineAdj, arrowPaint);
-
-        // ④ 移动指示点
-        float maxOffset = radius * 0.52f;
+        float maxOffset = radius * 0.78f;
         float dotX = cx + (xValue / (float) MAX_VALUE) * maxOffset;
         float dotY = cy - (yValue / (float) MAX_VALUE) * maxOffset; // y 上正，canvas 向下为正
-        float dotRadius = radius * 0.17f;
+        float dotRadius = Math.max(3f, radius * 0.12f);
+        canvas.drawCircle(dotX, dotY, dotRadius * 1.85f, dotGlowPaint);
         canvas.drawCircle(dotX, dotY, dotRadius, dotPaint);
     }
 

@@ -61,10 +61,8 @@ public class PostureCardView extends LinearLayout {
     public PostureCardView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
-
-        int pv = dp(context, 10);
-        int ph = dp(context, 12);
-        setPadding(ph, pv, ph, pv);
+        // Padding is applied in XML to specific rows so the 2D/3D canvas can be edge-to-edge.
+        setPadding(0, 0, 0, 0);
 
         setBackground(context.getResources().getDrawable(R.drawable.map_card_bg, context.getTheme()));
         setClipToOutline(true);
@@ -73,9 +71,9 @@ public class PostureCardView extends LinearLayout {
         inflate(context, R.layout.view_posture_card, this);
 
         excavatorPostureView = findViewById(R.id.excavatorPostureView);
-        tvBoom               = findViewById(R.id.tvPostureBoomAngle);
-        tvStick              = findViewById(R.id.tvPostureStickAngle);
-        tvBucket             = findViewById(R.id.tvPostureBucketAngle);
+//        tvBoom               = findViewById(R.id.tvPostureBoomAngle);
+//        tvStick              = findViewById(R.id.tvPostureStickAngle);
+//        tvBucket             = findViewById(R.id.tvPostureBucketAngle);
         btn2D                = findViewById(R.id.btn2D);
         btn3D                = findViewById(R.id.btn3D);
 
@@ -172,16 +170,18 @@ public class PostureCardView extends LinearLayout {
 
     private void applyToggleStyle() {
         if (btn2D == null || btn3D == null) return;
+        final int selectedText = 0xFFFFFFFF;
+        final int unselectedText = 0x80FFFFFF; // #66545435
         if (is3D) {
             btn2D.setBackground(null);
-            btn2D.setTextColor(0x80FFFFFF);
+            btn2D.setTextColor(unselectedText);
             btn3D.setBackgroundResource(R.drawable.mode_toggle_selected_bg);
-            btn3D.setTextColor(0xFF000000);
+            btn3D.setTextColor(selectedText);
         } else {
             btn2D.setBackgroundResource(R.drawable.mode_toggle_selected_bg);
-            btn2D.setTextColor(0xFF000000);
+            btn2D.setTextColor(selectedText);
             btn3D.setBackground(null);
-            btn3D.setTextColor(0x80FFFFFF);
+            btn3D.setTextColor(unselectedText);
         }
     }
 

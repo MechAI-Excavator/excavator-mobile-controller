@@ -2,15 +2,20 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 内容行 -->
-    <LinearLayout
+    <!-- Header 容器：信息栏 + 居中急停按钮叠加 -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="37dp"
-        android:background="#FFFFFF"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp">
+        android:background="#FFFFFF">
+
+        <!-- 信息栏 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp">
 
 
         <ImageView
@@ -21,62 +26,34 @@
             android:src="@drawable/black_logo"
             tools:ignore="ContentDescription" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="远程挖机控制系统"
-            android:textColor="#57627D"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+        <FrameLayout
+            android:id="@+id/pillConnected"
+            android:layout_width="42.66dp"
+            android:layout_height="19.556dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/connected_pill_bg"
+            android:clipToOutline="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
 
-        <!-- 模式状态按钮（空心蓝色边框） -->
-        <TextView
-            android:id="@+id/tvModeStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/header_mode_btn_bg"
-            android:paddingStart="10dp"
-            android:paddingTop="3dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="3dp"
-            android:text="手动模式"
-            android:textColor="#FF2196F3"
-            android:textSize="10sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="已连接"
+                android:textColor="#AD059669"
+                android:textSize="10sp"
+                android:textStyle="normal" />
+
+        </FrameLayout>
+
 
         <!-- 弹性空白 -->
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
-
-        <!-- 连接状态 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <View
-                android:id="@+id/headerConnectionDot"
-                android:layout_width="4dp"
-                android:layout_height="4dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/green_dot" />
-
-            <TextView
-                android:id="@+id/tvHeaderConnection"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="已连接"
-                android:textColor="#FF4CAF50"
-                android:textSize="8sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
 
         <!-- rtk -->
         <LinearLayout
@@ -97,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="RTK"
-                android:textColor="#7A7A7A50"
+                android:textColor="#AD059669"
                 android:textSize="10sp"
                 android:textStyle="normal" />
 
@@ -122,8 +99,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="IMU 4/4 正常"
-                android:textColor="#FF4CAF50"
+                android:text="IMU 4/4"
+                android:textColor="#AD059669"
                 android:textSize="10sp"
                 android:textStyle="normal" />
 
@@ -152,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:text="80%"
-                android:textColor="#000000"
+                android:textColor="#800C0C0C"
                 android:textSize="10sp"
                 android:textStyle="normal" />
 
@@ -166,20 +143,21 @@
             android:layout_marginLeft="15dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-            <ImageView
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:layout_gravity="center_vertical"
-                android:scaleType="centerCrop"
-                android:src="@drawable/wifi_black"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="延迟"
                 android:layout_marginRight="4.4dp"
-                tools:ignore="ContentDescription" />
+                android:textColor="#800C0C0C"
+                android:textSize="10sp"
+                android:textStyle="normal" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:text="59 ms"
-                 android:textColor="#000000"
+                android:textColor="#800C0C0C"
                 android:textSize="10sp"
                 android:textStyle="normal" />
         </LinearLayout>
@@ -192,25 +170,40 @@
             android:layout_marginLeft="15dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-            <ImageView
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:layout_gravity="center_vertical"
-                android:scaleType="centerCrop"
-                android:src="@drawable/clock_black"
-                android:layout_marginRight="4.4dp"
-                tools:ignore="ContentDescription" />
+   
             <TextView
                 android:id="@+id/tvCurrentTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:text="00:00"
-                 android:textColor="#000000"
+                android:textColor="#800C0C0C"
                 android:textSize="10sp"
                 android:textStyle="normal" />
         </LinearLayout>
-    </LinearLayout>
+        </LinearLayout>
+
+        <!-- 居中：急停按钮 -->
+        <TextView
+            android:id="@+id/btnEmergencyStop"
+            android:layout_width="90dp"
+            android:layout_height="31dp"
+            android:layout_gravity="center"
+            android:background="@drawable/emergency_stop_btn_bg"
+            android:gravity="center"
+            android:text="急停"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.032"
+            android:includeFontPadding="false"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="18dp"
+            android:outlineAmbientShadowColor="#4DFF0000"
+            android:outlineSpotShadowColor="#4DFF0000" />
+
+    </FrameLayout>
 
     <!-- 底部渐变分割线（从中间向两边渐隐） -->
     <!-- <View

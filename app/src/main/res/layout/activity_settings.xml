@@ -204,7 +204,9 @@
                         android:layout_height="wrap_content"
                         android:text="机械臂参数"
                         android:textColor="#FF9CA3AF"
-                        android:textSize="11sp" />
+                        android:textSize="11sp" 
+                        android:textFontWeight="200"
+                        android:textStyle="normal" />
                 </LinearLayout>
             </LinearLayout>
 

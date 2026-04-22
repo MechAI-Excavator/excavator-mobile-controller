@@ -1,6 +1,8 @@
 package com.capstone.excavator;
 
 import android.app.AlertDialog;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,6 +44,9 @@ import com.skydroid.fpvplayer.ReConnectInterceptor;
 import com.skydroid.fpvplayer.RtspTransport;
 import android.widget.RelativeLayout;
 
+import eightbitlab.com.blurview.BlurTarget;
+import eightbitlab.com.blurview.BlurView;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -51,14 +57,22 @@ public class MainActivity extends AppCompatActivity {
     // ── Components ───────────────────────────────────────────────────
     private HeaderBarView headerBar;
     private BottomBarView bottomBar;
-    private CarbinStatusView carbinStatusView;
-
     // ── Other UI ─────────────────────────────────────────────────────
     private PostureCardView postureCardView;
+    private BlurView postureCardBlur;
     private FPVWidget fpvWidget;
     private MapView mapView;
+    private View mapCardContainer;
+    private BlurView rightPanelBlur;
     private View videoPlaceholder;
     private TextView btnFloatingToggle;
+    private View rightPanelHeader;
+    private View rightPanelBody;
+    private View rightPanelCollapseArrow;
+    private BlurView livePillBlur;
+    private View livePillDot;
+    private TextView livePillText;
+    private ObjectAnimator liveDotBreathAnimator;
 
     // 驾驶模式状态
     private boolean isManualMode = true;
@@ -188,15 +202,38 @@ public class MainActivity extends AppCompatActivity {
     
     private void initViews() {
         postureCardView = findViewById(R.id.postureCardView);
+        postureCardBlur = findViewById(R.id.postureCardBlur);
         fpvWidget            = findViewById(R.id.fpvWidget);
         mapView              = findViewById(R.id.mapView);
+        mapCardContainer     = findViewById(R.id.mapCardContainer);
+        rightPanelBlur       = findViewById(R.id.rightPanelBlur);
+        rightPanelHeader     = findViewById(R.id.rightPanelHeader);
+        rightPanelBody       = findViewById(R.id.rightPanelBody);
+        rightPanelCollapseArrow = findViewById(R.id.rightPanelCollapseArrow);
         videoPlaceholder     = findViewById(R.id.videoPlaceholder);
+        livePillBlur         = findViewById(R.id.livePillBlur);
+        livePillDot          = findViewById(R.id.livePillDot);
+        livePillText         = findViewById(R.id.livePillText);
+
+        // Sync right map card height to posture card height after layout.
+        if (postureCardView != null && mapCardContainer != null) {
+            postureCardView.post(() -> {
+                int h = postureCardView.getHeight();
+                if (h <= 0) return;
+                ViewGroup.LayoutParams lp = mapCardContainer.getLayoutParams();
+                if (lp != null && lp.height != h) {
+                    lp.height = h;
+                    mapCardContainer.setLayoutParams(lp);
+                }
+            });
+        }
+
+        setupOverlayBlurs();
+        setupCollapsibleCards();
 
         // ── Header component ────────────────────────────────────────
         headerBar = findViewById(R.id.headerBar);
         headerBar.setMode(isManualMode ? "手动模式" : "自动模式");
-
-        carbinStatusView = findViewById(R.id.carbinStatusView);
 
         // ── Bottom bar component ─────────────────────────────────────
         bottomBar = findViewById(R.id.bottomBar);
@@ -208,6 +245,14 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("current_url", currentVideoUrl);
             startActivityForResult(intent, REQUEST_SETTINGS);
         });
+
+        // Dock 动作占位：找平 / 挖沟 / 修坡 —— 实际业务后续接入
+        bottomBar.setOnLevelListener(() ->
+                Toast.makeText(this, "找平", Toast.LENGTH_SHORT).show());
+        bottomBar.setOnTrenchListener(() ->
+                Toast.makeText(this, "挖沟", Toast.LENGTH_SHORT).show());
+        bottomBar.setOnSlopeListener(() ->
+                Toast.makeText(this, "修坡", Toast.LENGTH_SHORT).show());
 
         btnFloatingToggle = findViewById(R.id.btnFloatingToggle);
 
@@ -225,6 +270,111 @@ public class MainActivity extends AppCompatActivity {
 
         // 初始状态：未连接
         setVideoConnected(false);
+    }
+
+    private void setupOverlayBlurs() {
+        View t = findViewById(R.id.blurTarget);
+        if (!(t instanceof BlurTarget)) return;
+        BlurTarget target = (BlurTarget) t;
+
+        final float cardRadius = 18f;
+        final int cardOverlay = 0x4D808080; // glass gray overlay
+        final float liveRadius = 14f;
+        final int liveOverlay = 0xAA000000; // black blur overlay
+
+        if (postureCardBlur != null) {
+            postureCardBlur.post(() -> postureCardBlur.setupWith(target)
+                    .setBlurRadius(cardRadius)
+                    .setOverlayColor(cardOverlay));
+        }
+        if (rightPanelBlur != null) {
+            rightPanelBlur.post(() -> rightPanelBlur.setupWith(target)
+                    .setBlurRadius(cardRadius)
+                    .setOverlayColor(cardOverlay));
+        }
+        if (livePillBlur != null) {
+            livePillBlur.post(() -> livePillBlur.setupWith(target)
+                    .setBlurRadius(liveRadius)
+                    .setOverlayColor(liveOverlay));
+        }
+    }
+
+    private void setupCollapsibleCards() {
+        // Left: PostureCardView internal header/body
+        if (postureCardBlur != null && postureCardView != null) {
+            View header = postureCardView.findViewById(R.id.postureHeaderRow);
+            View body = postureCardView.findViewById(R.id.postureBody);
+            View arrow = postureCardView.findViewById(R.id.postureCollapseArrow);
+            setupOneCollapsible(postureCardBlur, header, body, arrow);
+        }
+
+        // Right panel
+        if (rightPanelBlur != null && rightPanelHeader != null && rightPanelBody != null) {
+            setupOneCollapsible(rightPanelBlur, rightPanelHeader, rightPanelBody, rightPanelCollapseArrow);
+        }
+    }
+
+    private void setupOneCollapsible(View container, View header, View body, View arrow) {
+        if (container == null || header == null || body == null) return;
+
+        final boolean[] collapsed = { false };
+        final int[] expandedH = { -1 };
+        final int[] collapsedH = { -1 };
+
+        container.post(() -> {
+            expandedH[0] = container.getHeight();
+            collapsedH[0] = header.getHeight();
+        });
+
+        Runnable expand = () -> {
+            if (!collapsed[0]) return;
+            collapsed[0] = false;
+            body.setVisibility(View.VISIBLE);
+            int from = container.getLayoutParams().height > 0 ? container.getLayoutParams().height : collapsedH[0];
+            int to = expandedH[0] > 0 ? expandedH[0] : container.getHeight();
+            animateHeight(container, from, to, () -> {});
+            if (arrow != null) arrow.animate().rotation(0f).setDuration(180).start();
+        };
+
+        Runnable collapse = () -> {
+            if (collapsed[0]) return;
+            collapsed[0] = true;
+            int from = container.getHeight();
+            int to = collapsedH[0] > 0 ? collapsedH[0] : header.getHeight();
+            animateHeight(container, from, to, () -> body.setVisibility(View.GONE));
+            if (arrow != null) arrow.animate().rotation(180f).setDuration(180).start();
+        };
+
+        if (arrow != null) {
+            arrow.setOnClickListener(v -> {
+                if (collapsed[0]) expand.run();
+                else collapse.run();
+            });
+        }
+
+        header.setOnClickListener(v -> {
+            if (collapsed[0]) expand.run();
+        });
+    }
+
+    private void animateHeight(View v, int from, int to, Runnable endAction) {
+        if (from == to) {
+            if (endAction != null) endAction.run();
+            return;
+        }
+        ViewGroup.LayoutParams lp = v.getLayoutParams();
+        ValueAnimator animator = ValueAnimator.ofInt(from, to);
+        animator.setDuration(220);
+        animator.addUpdateListener(a -> {
+            lp.height = (int) a.getAnimatedValue();
+            v.setLayoutParams(lp);
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator animation) {
+                if (endAction != null) endAction.run();
+            }
+        });
+        animator.start();
     }
 
     private void initMap() {
@@ -458,6 +608,38 @@ public class MainActivity extends AppCompatActivity {
         if (headerBar != null) headerBar.setConnected(connected);
         if (videoPlaceholder != null)
             videoPlaceholder.setVisibility(connected ? View.GONE : View.VISIBLE);
+        updateLivePill(connected);
+    }
+
+    private void updateLivePill(boolean connected) {
+        if (livePillDot == null || livePillText == null) return;
+        if (connected) {
+            livePillDot.setBackgroundResource(R.drawable.live_dot_red);
+            livePillText.setText("实时 · 主相机");
+            startLiveDotBreathing();
+        } else {
+            stopLiveDotBreathing();
+            livePillDot.setAlpha(1f);
+            livePillDot.setBackgroundResource(R.drawable.live_dot_off);
+            livePillText.setText("离线 · 主相机");
+        }
+    }
+
+    private void startLiveDotBreathing() {
+        if (livePillDot == null) return;
+        if (liveDotBreathAnimator != null) return;
+        liveDotBreathAnimator = ObjectAnimator.ofFloat(livePillDot, View.ALPHA, 0.35f, 1f);
+        liveDotBreathAnimator.setDuration(900);
+        liveDotBreathAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        liveDotBreathAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        liveDotBreathAnimator.start();
+    }
+
+    private void stopLiveDotBreathing() {
+        if (liveDotBreathAnimator != null) {
+            liveDotBreathAnimator.cancel();
+            liveDotBreathAnimator = null;
+        }
     }
 
     private void reconnectVideo() {
@@ -567,36 +749,37 @@ public class MainActivity extends AppCompatActivity {
             rawBucket = realBucketAngle;
             rawCabinPitch = realCabinPitchAngle;
             rawCabinRoll = realCabinRollAngle;
-        } else {
-            if (angleSets.isEmpty()) {
-                return;
-            }
-            // 使用模拟数据（每1秒切换一次角度）
-            angleUpdateCounter++;
-            if (angleUpdateCounter >= 1) {
-                angleIndex = (angleIndex + 1) % angleSets.size();
-                angleUpdateCounter = 0;
-            }
-
-            // 轮换角度数据（原始IMU角度）
-            AngleSet currentSet = angleSets.get(angleIndex);
-            rawBoom = currentSet.boom;
-            rawStick = currentSet.stick;
-            rawBucket = currentSet.bucket;
-
-            // 模拟座舱 IMU：与 angleIndex 同步平滑变化，幅值不超过 ±45°（再大易像翻车）
-            double phase = angleIndex * 0.18;
-            rawCabinPitch = (float) (45.0 * Math.sin(phase));
-            rawCabinRoll = (float) (45.0 * Math.cos(phase * 1.07));
         }
+        //  else {
+        //     if (angleSets.isEmpty()) {
+        //         return;
+        //     }
+        //     // 使用模拟数据（每1秒切换一次角度）
+        //     angleUpdateCounter++;
+        //     if (angleUpdateCounter >= 1) {
+        //         angleIndex = (angleIndex + 1) % angleSets.size();
+        //         angleUpdateCounter = 0;
+        //     }
+
+        //     // 轮换角度数据（原始IMU角度）
+        //     AngleSet currentSet = angleSets.get(angleIndex);
+        //     rawBoom = currentSet.boom;
+        //     rawStick = currentSet.stick;
+        //     rawBucket = currentSet.bucket;
+
+        //     // 模拟座舱 IMU：与 angleIndex 同步平滑变化，幅值不超过 ±45°（再大易像翻车）
+        //     double phase = angleIndex * 0.18;
+        //     rawCabinPitch = (float) (45.0 * Math.sin(phase));
+        //     rawCabinRoll = (float) (45.0 * Math.cos(phase * 1.07));
+        // }
 
         // 解算相对角度（统一入口，模拟/真实都使用）
         ImuAngleConverter.RelativeAngles relative = ImuAngleConverter.toRelativeAngles(
-                rawBoom,
-                rawStick,
-                rawBucket,
-                rawCabinPitch,
-                rawCabinRoll,
+                rawBoom = 0,
+                rawStick = 0,
+                rawBucket = 0,
+                rawCabinPitch = 0,
+                rawCabinRoll = 0,
                 imuAngleConfig
         );
         relativeBoomAngle = relative.boomDeg;
@@ -618,10 +801,6 @@ public class MainActivity extends AppCompatActivity {
             bottomBar.setAngles(relativeBoomAngle, relativeStickAngle, relativeBucketAngle,
                     rawCabinPitch, rawCabinRoll);
         }
-        // 推送到驾驶舱卡片
-        if (carbinStatusView != null) {
-            carbinStatusView.setCabinAngles(rawCabinPitch, rawCabinRoll);
-        }
     }
     
     private void updatePositioning() {
@@ -640,7 +819,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (mapView != null) mapView.setFixedLocation(lat, lon);
         if (bottomBar != null) bottomBar.setRtkLatLon(lat, lon);
-        if (carbinStatusView != null) carbinStatusView.setCabinLatLon(lat, lon);
     }
 
     private void updateDigDepth() {

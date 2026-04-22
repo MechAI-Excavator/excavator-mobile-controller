@@ -60,11 +60,7 @@ public class HeaderBarView extends LinearLayout {
         setOrientation(VERTICAL);
         setBackgroundColor(0x4D000000);
         inflate(context, R.layout.view_header_bar, this);
-
-        tvModeStatus       = findViewById(R.id.tvModeStatus);
-        tvHeaderConnection = findViewById(R.id.tvHeaderConnection);
         tvCurrentTime      = findViewById(R.id.tvCurrentTime);
-        connectionDot      = findViewById(R.id.headerConnectionDot);
     }
 
     // ── Public API ──────────────────────────────────────────────────

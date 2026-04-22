@@ -26,7 +26,6 @@
     <string name="bucket">BUCKET:</string>
 
     <!-- 姿态可视化器 -->
-    <string name="posture_visualizer_title">机械臂姿态</string>
     <string name="posture_card_title">机械臂状态</string>
     
     <!-- 地图 -->

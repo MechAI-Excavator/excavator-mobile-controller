@@ -3,11 +3,17 @@
 
     <!-- ── 顶部标题行：标题 + 2D/3D 切换 ── -->
     <LinearLayout
+        android:id="@+id/postureHeaderRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="17dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6.25dp"
+        android:paddingBottom="6.25dp"
+        android:clickable="true"
+        android:focusable="true"
         >
         <TextView
             android:layout_width="0dp"
@@ -16,26 +22,33 @@
             android:text="@string/posture_card_title"
             android:textColor="#FFFFFF"
             android:textSize="11sp"
-            android:textStyle="normal" />
+            android:textFontWeight="200" />
 
         <!-- 2D / 3D 切换胶囊按钮 -->
+        <eightbitlab.com.blurview.BlurView
+            android:id="@+id/blurModeToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/mode_toggle_bg"
+            android:padding="0.5dp"
+            android:gravity="center_vertical">
         <LinearLayout
             android:id="@+id/modeToggleContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="24dp"
+            android:layout_width="50dp"
+            android:layout_height="18dp"
             android:orientation="horizontal"
-            android:background="@drawable/mode_toggle_bg"
             android:padding="2dp"
             android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/btn2D"
-                android:layout_width="32dp"
+                android:layout_width="22dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="2D"
-                android:textColor="#000000"
-                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:textSize="7dp"
                 android:textStyle="bold"
                 android:background="@drawable/mode_toggle_selected_bg"
                 android:clickable="true"
@@ -43,27 +56,47 @@
 
             <TextView
                 android:id="@+id/btn3D"
-                android:layout_width="32dp"
+                android:layout_width="22dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="3D"
-                android:textColor="#80FFFFFF"
-                android:textSize="10sp"
+                android:textColor="#66545454"
+                android:textSize="7dp"
                 android:textStyle="bold"
                 android:clickable="true"
                 android:focusable="true" />
 
         </LinearLayout>
+        </eightbitlab.com.blurview.BlurView>
+
+        <ImageView
+            android:id="@+id/postureCollapseArrow"
+            android:layout_width="10.66dp"
+            android:layout_height="10.66dp"
+            android:src="@drawable/droparrow"
+            android:contentDescription="@null"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="2dp" />
 
     </LinearLayout>
 
-    <!-- ── 2D 模式：posture.png 底图 + 角度叠加文字 ── -->
-    <FrameLayout
-        android:id="@+id/view2D"
+    <!-- 可收起内容区（收起后仅保留标题行） -->
+    <LinearLayout
+        android:id="@+id/postureBody"
         android:layout_width="match_parent"
-        android:layout_height="93dp"
-        android:layout_marginBottom="6dp"
-        android:visibility="visible">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- ── 2D 模式：posture.png 底图 + 角度叠加文字 ── -->
+        <FrameLayout
+            android:id="@+id/view2D"
+            android:layout_width="match_parent"
+            android:layout_height="93dp"
+            android:layout_gravity="bottom"
+            android:layout_marginTop="13dp"
+            android:layout_marginBottom="6dp"
+            android:visibility="visible">
 
         <ImageView
             android:layout_width="match_parent"
@@ -112,112 +145,15 @@
             android:textSize="9sp"
             android:textStyle="bold" />
 
-    </FrameLayout>
+        </FrameLayout>
 
-    <!-- ── 3D 模式：WebView（2D 时隐藏，切换后显示） ── -->
-    <com.capstone.excavator.ExcavatorPostureView
-        android:id="@+id/excavatorPostureView"
-        android:layout_width="match_parent"
-        android:layout_height="93dp"
-        android:layout_marginBottom="6dp"
-        android:visibility="gone" />
-
-    <!-- ── 分隔线 ── -->
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="0.5pt"
-        android:src="@drawable/cabin_line"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="18dp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- ── 大臂 ── -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="7dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="大臂"
-            android:textColor="#80FFFFFF"
-            android:textSize="10sp"
-            android:letterSpacing="0.05" />
-
-        <TextView
-            android:id="@+id/tvPostureBoomAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textColor="#5C87FF"
-            android:textSize="12sp"
-            android:textStyle="normal" />
-
-    </LinearLayout>
-
-    <!-- ── 斗杆 ── -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="7dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="斗杆"
-            android:textColor="#80FFFFFF"
-            android:textSize="10sp"
-            android:letterSpacing="0.05" />
-
-        <TextView
-            android:id="@+id/tvPostureStickAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textColor="#3EC4A2"
-            android:textSize="12sp"
-            android:textStyle="normal" />
-
-    </LinearLayout>
-
-    <!-- ── 铲斗 ── -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="17dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="铲斗"
-            android:textColor="#80FFFFFF"
-            android:textSize="10sp"
-            android:letterSpacing="0.05" />
-
-        <TextView
-            android:id="@+id/tvPostureBucketAngle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textColor="#FBBF24"
-            android:textSize="12sp"
-            android:textStyle="normal" />
+        <!-- ── 3D 模式：WebView（2D 时隐藏，切换后显示） ── -->
+        <com.capstone.excavator.ExcavatorPostureView
+            android:id="@+id/excavatorPostureView"
+            android:layout_width="match_parent"
+            android:layout_height="139dp"
+            android:layout_marginBottom="0dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 

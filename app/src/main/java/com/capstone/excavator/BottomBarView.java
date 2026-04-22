@@ -1,66 +1,50 @@
 package com.capstone.excavator;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.ViewOutlineProvider;
+import android.widget.FrameLayout;
 
-import java.util.Locale;
+import eightbitlab.com.blurview.BlurTarget;
+import eightbitlab.com.blurview.BlurView;
 
 /**
- * Bottom status bar component.
+ * 底部覆盖层：左右两侧分立的毛玻璃摇杆指示器，中央是 dock 风格的快捷动作按钮
+ * （重连 / 找平 / 挖沟 / 修坡 / 设置）。
  *
- * Data in  (call from MainActivity):
- *   setAngles(), setRtkLatLon(), setDepth(), setDelay(), setSignal(),
- *   setLiveStatus(), setJoystickLeft(), setJoystickRight()
- *
- * Events out (implement interfaces and pass in):
- *   setOnSettingsListener()   – user tapped SET
- *   setOnBarToggleListener()  – user tapped ▼ to collapse
- *
- * The parent (MainActivity) owns the floating ▲ button and
- * controls this view's visibility when collapse/expand happens.
- *
- * Usage in XML:
- *   <com.capstone.excavator.BottomBarView
- *       android:id="@+id/bottomBar"
- *       android:layout_width="match_parent"
- *       android:layout_height="wrap_content"
- *       android:layout_gravity="bottom" />
+ * 数据相关的 setter（角度、深度、信号、延迟、LIVE 等）已不再有对应的 UI，
+ * 但保留为 no-op 以避免外部调用者编译失败。如后续需要重新展示，
+ * 可在布局中加回相应控件并在 {@link #onFinishInflate()} 内绑定。
  */
-public class BottomBarView extends LinearLayout {
+public class BottomBarView extends FrameLayout {
 
-    // ── Event interface ──────────────────────────────────────────────
+    // ── Event interfaces ─────────────────────────────────────────────
 
+    /** 兼容历史调用：当前布局已没有折叠按钮，触发逻辑由调用方决定。 */
     public interface OnBarToggleListener {
-        /** Called when the user taps ▼. Parent should hide this view and show the float button. */
         void onCollapse();
     }
 
     // ── Internal views ───────────────────────────────────────────────
 
-    private TextView tvBoomAngle;
-    private TextView tvStickAngle;
-    private TextView tvBucketAngle;
-    private TextView tvCabinPitchAngle;
-    private TextView tvCabinRollAngle;
-    private TextView tvRtkLatLon;
-    private TextView tvDigDepth;
-    private TextView tvVideoLink;
-    private TextView tvRcSignal;
-    private View liveIndicatorDot;
-    private TextView tvLiveStatus;
     private JoystickIndicatorView joystickLeft;
     private JoystickIndicatorView joystickRight;
+
+    private BlurView blurReconnect;
+    private BlurView blurWorkGroup;
+    private BlurView blurSettings;
+    private BlurView blurJoystickRight;
+    private BlurView blurJoystickLeft;
 
     // ── Callbacks ────────────────────────────────────────────────────
 
     private Runnable onReconnectListener;
+    private Runnable onLevelListener;
+    private Runnable onTrenchListener;
+    private Runnable onSlopeListener;
     private Runnable onSettingsListener;
-    private OnBarToggleListener onBarToggleListener;
+    private OnBarToggleListener onBarToggleListener; // 保留接口；当前布局不再触发
 
     // ── Constructors ─────────────────────────────────────────────────
 
@@ -74,117 +58,121 @@ public class BottomBarView extends LinearLayout {
 
     public BottomBarView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setOrientation(VERTICAL);
         inflate(context, R.layout.view_bottom_bar, this);
 
-        tvBoomAngle       = findViewById(R.id.tvBoomAngle);
-        tvStickAngle      = findViewById(R.id.tvStickAngle);
-        tvBucketAngle     = findViewById(R.id.tvBucketAngle);
-        tvCabinPitchAngle = findViewById(R.id.tvCabinPitchAngle);
-        tvCabinRollAngle  = findViewById(R.id.tvCabinRollAngle);
-        tvRtkLatLon       = findViewById(R.id.tvRtkLatLon);
-        tvDigDepth        = findViewById(R.id.tvDigDepth);
-        tvVideoLink       = findViewById(R.id.tvVideoLink);
-        tvRcSignal        = findViewById(R.id.tvRcSignal);
-        liveIndicatorDot  = findViewById(R.id.liveIndicatorDot);
-        tvLiveStatus      = findViewById(R.id.tvLiveStatus);
-        joystickLeft      = findViewById(R.id.joystickLeft);
-        joystickRight     = findViewById(R.id.joystickRight);
+        joystickLeft  = findViewById(R.id.joystickLeft);
+        joystickRight = findViewById(R.id.joystickRight);
 
-        View btnReconnect = findViewById(R.id.btnReconnect);
-        View btnSettings  = findViewById(R.id.btnSettings);
-        View btnToggleBar = findViewById(R.id.btnToggleBar);
+        blurReconnect = findViewById(R.id.btnReconnect);
+        blurWorkGroup = findViewById(R.id.blurWorkGroup);
+        blurSettings  = findViewById(R.id.btnSettings);
+        blurJoystickRight = findViewById(R.id.blurJoystickRight);
+        blurJoystickLeft = findViewById(R.id.blurJoystickLeft);
 
-        if (btnReconnect != null)
-            btnReconnect.setOnClickListener(v -> { if (onReconnectListener != null) onReconnectListener.run(); });
-        if (btnSettings != null)
-            btnSettings.setOnClickListener(v ->  { if (onSettingsListener != null)  onSettingsListener.run();  });
-        if (btnToggleBar != null)
-            btnToggleBar.setOnClickListener(v -> { if (onBarToggleListener != null) onBarToggleListener.onCollapse(); });
+        bindDockButton(R.id.btnReconnect, () -> onReconnectListener);
+        bindDockButton(R.id.btnLevel,     () -> onLevelListener);
+        bindDockButton(R.id.btnTrench,    () -> onTrenchListener);
+        bindDockButton(R.id.btnSlope,     () -> onSlopeListener);
+        bindDockButton(R.id.btnSettings,  () -> onSettingsListener);
     }
 
-    // ── Data setters ─────────────────────────────────────────────────
-
-    /** 更新五路角度显示（相对角度，单位 °） */
-    public void setAngles(float boom, float stick, float bucket,
-                          float cabinPitch, float cabinRoll) {
-        setText(tvBoomAngle,       "%.2f°", boom);
-        setText(tvStickAngle,      "%.2f°", stick);
-        setText(tvBucketAngle,     "%.2f°", bucket);
-        setText(tvCabinPitchAngle, "%.2f°", cabinPitch);
-        setText(tvCabinRollAngle,  "%.2f°", cabinRoll);
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // 延迟到视图树完成布局后再初始化 BlurView，避免 onAttachedToWindow 时还没测量好
+        post(this::setupDockBlur);
     }
 
-    /** 更新 RTK 经纬度 */
-    public void setRtkLatLon(double lat, double lon) {
-        if (tvRtkLatLon != null)
-            tvRtkLatLon.setText(String.format(Locale.getDefault(), "%.6f, %.6f", lat, lon));
-    }
+    private void setupDockBlur() {
+        try {
+            View root = getRootView();
+            View t = root != null ? root.findViewById(R.id.blurTarget) : null;
+            if (!(t instanceof BlurTarget)) return;
+            BlurTarget target = (BlurTarget) t;
 
-    /** 更新挖掘深度（单位 m） */
-    public void setDepth(double depth) {
-        if (tvDigDepth != null)
-            tvDigDepth.setText(String.format(Locale.getDefault(), "%.2f m", depth));
-    }
+            final float radius = 18f;
+            final int overlay = 0x4D808080;
 
-    /** 更新链路延迟（单位 ms；传 -1 表示暂无数据） */
-    public void setDelay(int ms) {
-        if (tvVideoLink == null) return;
-        if (ms < 0) {
-            tvVideoLink.setText("⏱ Delay: --");
-        } else {
-            tvVideoLink.setText("⏱ Delay: " + ms + "ms");
+            setupOneBlur(blurReconnect, target, radius, overlay);
+            setupOneBlur(blurWorkGroup, target, radius, overlay);
+            setupOneBlur(blurSettings,  target, radius, overlay);
+            setupOneBlur(blurJoystickRight, target, radius, overlay);
+            setupOneBlur(blurJoystickLeft, target, radius, overlay);
+        } catch (Throwable ignored) {
+            // Blur 是装饰，失败不应阻塞 UI
         }
     }
 
-    /** 更新遥控信号强度（0‑100） */
-    public void setSignal(int percent) {
-        if (tvRcSignal != null) tvRcSignal.setText("📶 Signal: " + percent + "%");
+    private void setupOneBlur(BlurView blurView, BlurTarget target, float radius, int overlayColor) {
+        if (blurView == null) return;
+        blurView.setupWith(target)
+                .setBlurRadius(radius)
+                .setOverlayColor(overlayColor);
+        blurView.setClipToOutline(true);
+        blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
     }
 
-    /** 更新 LIVE 指示灯 */
-    public void setLiveStatus(boolean connected) {
-        if (tvLiveStatus != null) {
-            tvLiveStatus.setText(connected ? "LIVE" : "OFFLINE");
-            tvLiveStatus.setTextColor(connected ? Color.WHITE : Color.parseColor("#FF6B6B"));
-        }
-        if (liveIndicatorDot != null) {
-            GradientDrawable dot = new GradientDrawable();
-            dot.setShape(GradientDrawable.OVAL);
-            dot.setColor(connected
-                    ? Color.parseColor("#00E676")
-                    : Color.parseColor("#FF6B6B"));
-            liveIndicatorDot.setBackground(dot);
-        }
+    private void bindDockButton(int id, RunnableSupplier supplier) {
+        View v = findViewById(id);
+        if (v == null) return;
+        v.setOnClickListener(view -> {
+            Runnable r = supplier.get();
+            if (r != null) r.run();
+        });
     }
 
-    /** 更新左摇杆示意图 */
+    private interface RunnableSupplier {
+        Runnable get();
+    }
+
+    // ── Joystick setters ─────────────────────────────────────────────
+
+    /** 更新左摇杆指示位置（x：左右，y：上下，范围 -450~450） */
     public void setJoystickLeft(int x, int y) {
         if (joystickLeft != null) joystickLeft.setValues(x, y);
     }
 
-    /** 更新右摇杆示意图 */
+    /** 更新右摇杆指示位置（x：左右，y：上下，范围 -450~450） */
     public void setJoystickRight(int x, int y) {
         if (joystickRight != null) joystickRight.setValues(x, y);
     }
 
-    // ── Callback setters ─────────────────────────────────────────────
+    // ── Dock action listeners ────────────────────────────────────────
 
-    public void setOnReconnectListener(Runnable listener) {
-        this.onReconnectListener = listener;
-    }
-
-    public void setOnSettingsListener(Runnable listener) {
-        this.onSettingsListener = listener;
-    }
+    public void setOnReconnectListener(Runnable listener) { this.onReconnectListener = listener; }
+    public void setOnLevelListener(Runnable listener)     { this.onLevelListener     = listener; }
+    public void setOnTrenchListener(Runnable listener)    { this.onTrenchListener    = listener; }
+    public void setOnSlopeListener(Runnable listener)     { this.onSlopeListener     = listener; }
+    public void setOnSettingsListener(Runnable listener)  { this.onSettingsListener  = listener; }
 
     public void setOnBarToggleListener(OnBarToggleListener listener) {
         this.onBarToggleListener = listener;
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    // ── Legacy data setters (no-op, 当前布局不再展示这些数据) ─────────
 
-    private void setText(TextView tv, String fmt, float value) {
-        if (tv != null) tv.setText(String.format(Locale.getDefault(), fmt, value));
+    public void setAngles(float boom, float stick, float bucket,
+                          float cabinPitch, float cabinRoll) {
+        // no-op: 当前 UI 不再显示传感器角度，姿态卡片承担显示职责
+    }
+
+    public void setRtkLatLon(double lat, double lon) {
+        // no-op
+    }
+
+    public void setDepth(double depth) {
+        // no-op
+    }
+
+    public void setDelay(int ms) {
+        // no-op
+    }
+
+    public void setSignal(int percent) {
+        // no-op
+    }
+
+    public void setLiveStatus(boolean connected) {
+        // no-op: LIVE/OFFLINE 状态由 HeaderBarView 显示
     }
 }
