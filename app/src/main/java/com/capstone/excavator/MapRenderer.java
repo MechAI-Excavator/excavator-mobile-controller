@@ -66,9 +66,9 @@ public class MapRenderer {
         compassFillPaint.setStyle(Paint.Style.FILL);
         compassFillPaint.setColor(Color.parseColor("#66000000"));
         compassStrokePaint.setStyle(Paint.Style.STROKE);
-        compassStrokePaint.setColor(Color.parseColor("#66FFFFFF"));
-        compassStrokePaint.setStrokeWidth(1.5f);
-        compassTextPaint.setColor(Color.WHITE);
+        compassStrokePaint.setColor(Color.parseColor("#1AFFFFFF"));
+        compassStrokePaint.setStrokeWidth(1f);
+        compassTextPaint.setColor(Color.parseColor("#80FFFFFF"));
         compassTextPaint.setTextSize(26f);
         compassTextPaint.setFakeBoldText(true);
 

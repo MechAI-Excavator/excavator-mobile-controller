@@ -232,4 +232,12 @@
         android:layout_gravity="top"
         android:elevation="10dp" />
 
+    <!-- ==================== 急停全屏覆盖层（默认隐藏，按下急停按钮后显示） ==================== -->
+    <com.capstone.excavator.EmergencyStopOverlayView
+        android:id="@+id/emergencyStopOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="40dp"
+        android:visibility="gone" />
+
 </FrameLayout>

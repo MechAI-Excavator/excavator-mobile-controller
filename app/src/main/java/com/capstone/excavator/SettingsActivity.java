@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -25,23 +24,39 @@ import java.io.InputStream;
 import java.util.Locale;
 
 /**
- * 设置页面 - 视频流地址、3D 大臂/小臂长度比例、IMU 数值配置
+ * 设置页面。
+ *
+ * 左侧导航栏：4 个 menu item（IMU 安装角度 / 尺寸信息 / 摇杆通道映射 / 通用设置）。
+ * 右侧 FrameLayout：每个 menu 对应一个 <include> 子页，切换时 VISIBLE/GONE 互换。
  */
 public class SettingsActivity extends AppCompatActivity {
 
     private static final float MIN_ARM_SCALE = 0.1f;
     private static final float MAX_ARM_SCALE = 10f;
 
-    private EditText etSettingsVideoUrl;
-    private EditText etArmBoomScale;
-    private EditText etArmStickScale;
-    private android.view.View btnSaveVideoUrl;
-    private TextView btnBack;
+    // ── 导航项 ───────────────────────────────────────────────────────────────
+    private LinearLayout navImu;
+    private LinearLayout navDimensions;
+    private LinearLayout navJoystick;
+    private LinearLayout navGeneral;
 
-    // IMU preview labels on the card
+    // ── 内容页根视图 ─────────────────────────────────────────────────────────
+    private View pageImu;
+    private View pageDimensions;
+    private View pageJoystick;
+    private View pageGeneral;
+
+    private int currentPage = 0; // 0=IMU, 1=尺寸, 2=摇杆, 3=通用
+
+    // ── IMU page views ───────────────────────────────────────────────────────
     private TextView tvImuBoomOffsetPreview;
     private TextView tvImuStickOffsetPreview;
     private TextView tvImuBucketOffsetPreview;
+
+    // ── General page views ───────────────────────────────────────────────────
+    private EditText etSettingsVideoUrl;
+    private EditText etArmBoomScale;
+    private EditText etArmStickScale;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,67 +64,173 @@ public class SettingsActivity extends AppCompatActivity {
         setFullScreenMode();
         setContentView(R.layout.activity_settings);
 
-        etSettingsVideoUrl = findViewById(R.id.etSettingsVideoUrl);
-        etArmBoomScale     = findViewById(R.id.etArmBoomScale);
-        etArmStickScale    = findViewById(R.id.etArmStickScale);
-        btnSaveVideoUrl    = findViewById(R.id.btnSaveVideoUrl);
-        btnBack            = findViewById(R.id.btnBack);
+        bindNavItems();
+        bindPages();
+        bindTopBar();
+        bindImuPage();
+        bindGeneralPage();
 
-        tvImuBoomOffsetPreview   = findViewById(R.id.tvImuBoomOffsetPreview);
-        tvImuStickOffsetPreview  = findViewById(R.id.tvImuStickOffsetPreview);
-        tvImuBucketOffsetPreview = findViewById(R.id.tvImuBucketOffsetPreview);
+        showPage(0);
+    }
 
-        // 加载当前视频地址
-        String currentUrl = getIntent().getStringExtra("current_url");
-        if (currentUrl != null && !currentUrl.isEmpty()) {
-            etSettingsVideoUrl.setText(currentUrl);
-        }
+    // ── Navigation ───────────────────────────────────────────────────────────
 
-        float boom  = ArmLengthPreferences.getBoomScale(this);
-        float stick = ArmLengthPreferences.getStickScale(this);
-        etArmBoomScale.setText(formatScaleForEdit(boom));
-        etArmStickScale.setText(formatScaleForEdit(stick));
+    private void bindNavItems() {
+        navImu        = findViewById(R.id.navImu);
+        navDimensions = findViewById(R.id.navDimensions);
+        navJoystick   = findViewById(R.id.navJoystick);
+        navGeneral    = findViewById(R.id.navGeneral);
 
-        refreshImuPreviewLabels();
+        navImu.setOnClickListener(v        -> showPage(0));
+        navDimensions.setOnClickListener(v -> showPage(1));
+        navJoystick.setOnClickListener(v   -> showPage(2));
+        navGeneral.setOnClickListener(v    -> showPage(3));
+    }
 
-        btnBack.setOnClickListener(v -> finish());
+    private void bindPages() {
+        pageImu        = findViewById(R.id.pageImu);
+        pageDimensions = findViewById(R.id.pageDimensions);
+        pageJoystick   = findViewById(R.id.pageJoystick);
+        pageGeneral    = findViewById(R.id.pageGeneral);
+    }
 
-        btnSaveVideoUrl.setOnClickListener(v -> {
-            String newUrl = etSettingsVideoUrl.getText().toString().trim();
+    private void showPage(int index) {
+        currentPage = index;
 
-            float boomScale  = parseScale(etArmBoomScale.getText().toString(),  ArmLengthPreferences.DEFAULT_SCALE);
-            float stickScale = parseScale(etArmStickScale.getText().toString(), ArmLengthPreferences.DEFAULT_SCALE);
+        pageImu.setVisibility(index == 0 ? View.VISIBLE : View.GONE);
+        pageDimensions.setVisibility(index == 1 ? View.VISIBLE : View.GONE);
+        pageJoystick.setVisibility(index == 2 ? View.VISIBLE : View.GONE);
+        pageGeneral.setVisibility(index == 3 ? View.VISIBLE : View.GONE);
 
-            if (boomScale < MIN_ARM_SCALE || boomScale > MAX_ARM_SCALE
-                    || stickScale < MIN_ARM_SCALE || stickScale > MAX_ARM_SCALE) {
-                Toast.makeText(this,
-                        "大臂、小臂比例须在 " + MIN_ARM_SCALE + "～" + MAX_ARM_SCALE + " 之间",
-                        Toast.LENGTH_SHORT).show();
-                return;
+        updateNavHighlight(index);
+    }
+
+    /** 选中项用 nav_item_selected_bg + 蓝色文字，其余恢复默认背景。 */
+    private void updateNavHighlight(int index) {
+        LinearLayout[] navItems = { navImu, navDimensions, navJoystick, navGeneral };
+        for (int i = 0; i < navItems.length; i++) {
+            LinearLayout item = navItems[i];
+            boolean selected = (i == index);
+            item.setBackgroundResource(selected
+                    ? R.drawable.nav_item_selected_bg
+                    : android.R.color.transparent);
+
+            // 标题 TextView 是 item 的第二个子 view 的第一个子 view
+            try {
+                LinearLayout textCol = (LinearLayout) item.getChildAt(1);
+                TextView title = (TextView) textCol.getChildAt(0);
+                TextView sub   = (TextView) textCol.getChildAt(1);
+                if (selected) {
+                    title.setTextColor(0xFF1D4ED8);
+                    sub.setTextColor(0xFF6B7280);
+                } else {
+                    title.setTextColor(0xFF374151);
+                    sub.setTextColor(0xFF9CA3AF);
+                }
+                // icon emoji color
+                TextView icon = (TextView) item.getChildAt(0);
+                icon.setTextColor(selected ? 0xFF2563EB : 0xFF9CA3AF);
+            } catch (ClassCastException | NullPointerException ignored) {
             }
-
-            ArmLengthPreferences.save(this, boomScale, stickScale);
-
-            Intent resultIntent = new Intent();
-            if (!newUrl.isEmpty()) {
-                resultIntent.putExtra("video_url", newUrl);
-            }
-            resultIntent.putExtra("arm_boom_scale", boomScale);
-            resultIntent.putExtra("arm_stick_scale", stickScale);
-            setResult(RESULT_OK, resultIntent);
-
-            Toast.makeText(this, newUrl.isEmpty() ? "臂长比例已保存" : "已保存并应用", Toast.LENGTH_SHORT).show();
-            finish();
-        });
-
-        // IMU 配置入口
-        Button btnOpenImuDialog = findViewById(R.id.btnOpenImuDialog);
-        if (btnOpenImuDialog != null) {
-            btnOpenImuDialog.setOnClickListener(v -> showImuSettingsDialog());
         }
     }
 
-    // ── IMU preview ──────────────────────────────────────────────────────────
+    // ── Top bar ──────────────────────────────────────────────────────────────
+
+    private void bindTopBar() {
+        TextView btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
+
+        View btnSave = findViewById(R.id.btnSaveVideoUrl);
+        btnSave.setOnClickListener(v -> saveAll());
+    }
+
+    private void saveAll() {
+        // 只有通用设置页才有视频流 & 臂长字段
+        String newUrl = etSettingsVideoUrl != null
+                ? etSettingsVideoUrl.getText().toString().trim() : "";
+
+        float boomScale  = parseScale(etArmBoomScale  != null ? etArmBoomScale.getText().toString()  : "", ArmLengthPreferences.DEFAULT_SCALE);
+        float stickScale = parseScale(etArmStickScale != null ? etArmStickScale.getText().toString() : "", ArmLengthPreferences.DEFAULT_SCALE);
+
+        if (boomScale < MIN_ARM_SCALE || boomScale > MAX_ARM_SCALE
+                || stickScale < MIN_ARM_SCALE || stickScale > MAX_ARM_SCALE) {
+            Toast.makeText(this,
+                    "大臂、小臂比例须在 " + MIN_ARM_SCALE + "～" + MAX_ARM_SCALE + " 之间",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ArmLengthPreferences.save(this, boomScale, stickScale);
+
+        Intent resultIntent = new Intent();
+        if (!newUrl.isEmpty()) resultIntent.putExtra("video_url", newUrl);
+        resultIntent.putExtra("arm_boom_scale", boomScale);
+        resultIntent.putExtra("arm_stick_scale", stickScale);
+        setResult(RESULT_OK, resultIntent);
+
+        Toast.makeText(this, newUrl.isEmpty() ? "臂长比例已保存" : "已保存并应用", Toast.LENGTH_SHORT).show();
+        finish();
+    }
+
+    // ── IMU page ─────────────────────────────────────────────────────────────
+
+    private void bindImuPage() {
+        tvImuBoomOffsetPreview   = pageImu.findViewById(R.id.tvImuBoomOffsetPreview);
+        tvImuStickOffsetPreview  = pageImu.findViewById(R.id.tvImuStickOffsetPreview);
+        tvImuBucketOffsetPreview = pageImu.findViewById(R.id.tvImuBucketOffsetPreview);
+
+        refreshImuPreviewLabels();
+
+        // 点击偏移量预览值 → 弹出数字键盘
+        bindImuNumpad(tvImuBoomOffsetPreview,   "boomImuOffsetDeg");
+        bindImuNumpad(tvImuStickOffsetPreview,  "stickImuOffsetDeg");
+        bindImuNumpad(tvImuBucketOffsetPreview, "bucketImuOffsetDeg");
+
+//        Button btnOpenImuDialog = pageImu.findViewById(R.id.btnOpenImuDialog);
+//        if (btnOpenImuDialog != null) {
+//            btnOpenImuDialog.setOnClickListener(v -> showImuSettingsDialog());
+//        }
+    }
+
+    /**
+     * 给 IMU 偏移预览 TextView 绑定数字键盘。
+     * 点击 → 弹出键盘，确认 → 立即持久化该字段并刷新显示。
+     *
+     * @param tv        偏移量预览 TextView
+     * @param fieldKey  对应字段名（仅用于注释/调试，实际由 lambda 区分）
+     */
+    private void bindImuNumpad(TextView tv, String fieldKey) {
+        if (tv == null) return;
+        tv.setClickable(true);
+        tv.setFocusable(true);
+        tv.setOnClickListener(v -> {
+            ImuPreferences.Params current = ImuPreferences.load(this);
+            double initialValue;
+            switch (fieldKey) {
+                case "boomImuOffsetDeg":   initialValue = current.boomImuOffsetDeg;   break;
+                case "stickImuOffsetDeg":  initialValue = current.stickImuOffsetDeg;  break;
+                case "bucketImuOffsetDeg": initialValue = current.bucketImuOffsetDeg; break;
+                default: initialValue = 0; break;
+            }
+
+            NumpadView numpad = new NumpadView(this);
+            numpad.setValue(ImuPreferences.fmt(initialValue));
+            numpad.setOnConfirmListener(value -> {
+                double parsed = ImuPreferences.parseOrDefault(value, initialValue);
+                ImuPreferences.Params p = ImuPreferences.load(this);
+                switch (fieldKey) {
+                    case "boomImuOffsetDeg":   p.boomImuOffsetDeg   = parsed; break;
+                    case "stickImuOffsetDeg":  p.stickImuOffsetDeg  = parsed; break;
+                    case "bucketImuOffsetDeg": p.bucketImuOffsetDeg = parsed; break;
+                }
+                ImuPreferences.save(this, p);
+                refreshImuPreviewLabels();
+            });
+            // 定位：使用 window 绝对坐标（你可自行调整 x/y）
+            numpad.showForAtScreen(tv, tv, 1260, 278);
+        });
+    }
 
     private void refreshImuPreviewLabels() {
         ImuPreferences.Params p = ImuPreferences.load(this);
@@ -122,7 +243,25 @@ public class SettingsActivity extends AppCompatActivity {
             tvImuBucketOffsetPreview.setText(String.format(Locale.US, fmt, p.bucketImuOffsetDeg));
     }
 
-    // ── IMU Dialog ───────────────────────────────────────────────────────────
+    // ── General page ─────────────────────────────────────────────────────────
+
+    private void bindGeneralPage() {
+        etSettingsVideoUrl = pageGeneral.findViewById(R.id.etSettingsVideoUrl);
+        etArmBoomScale     = pageGeneral.findViewById(R.id.etArmBoomScale);
+        etArmStickScale    = pageGeneral.findViewById(R.id.etArmStickScale);
+
+        String currentUrl = getIntent().getStringExtra("current_url");
+        if (currentUrl != null && !currentUrl.isEmpty() && etSettingsVideoUrl != null) {
+            etSettingsVideoUrl.setText(currentUrl);
+        }
+
+        float boom  = ArmLengthPreferences.getBoomScale(this);
+        float stick = ArmLengthPreferences.getStickScale(this);
+        if (etArmBoomScale  != null) etArmBoomScale.setText(formatScaleForEdit(boom));
+        if (etArmStickScale != null) etArmStickScale.setText(formatScaleForEdit(stick));
+    }
+
+    // ── IMU dialog ───────────────────────────────────────────────────────────
 
     private void showImuSettingsDialog() {
         Dialog dialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
@@ -138,7 +277,6 @@ public class SettingsActivity extends AppCompatActivity {
             window.setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        // Load joint diagram from assets
         ImageView ivDiagram = dialog.findViewById(R.id.ivJointDiagram);
         try {
             InputStream is = getAssets().open("images/preview.jpg");
@@ -149,25 +287,22 @@ public class SettingsActivity extends AppCompatActivity {
             ivDiagram.setVisibility(View.GONE);
         }
 
-        // Load current params
         ImuPreferences.Params p = ImuPreferences.load(this);
 
-        // ── Bind all field rows ──
-        FieldRow rowBoomOffset      = new FieldRow(dialog, R.id.rowBoomOffset,      "大臂 IMU 偏移角 (°)",  ImuPreferences.fmt(p.boomImuOffsetDeg));
-        FieldRow rowStickOffset     = new FieldRow(dialog, R.id.rowStickOffset,     "小臂 IMU 偏移角 (°)",  ImuPreferences.fmt(p.stickImuOffsetDeg));
-        FieldRow rowBucketOffset    = new FieldRow(dialog, R.id.rowBucketOffset,    "铲斗 IMU 偏移角 (°)",  ImuPreferences.fmt(p.bucketImuOffsetDeg));
+        FieldRow rowBoomOffset   = new FieldRow(dialog, R.id.rowBoomOffset,       "大臂 IMU 偏移角 (°)",   ImuPreferences.fmt(p.boomImuOffsetDeg));
+        FieldRow rowStickOffset  = new FieldRow(dialog, R.id.rowStickOffset,      "小臂 IMU 偏移角 (°)",   ImuPreferences.fmt(p.stickImuOffsetDeg));
+        FieldRow rowBucketOffset = new FieldRow(dialog, R.id.rowBucketOffset,     "铲斗 IMU 偏移角 (°)",   ImuPreferences.fmt(p.bucketImuOffsetDeg));
+        FieldRow rowBoomLength   = new FieldRow(dialog, R.id.rowBoomLength,       "大臂长度",               ImuPreferences.fmt(p.boomLength));
+        FieldRow rowStickLength  = new FieldRow(dialog, R.id.rowStickLength,      "小臂长度",               ImuPreferences.fmt(p.stickLength));
+        FieldRow rowBucketLength = new FieldRow(dialog, R.id.rowBucketLength,     "铲斗长度",               ImuPreferences.fmt(p.bucketLength));
+        FieldRow rowBucketAO     = new FieldRow(dialog, R.id.rowBucketAngleOffset,"铲斗角偏移 (°)",         ImuPreferences.fmt(p.bucketAngleOffsetDeg));
 
-        FieldRow rowBoomLength      = new FieldRow(dialog, R.id.rowBoomLength,      "大臂长度",              ImuPreferences.fmt(p.boomLength));
-        FieldRow rowStickLength     = new FieldRow(dialog, R.id.rowStickLength,     "小臂长度",              ImuPreferences.fmt(p.stickLength));
-        FieldRow rowBucketLength    = new FieldRow(dialog, R.id.rowBucketLength,    "铲斗长度",              ImuPreferences.fmt(p.bucketLength));
-        FieldRow rowBucketAO        = new FieldRow(dialog, R.id.rowBucketAngleOffset,"铲斗角偏移 (°)",       ImuPreferences.fmt(p.bucketAngleOffsetDeg));
-
-        FieldRow rowBoomL2 = new FieldRow(dialog, R.id.rowBoomL2, "boomL2", ImuPreferences.fmt(p.boomL2));
-        FieldRow rowBoomL3 = new FieldRow(dialog, R.id.rowBoomL3, "boomL3", ImuPreferences.fmt(p.boomL3));
-        FieldRow rowBoomL4 = new FieldRow(dialog, R.id.rowBoomL4, "boomL4", ImuPreferences.fmt(p.boomL4));
-        FieldRow rowBoomL5 = new FieldRow(dialog, R.id.rowBoomL5, "boomL5", ImuPreferences.fmt(p.boomL5));
-        FieldRow rowBoomL6 = new FieldRow(dialog, R.id.rowBoomL6, "boomL6", ImuPreferences.fmt(p.boomL6));
-        FieldRow rowBoomL7 = new FieldRow(dialog, R.id.rowBoomL7, "boomL7", ImuPreferences.fmt(p.boomL7));
+        FieldRow rowBoomL2  = new FieldRow(dialog, R.id.rowBoomL2,  "boomL2",  ImuPreferences.fmt(p.boomL2));
+        FieldRow rowBoomL3  = new FieldRow(dialog, R.id.rowBoomL3,  "boomL3",  ImuPreferences.fmt(p.boomL3));
+        FieldRow rowBoomL4  = new FieldRow(dialog, R.id.rowBoomL4,  "boomL4",  ImuPreferences.fmt(p.boomL4));
+        FieldRow rowBoomL5  = new FieldRow(dialog, R.id.rowBoomL5,  "boomL5",  ImuPreferences.fmt(p.boomL5));
+        FieldRow rowBoomL6  = new FieldRow(dialog, R.id.rowBoomL6,  "boomL6",  ImuPreferences.fmt(p.boomL6));
+        FieldRow rowBoomL7  = new FieldRow(dialog, R.id.rowBoomL7,  "boomL7",  ImuPreferences.fmt(p.boomL7));
 
         FieldRow rowStickL2 = new FieldRow(dialog, R.id.rowStickL2, "stickL2", ImuPreferences.fmt(p.stickL2));
         FieldRow rowStickL3 = new FieldRow(dialog, R.id.rowStickL3, "stickL3", ImuPreferences.fmt(p.stickL3));
@@ -185,11 +320,10 @@ public class SettingsActivity extends AppCompatActivity {
         FieldRow rowBucketL9  = new FieldRow(dialog, R.id.rowBucketL9,  "bucketL9",  ImuPreferences.fmt(p.bucketL9));
         FieldRow rowBucketL10 = new FieldRow(dialog, R.id.rowBucketL10, "bucketL10", ImuPreferences.fmt(p.bucketL10));
 
-        // ── Buttons ──
         dialog.findViewById(R.id.btnImuDialogCancel).setOnClickListener(v -> dialog.dismiss());
 
         dialog.findViewById(R.id.btnImuDialogReset).setOnClickListener(v -> {
-            ImuPreferences.Params def = new ImuPreferences.Params(); // all defaults
+            ImuPreferences.Params def = new ImuPreferences.Params();
             rowBoomOffset.set(ImuPreferences.fmt(def.boomImuOffsetDeg));
             rowStickOffset.set(ImuPreferences.fmt(def.stickImuOffsetDeg));
             rowBucketOffset.set(ImuPreferences.fmt(def.bucketImuOffsetDeg));
@@ -222,43 +356,27 @@ public class SettingsActivity extends AppCompatActivity {
 
         dialog.findViewById(R.id.btnImuDialogSave).setOnClickListener(v -> {
             ImuPreferences.Params np = new ImuPreferences.Params();
-
             np.boomImuOffsetDeg   = rowBoomOffset.get(p.boomImuOffsetDeg);
             np.stickImuOffsetDeg  = rowStickOffset.get(p.stickImuOffsetDeg);
             np.bucketImuOffsetDeg = rowBucketOffset.get(p.bucketImuOffsetDeg);
-
             np.boomLength           = rowBoomLength.get(p.boomLength);
             np.stickLength          = rowStickLength.get(p.stickLength);
             np.bucketLength         = rowBucketLength.get(p.bucketLength);
             np.bucketAngleOffsetDeg = rowBucketAO.get(p.bucketAngleOffsetDeg);
-
-            np.boomL2 = rowBoomL2.get(p.boomL2);
-            np.boomL3 = rowBoomL3.get(p.boomL3);
-            np.boomL4 = rowBoomL4.get(p.boomL4);
-            np.boomL5 = rowBoomL5.get(p.boomL5);
-            np.boomL6 = rowBoomL6.get(p.boomL6);
-            np.boomL7 = rowBoomL7.get(p.boomL7);
-
-            np.stickL2 = rowStickL2.get(p.stickL2);
-            np.stickL3 = rowStickL3.get(p.stickL3);
-            np.stickL4 = rowStickL4.get(p.stickL4);
-            np.stickL5 = rowStickL5.get(p.stickL5);
-            np.stickL6 = rowStickL6.get(p.stickL6);
-            np.stickL7 = rowStickL7.get(p.stickL7);
-
-            np.bucketL2  = rowBucketL2.get(p.bucketL2);
-            np.bucketL3  = rowBucketL3.get(p.bucketL3);
-            np.bucketL4  = rowBucketL4.get(p.bucketL4);
-            np.bucketL5  = rowBucketL5.get(p.bucketL5);
-            np.bucketL6  = rowBucketL6.get(p.bucketL6);
-            np.bucketL7  = rowBucketL7.get(p.bucketL7);
-            np.bucketL9  = rowBucketL9.get(p.bucketL9);
-            np.bucketL10 = rowBucketL10.get(p.bucketL10);
+            np.boomL2 = rowBoomL2.get(p.boomL2); np.boomL3 = rowBoomL3.get(p.boomL3);
+            np.boomL4 = rowBoomL4.get(p.boomL4); np.boomL5 = rowBoomL5.get(p.boomL5);
+            np.boomL6 = rowBoomL6.get(p.boomL6); np.boomL7 = rowBoomL7.get(p.boomL7);
+            np.stickL2 = rowStickL2.get(p.stickL2); np.stickL3 = rowStickL3.get(p.stickL3);
+            np.stickL4 = rowStickL4.get(p.stickL4); np.stickL5 = rowStickL5.get(p.stickL5);
+            np.stickL6 = rowStickL6.get(p.stickL6); np.stickL7 = rowStickL7.get(p.stickL7);
+            np.bucketL2  = rowBucketL2.get(p.bucketL2);  np.bucketL3  = rowBucketL3.get(p.bucketL3);
+            np.bucketL4  = rowBucketL4.get(p.bucketL4);  np.bucketL5  = rowBucketL5.get(p.bucketL5);
+            np.bucketL6  = rowBucketL6.get(p.bucketL6);  np.bucketL7  = rowBucketL7.get(p.bucketL7);
+            np.bucketL9  = rowBucketL9.get(p.bucketL9);  np.bucketL10 = rowBucketL10.get(p.bucketL10);
 
             ImuPreferences.save(this, np);
             refreshImuPreviewLabels();
 
-            // Signal MainActivity to re-apply IMU config
             Intent result = new Intent();
             result.putExtra("imu_config_updated", true);
             setResult(RESULT_OK, result);
@@ -272,7 +390,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     // ── FieldRow helper ──────────────────────────────────────────────────────
 
-    /** Wraps a single label+EditText row inflated via <include>. */
     private static final class FieldRow {
         private final EditText editText;
 
@@ -284,21 +401,17 @@ public class SettingsActivity extends AppCompatActivity {
             editText.setText(value);
         }
 
-        void set(String value) {
-            editText.setText(value);
-        }
+        void set(String value) { editText.setText(value); }
 
         double get(double fallback) {
             return ImuPreferences.parseOrDefault(editText.getText().toString(), fallback);
         }
     }
 
-    // ── Shared helpers ───────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static String formatScaleForEdit(float v) {
-        if (Math.abs(v - Math.round(v)) < 1e-6f) {
-            return String.valueOf(Math.round(v));
-        }
+        if (Math.abs(v - Math.round(v)) < 1e-6f) return String.valueOf(Math.round(v));
         return String.format(Locale.US, "%.4g", v);
     }
 

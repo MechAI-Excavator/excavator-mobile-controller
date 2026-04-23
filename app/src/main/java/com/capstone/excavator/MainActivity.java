@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private View livePillDot;
     private TextView livePillText;
     private ObjectAnimator liveDotBreathAnimator;
+    private EmergencyStopOverlayView emergencyStopOverlay;
 
     // 驾驶模式状态
     private boolean isManualMode = true;
@@ -192,6 +193,15 @@ public class MainActivity extends AppCompatActivity {
     }
     
     @Override
+    public void onBackPressed() {
+        if (emergencyStopOverlay != null
+                && emergencyStopOverlay.getVisibility() == View.VISIBLE) {
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
@@ -235,6 +245,16 @@ public class MainActivity extends AppCompatActivity {
         headerBar = findViewById(R.id.headerBar);
         headerBar.setMode(isManualMode ? "手动模式" : "自动模式");
 
+        // ── 急停覆盖层 ───────────────────────────────────────────────
+        emergencyStopOverlay = findViewById(R.id.emergencyStopOverlay);
+        headerBar.setOnEmergencyStopListener(() -> {
+            if (emergencyStopOverlay != null) emergencyStopOverlay.show();
+        });
+        if (emergencyStopOverlay != null) {
+            emergencyStopOverlay.setOnDismissListener(() ->
+                    Toast.makeText(this, "急停已解除", Toast.LENGTH_SHORT).show());
+        }
+
         // ── Bottom bar component ─────────────────────────────────────
         bottomBar = findViewById(R.id.bottomBar);
 
@@ -246,15 +266,17 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intent, REQUEST_SETTINGS);
         });
 
-        // Dock 动作占位：找平 / 挖沟 / 修坡 —— 实际业务后续接入
-        bottomBar.setOnLevelListener(() ->
-                Toast.makeText(this, "找平", Toast.LENGTH_SHORT).show());
-        bottomBar.setOnTrenchListener(() ->
-                Toast.makeText(this, "挖沟", Toast.LENGTH_SHORT).show());
-        bottomBar.setOnSlopeListener(() ->
-                Toast.makeText(this, "修坡", Toast.LENGTH_SHORT).show());
+        bottomBar.setOnLevelListener(() -> {
+            Toast.makeText(this, "找平", Toast.LENGTH_SHORT).show();
+        });
 
-        btnFloatingToggle = findViewById(R.id.btnFloatingToggle);
+        bottomBar.setOnTrenchListener(() -> {
+            Toast.makeText(this, "挖沟", Toast.LENGTH_SHORT).show();
+        });
+
+        bottomBar.setOnSlopeListener(() -> {
+            Toast.makeText(this, "修坡", Toast.LENGTH_SHORT).show();
+        });
 
         bottomBar.setOnBarToggleListener(() -> {
             bottomBar.setVisibility(View.GONE);

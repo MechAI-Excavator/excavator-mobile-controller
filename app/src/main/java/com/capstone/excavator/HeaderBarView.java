@@ -33,6 +33,8 @@ public class HeaderBarView extends LinearLayout {
     private TextView tvHeaderConnection;
     private TextView tvCurrentTime;
     private View connectionDot;
+    private TextView btnEmergencyStop;
+    private Runnable onEmergencyStopListener;
 
     private final Handler clockHandler = new Handler(Looper.getMainLooper());
     private final Runnable clockRunnable = new Runnable() {
@@ -61,6 +63,17 @@ public class HeaderBarView extends LinearLayout {
         setBackgroundColor(0x4D000000);
         inflate(context, R.layout.view_header_bar, this);
         tvCurrentTime      = findViewById(R.id.tvCurrentTime);
+        btnEmergencyStop   = findViewById(R.id.btnEmergencyStop);
+        if (btnEmergencyStop != null) {
+            btnEmergencyStop.setOnClickListener(v -> {
+                if (onEmergencyStopListener != null) onEmergencyStopListener.run();
+            });
+        }
+    }
+
+    /** 外部注册急停按钮点击回调。 */
+    public void setOnEmergencyStopListener(Runnable listener) {
+        this.onEmergencyStopListener = listener;
     }
 
     // ── Public API ──────────────────────────────────────────────────

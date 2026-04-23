@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="通用设置"
+            android:textColor="#FF111827"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="配置视频流地址及 3D 模型臂长显示比例。"
+            android:textColor="#FF6B7280"
+            android:textSize="12sp" />
+
+        <!-- 视频流 & 臂长比例卡片 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/card_light_bg"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="视频流 &amp; 臂长比例"
+                android:textColor="#FF111827"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="RTSP 视频流地址"
+                android:textColor="#FF6B7280"
+                android:textSize="12sp" />
+
+            <EditText
+                android:id="@+id/etSettingsVideoUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/edittext_light_bg"
+                android:hint="例如 rtsp://192.168.144.100:554/stream1"
+                android:imeOptions="actionDone"
+                android:inputType="textUri"
+                android:padding="10dp"
+                android:singleLine="true"
+                android:textColor="#FF111827"
+                android:textColorHint="#FFAAAAAA"
+                android:textSize="13sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
+                android:textColor="#FF6B7280"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="大臂比例"
+                        android:textColor="#FF9CA3AF"
+                        android:textSize="11sp" />
+
+                    <EditText
+                        android:id="@+id/etArmBoomScale"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/edittext_light_bg"
+                        android:gravity="center"
+                        android:hint="1.0"
+                        android:imeOptions="actionNext"
+                        android:inputType="numberDecimal"
+                        android:padding="8dp"
+                        android:singleLine="true"
+                        android:text="1"
+                        android:textColor="#FF111827"
+                        android:textColorHint="#FFAAAAAA"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="小臂比例"
+                        android:textColor="#FF9CA3AF"
+                        android:textSize="11sp" />
+
+                    <EditText
+                        android:id="@+id/etArmStickScale"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/edittext_light_bg"
+                        android:gravity="center"
+                        android:hint="1.0"
+                        android:imeOptions="actionDone"
+                        android:inputType="numberDecimal"
+                        android:padding="8dp"
+                        android:singleLine="true"
+                        android:text="1"
+                        android:textColor="#FF111827"
+                        android:textColorHint="#FFAAAAAA"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
