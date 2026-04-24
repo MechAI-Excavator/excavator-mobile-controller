@@ -16,4 +16,8 @@
     <color name="chip_bg">#99000000</color>
     <color name="excavator_gray">#FF888888</color>
     <color name="excavator_orange">#FFFFA500</color>
+
+    <!-- 找平设置页 -->
+    <color name="level_selected">#FF2563EB</color>
+    <color name="level_unselected">#FF9CA3AF</color>
 </resources>

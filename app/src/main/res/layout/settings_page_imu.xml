@@ -32,13 +32,14 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:baselineAligned="false"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:weightSum="97.4">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="15dp"
-                android:layout_weight="1"
+                android:layout_weight="52.2"
                 android:orientation="vertical">
 
                 <!-- 大臂卡片 -->
@@ -101,7 +102,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="大臂IMU相对于设计位置的安装偏差"
                                 android:textColor="#FF9CA3AF"
-                                android:textSize="10dp" />
+                                android:textSize="9sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -191,7 +192,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="小臂IMU相对于设计位置的安装偏差"
                                 android:textColor="#FF9CA3AF"
-                                android:textSize="11sp" />
+                                android:textSize="9sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -280,7 +281,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="铲斗IMU相对于设计位置的安装偏差"
                                 android:textColor="#FF9CA3AF"
-                                android:textSize="11sp" />
+                                android:textSize="9sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -315,7 +316,7 @@
                 android:id="@+id/imuSidePanel"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="45.2"
                 android:background="@drawable/side_panel_white_bg"
                 android:elevation="1dp"
             

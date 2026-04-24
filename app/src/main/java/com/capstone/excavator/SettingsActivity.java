@@ -2,11 +2,15 @@ package com.capstone.excavator;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -15,9 +19,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+
+import com.google.android.material.slider.Slider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +42,14 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final float MIN_ARM_SCALE = 0.1f;
     private static final float MAX_ARM_SCALE = 10f;
+
+    private static final String PREFS_GENERAL_UI = "general_ui_prefs";
+    private static final String KEY_BRIGHTNESS_PERCENT = "brightness_percent";
+    private static final String KEY_LANGUAGE = "language";
+
+    /** 尺寸页 / IMU 页数字键盘在屏幕上的固定锚点（与旧版 IMU 行为一致）。 */
+    private static final int NUMPAD_SCREEN_X = 1260;
+    private static final int NUMPAD_SCREEN_Y = 278;
 
     // ── 导航项 ───────────────────────────────────────────────────────────────
     private LinearLayout navImu;
@@ -58,6 +75,12 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText etArmBoomScale;
     private EditText etArmStickScale;
 
+    private Button btnLangZhHans;
+    private Button btnLangZhHant;
+    private Button btnLangEn;
+    private Slider sbBrightness;
+    private TextView tvBrightnessPercent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +91,8 @@ public class SettingsActivity extends AppCompatActivity {
         bindPages();
         bindTopBar();
         bindImuPage();
+        bindDimensionsPage();
+        bindJoystickPage();
         bindGeneralPage();
 
         showPage(0);
@@ -228,7 +253,263 @@ public class SettingsActivity extends AppCompatActivity {
                 refreshImuPreviewLabels();
             });
             // 定位：使用 window 绝对坐标（你可自行调整 x/y）
-            numpad.showForAtScreen(tv, tv, 1260, 278);
+            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+        });
+    }
+
+    // ── Dimensions page ─────────────────────────────────────────────────────
+
+    private void bindDimensionsPage() {
+        if (pageDimensions == null) return;
+
+        TextView tabSelect = pageDimensions.findViewById(R.id.tabDimSelectModel);
+        TextView tabCustom = pageDimensions.findViewById(R.id.tabDimCustom);
+        View underlineSelect = pageDimensions.findViewById(R.id.dimUnderlineSelect);
+        View underlineCustom = pageDimensions.findViewById(R.id.dimUnderlineCustom);
+        View panelSelect = pageDimensions.findViewById(R.id.dimPanelSelect);
+        View panelCustom = pageDimensions.findViewById(R.id.dimPanelCustom);
+
+        TextView tvDimLb = pageDimensions.findViewById(R.id.tvDimLb);
+        TextView tvDimLs = pageDimensions.findViewById(R.id.tvDimLs);
+        TextView tvDimLinkL1 = pageDimensions.findViewById(R.id.tvDimLinkL1);
+        TextView tvDimLinkL2 = pageDimensions.findViewById(R.id.tvDimLinkL2);
+        TextView tvDimLinkL3 = pageDimensions.findViewById(R.id.tvDimLinkL3);
+        TextView tvDimLinkL4 = pageDimensions.findViewById(R.id.tvDimLinkL4);
+        TextView tvDimLinkAngle = pageDimensions.findViewById(R.id.tvDimLinkAngle);
+        TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
+        TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
+        TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
+
+        wireModelCard(R.id.cardDimCAT303, R.id.checkDimCAT303, DimensionPreferences.MODEL_CAT_303);
+        wireModelCard(R.id.cardDimCAT312, R.id.checkDimCAT312, DimensionPreferences.MODEL_CAT_312);
+        wireModelCard(R.id.cardDimCAT320, R.id.checkDimCAT320, DimensionPreferences.MODEL_CAT_320);
+        wireModelCard(R.id.cardDimCAT330, R.id.checkDimCAT330, DimensionPreferences.MODEL_CAT_330);
+        wireModelCard(R.id.cardDimCAT336, R.id.checkDimCAT336, DimensionPreferences.MODEL_CAT_336);
+
+        View.OnClickListener tabSelectListener = v -> showDimensionsSubTab(
+                tabSelect, tabCustom, underlineSelect, underlineCustom, panelSelect, panelCustom, 0);
+        View.OnClickListener tabCustomListener = v -> showDimensionsSubTab(
+                tabSelect, tabCustom, underlineSelect, underlineCustom, panelSelect, panelCustom, 1);
+
+        pageDimensions.findViewById(R.id.wrapTabDimSelectModel).setOnClickListener(tabSelectListener);
+        tabSelect.setOnClickListener(tabSelectListener);
+        pageDimensions.findViewById(R.id.wrapTabDimCustom).setOnClickListener(tabCustomListener);
+        tabCustom.setOnClickListener(tabCustomListener);
+
+        bindDimensionNumpad(tvDimLb, "boomM");
+        bindDimensionNumpad(tvDimLs, "stickM");
+        bindDimensionNumpad(tvDimLinkL1, "linkL1");
+        bindDimensionNumpad(tvDimLinkL2, "linkL2");
+        bindDimensionNumpad(tvDimLinkL3, "linkL3");
+        bindDimensionNumpad(tvDimLinkL4, "linkL4");
+        bindDimensionNumpad(tvDimLinkAngle, "linkAngleDeg");
+        bindDimensionNumpad(tvDimChassisH, "chassisM");
+        bindDimensionNumpad(tvDimTrackW, "trackM");
+        bindDimensionNumpad(tvDimCabinH, "cabinM");
+
+        DimensionPreferences.Params p = DimensionPreferences.load(this);
+        refreshDimensionModelSelectionUi(p.selectedModel);
+        refreshDimensionValueLabels();
+        showDimensionsSubTab(tabSelect, tabCustom, underlineSelect, underlineCustom,
+                panelSelect, panelCustom, 0);
+    }
+
+    private void wireModelCard(int cardId, int checkId, String modelId) {
+        View card = pageDimensions.findViewById(cardId);
+        if (card == null) return;
+        card.setOnClickListener(v -> {
+            DimensionPreferences.applyModelPreset(this, modelId);
+            refreshDimensionModelSelectionUi(modelId);
+            refreshDimensionValueLabels();
+        });
+    }
+
+    private void showDimensionsSubTab(
+            TextView tabSelect,
+            TextView tabCustom,
+            View underlineSelect,
+            View underlineCustom,
+            View panelSelect,
+            View panelCustom,
+            int index) {
+        boolean selectModel = (index == 0);
+        panelSelect.setVisibility(selectModel ? View.VISIBLE : View.GONE);
+        panelCustom.setVisibility(selectModel ? View.GONE : View.VISIBLE);
+
+        int active = 0xFF2563EB;
+        int inactiveText = 0xFF9CA3AF;
+        int inactiveLine = 0xFFE5E7EB;
+
+        tabSelect.setTextColor(selectModel ? active : inactiveText);
+        tabSelect.setTypeface(null, selectModel ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        underlineSelect.setBackgroundColor(selectModel ? active : inactiveLine);
+
+        tabCustom.setTextColor(selectModel ? inactiveText : active);
+        tabCustom.setTypeface(null, selectModel ? android.graphics.Typeface.NORMAL : android.graphics.Typeface.BOLD);
+        underlineCustom.setBackgroundColor(selectModel ? inactiveLine : active);
+    }
+
+    private void refreshDimensionModelSelectionUi(String selectedModel) {
+        int[] cardIds = {
+                R.id.cardDimCAT303, R.id.cardDimCAT312, R.id.cardDimCAT320,
+                R.id.cardDimCAT330, R.id.cardDimCAT336
+        };
+        int[] checkIds = {
+                R.id.checkDimCAT303, R.id.checkDimCAT312, R.id.checkDimCAT320,
+                R.id.checkDimCAT330, R.id.checkDimCAT336
+        };
+        String[] modelIds = {
+                DimensionPreferences.MODEL_CAT_303, DimensionPreferences.MODEL_CAT_312,
+                DimensionPreferences.MODEL_CAT_320, DimensionPreferences.MODEL_CAT_330,
+                DimensionPreferences.MODEL_CAT_336
+        };
+        float d = getResources().getDisplayMetrics().density;
+        for (int i = 0; i < cardIds.length; i++) {
+            View card = pageDimensions.findViewById(cardIds[i]);
+            TextView check = pageDimensions.findViewById(checkIds[i]);
+            if (card == null || check == null) continue;
+            boolean sel = modelIds[i].equals(selectedModel);
+            card.setBackgroundResource(sel ? R.drawable.model_card_selected_bg : R.drawable.card_light_bg);
+            card.setElevation(sel ? 2f * d : 1f * d);
+            check.setVisibility(sel ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void refreshDimensionValueLabels() {
+        DimensionPreferences.Params p = DimensionPreferences.load(this);
+        TextView tvDimLb = pageDimensions.findViewById(R.id.tvDimLb);
+        TextView tvDimLs = pageDimensions.findViewById(R.id.tvDimLs);
+        TextView tvDimLinkL1 = pageDimensions.findViewById(R.id.tvDimLinkL1);
+        TextView tvDimLinkL2 = pageDimensions.findViewById(R.id.tvDimLinkL2);
+        TextView tvDimLinkL3 = pageDimensions.findViewById(R.id.tvDimLinkL3);
+        TextView tvDimLinkL4 = pageDimensions.findViewById(R.id.tvDimLinkL4);
+        TextView tvDimLinkAngle = pageDimensions.findViewById(R.id.tvDimLinkAngle);
+        TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
+        TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
+        TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
+
+        if (tvDimLb != null) tvDimLb.setText(String.format(Locale.US, "%.2f", p.boomM));
+        if (tvDimLs != null) tvDimLs.setText(String.format(Locale.US, "%.2f", p.stickM));
+        if (tvDimLinkL1 != null) tvDimLinkL1.setText(String.format(Locale.US, "%.2f", p.linkL1));
+        if (tvDimLinkL2 != null) tvDimLinkL2.setText(String.format(Locale.US, "%.2f", p.linkL2));
+        if (tvDimLinkL3 != null) tvDimLinkL3.setText(String.format(Locale.US, "%.2f", p.linkL3));
+        if (tvDimLinkL4 != null) tvDimLinkL4.setText(String.format(Locale.US, "%.2f", p.linkL4));
+        if (tvDimLinkAngle != null) tvDimLinkAngle.setText(String.format(Locale.US, "%.1f", p.linkAngleDeg));
+        if (tvDimChassisH != null) tvDimChassisH.setText(String.format(Locale.US, "%.2f", p.chassisHeightM));
+        if (tvDimTrackW != null) tvDimTrackW.setText(String.format(Locale.US, "%.2f", p.trackWidthM));
+        if (tvDimCabinH != null) tvDimCabinH.setText(String.format(Locale.US, "%.2f", p.cabinHeightM));
+    }
+
+    /**
+     * 自定义尺寸数值：点击预览 TextView → 与 IMU 页相同的屏幕坐标弹出数字键盘。
+     */
+    private void bindDimensionNumpad(TextView tv, String fieldKey) {
+        if (tv == null) return;
+        tv.setClickable(true);
+        tv.setFocusable(true);
+        tv.setOnClickListener(v -> {
+            DimensionPreferences.Params current = DimensionPreferences.load(this);
+            double initialValue;
+            switch (fieldKey) {
+                case "boomM": initialValue = current.boomM; break;
+                case "stickM": initialValue = current.stickM; break;
+                case "linkL1": initialValue = current.linkL1; break;
+                case "linkL2": initialValue = current.linkL2; break;
+                case "linkL3": initialValue = current.linkL3; break;
+                case "linkL4": initialValue = current.linkL4; break;
+                case "linkAngleDeg": initialValue = current.linkAngleDeg; break;
+                case "chassisM": initialValue = current.chassisHeightM; break;
+                case "trackM": initialValue = current.trackWidthM; break;
+                case "cabinM": initialValue = current.cabinHeightM; break;
+                default: initialValue = 0; break;
+            }
+
+            NumpadView numpad = new NumpadView(this);
+            if ("linkAngleDeg".equals(fieldKey)) {
+                numpad.setValue(String.format(Locale.US, "%.1f", initialValue));
+            } else {
+                numpad.setValue(String.format(Locale.US, "%.2f", initialValue));
+            }
+            numpad.setOnConfirmListener(value -> {
+                double parsed = ImuPreferences.parseOrDefault(value, initialValue);
+                DimensionPreferences.Params p = DimensionPreferences.load(this);
+                switch (fieldKey) {
+                    case "boomM": p.boomM = parsed; break;
+                    case "stickM": p.stickM = parsed; break;
+                    case "linkL1": p.linkL1 = parsed; break;
+                    case "linkL2": p.linkL2 = parsed; break;
+                    case "linkL3": p.linkL3 = parsed; break;
+                    case "linkL4": p.linkL4 = parsed; break;
+                    case "linkAngleDeg": p.linkAngleDeg = parsed; break;
+                    case "chassisM": p.chassisHeightM = parsed; break;
+                    case "trackM": p.trackWidthM = parsed; break;
+                    case "cabinM": p.cabinHeightM = parsed; break;
+                }
+                DimensionPreferences.save(this, p);
+                refreshDimensionValueLabels();
+            });
+            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+        });
+    }
+
+    // ── Joystick page ───────────────────────────────────────────────────────
+
+    private void bindJoystickPage() {
+        if (pageJoystick == null) return;
+
+        AppCompatAutoCompleteTextView leftAB = pageJoystick.findViewById(R.id.spJoyLeftAB);
+        AppCompatAutoCompleteTextView leftCD = pageJoystick.findViewById(R.id.spJoyLeftCD);
+        AppCompatAutoCompleteTextView rightEF = pageJoystick.findViewById(R.id.spJoyRightEF);
+        AppCompatAutoCompleteTextView rightGH = pageJoystick.findViewById(R.id.spJoyRightGH);
+
+        String[] options = new String[] { "大臂", "小臂", "铲斗", "回旋" };
+        bindJoystickDropdown(leftAB, options);
+        bindJoystickDropdown(leftCD, options);
+        bindJoystickDropdown(rightEF, options);
+        bindJoystickDropdown(rightGH, options);
+    }
+
+    private void bindJoystickDropdown(AppCompatAutoCompleteTextView tv, String[] options) {
+        if (tv == null) return;
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this,
+                R.layout.dropdown_item_with_divider,
+                R.id.tvDropdownText,
+                options
+        ) {
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                View row = super.getView(position, convertView, parent);
+                View divider = row.findViewById(R.id.vDivider);
+                if (divider != null) {
+                    divider.setVisibility(position == getCount() - 1 ? View.GONE : View.VISIBLE);
+                }
+                return row;
+            }
+        };
+        tv.setAdapter(adapter);
+
+        // 下拉弹窗背景（更像卡片）
+        tv.setDropDownBackgroundResource(R.drawable.card_light_bg);
+
+        // 右侧箭头改为灰色，避免白色“斜切块”视觉突兀
+        Drawable arrow = AppCompatResources.getDrawable(this, R.drawable.droparrowdown);
+        if (arrow != null) {
+            Drawable wrapped = DrawableCompat.wrap(arrow.mutate());
+            DrawableCompat.setTint(wrapped, 0xFF9CA3AF);
+            int sizePx = (int) (10 * getResources().getDisplayMetrics().density);
+            wrapped.setBounds(0, 0, sizePx, sizePx);
+            tv.setCompoundDrawablesRelative(null, null, wrapped, null);
+            tv.setCompoundDrawablePadding((int) (4 * getResources().getDisplayMetrics().density));
+        }
+
+        // 更像「选择器」：不可编辑，点击即弹出
+        tv.setKeyListener(null);
+        tv.setCursorVisible(false);
+        tv.setOnClickListener(v -> tv.showDropDown());
+        tv.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) tv.showDropDown();
         });
     }
 
@@ -250,6 +531,44 @@ public class SettingsActivity extends AppCompatActivity {
         etArmBoomScale     = pageGeneral.findViewById(R.id.etArmBoomScale);
         etArmStickScale    = pageGeneral.findViewById(R.id.etArmStickScale);
 
+        btnLangZhHans = pageGeneral.findViewById(R.id.btnLangZhHans);
+        btnLangZhHant = pageGeneral.findViewById(R.id.btnLangZhHant);
+        btnLangEn     = pageGeneral.findViewById(R.id.btnLangEn);
+        sbBrightness  = pageGeneral.findViewById(R.id.sbBrightness);
+        tvBrightnessPercent = pageGeneral.findViewById(R.id.tvBrightnessPercent);
+
+        SharedPreferences sp = getSharedPreferences(PREFS_GENERAL_UI, MODE_PRIVATE);
+
+        // Language UI only (no actual locale switching yet)
+        String lang = sp.getString(KEY_LANGUAGE, "zh-Hans");
+        applyLanguageUi(lang);
+        View.OnClickListener langClick = v -> {
+            String next = "zh-Hans";
+            if (v == btnLangZhHant) next = "zh-Hant";
+            else if (v == btnLangEn) next = "en";
+            sp.edit().putString(KEY_LANGUAGE, next).apply();
+            applyLanguageUi(next);
+        };
+        if (btnLangZhHans != null) btnLangZhHans.setOnClickListener(langClick);
+        if (btnLangZhHant != null) btnLangZhHant.setOnClickListener(langClick);
+        if (btnLangEn != null) btnLangEn.setOnClickListener(langClick);
+
+        // Brightness (apply to this Activity window)
+        int percent = sp.getInt(KEY_BRIGHTNESS_PERCENT, 50);
+        percent = Math.max(1, Math.min(100, percent));
+        applyBrightnessPercent(percent);
+        if (sbBrightness != null) {
+            sbBrightness.setValueFrom(1f);
+            sbBrightness.setValueTo(100f);
+            sbBrightness.setStepSize(1f);
+            sbBrightness.setValue((float) percent);
+            sbBrightness.addOnChangeListener((slider, value, fromUser) -> {
+                int p = Math.max(1, Math.min(100, Math.round(value)));
+                applyBrightnessPercent(p);
+                sp.edit().putInt(KEY_BRIGHTNESS_PERCENT, p).apply();
+            });
+        }
+
         String currentUrl = getIntent().getStringExtra("current_url");
         if (currentUrl != null && !currentUrl.isEmpty() && etSettingsVideoUrl != null) {
             etSettingsVideoUrl.setText(currentUrl);
@@ -259,6 +578,32 @@ public class SettingsActivity extends AppCompatActivity {
         float stick = ArmLengthPreferences.getStickScale(this);
         if (etArmBoomScale  != null) etArmBoomScale.setText(formatScaleForEdit(boom));
         if (etArmStickScale != null) etArmStickScale.setText(formatScaleForEdit(stick));
+    }
+
+    private void applyBrightnessPercent(int percent) {
+        if (tvBrightnessPercent != null) tvBrightnessPercent.setText(percent + "%");
+        Window window = getWindow();
+        if (window == null) return;
+        WindowManager.LayoutParams lp = window.getAttributes();
+        // 0..1, keep a tiny minimum to avoid "black screen" feeling.
+        float b = Math.max(0.05f, Math.min(1f, percent / 100f));
+        lp.screenBrightness = b;
+        window.setAttributes(lp);
+    }
+
+    private void applyLanguageUi(String lang) {
+        boolean isHans = "zh-Hans".equals(lang);
+        boolean isHant = "zh-Hant".equals(lang);
+        boolean isEn = "en".equals(lang);
+        setLangButtonState(btnLangZhHans, isHans);
+        setLangButtonState(btnLangZhHant, isHant);
+        setLangButtonState(btnLangEn, isEn);
+    }
+
+    private void setLangButtonState(Button b, boolean selected) {
+        if (b == null) return;
+        b.setBackgroundResource(selected ? R.drawable.lang_chip_selected_bg : R.drawable.lang_chip_unselected_bg);
+        b.setTextColor(selected ? 0xFF2563EB : 0xFF9CA3AF);
     }
 
     // ── IMU dialog ───────────────────────────────────────────────────────────

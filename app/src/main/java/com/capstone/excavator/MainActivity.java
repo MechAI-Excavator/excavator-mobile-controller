@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         bottomBar.setOnLevelListener(() -> {
-            Toast.makeText(this, "找平", Toast.LENGTH_SHORT).show();
+            startActivity(new android.content.Intent(this, LevelSettingActivity.class));
         });
 
         bottomBar.setOnTrenchListener(() -> {
@@ -707,13 +707,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 updateAllData();
-                handler.postDelayed(this, 50); // 每秒更新一次
+                handler.postDelayed(this, 1000); // 每秒更新一次
             }
         };
         
         handler.post(updateRunnable);
         
-        // 摇杆值更新Handler（100ms更新一次）
+        // 摇杆值更新Handler（50ms更新一次）
         joystickHandler = new Handler(Looper.getMainLooper());
         
         joystickUpdateRunnable = new Runnable() {
@@ -867,6 +867,7 @@ public class MainActivity extends AppCompatActivity {
 
                         runOnUiThread(() -> {
                             if (bottomBar != null) {
+                                // JoystickIndicatorView 约定：y 上为正；遥控器通道通常 y 下为正，因此统一取反
                                 bottomBar.setJoystickLeft(ch4Value, ch3Value);
                                 bottomBar.setJoystickRight(ch1Value, -ch2Value);
                             }

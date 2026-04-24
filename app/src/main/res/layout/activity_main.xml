@@ -56,7 +56,7 @@
     <!-- 顶部居中：LIVE 状态胶囊（在急停按钮下方，不属于 HeaderBar） -->
     <eightbitlab.com.blurview.BlurView
         android:id="@+id/livePillBlur"
-        android:layout_width="72dp"
+        android:layout_width="76dp"
         android:layout_height="16.66dp"
         android:layout_gravity="top|center_horizontal"
         android:layout_marginTop="50dp"
@@ -70,6 +70,8 @@
             android:layout_height="match_parent"
             android:orientation="horizontal"
             android:gravity="center"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
             android:paddingStart="6dp"
             android:paddingEnd="6dp">
 
@@ -86,7 +88,7 @@
                 android:layout_height="wrap_content"
                 android:text="实时 · 主相机"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8sp"
                 android:includeFontPadding="false"
                 android:letterSpacing="0.02" />
 

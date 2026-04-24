@@ -81,7 +81,7 @@
 
         <!-- ── 左侧导航面板 ──────────────────────────────────────── -->
         <LinearLayout
-            android:layout_width="205dp"
+            android:layout_width="167dp"
             android:layout_height="match_parent"
             android:background="#FFFFFFFF"
             android:elevation="1dp"

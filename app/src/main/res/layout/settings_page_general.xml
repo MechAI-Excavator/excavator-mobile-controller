@@ -1,86 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
+    android:fillViewport="true"
+    android:paddingStart="20dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- 更改语言 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="通用设置"
+            android:layout_marginBottom="10dp"
+            android:text="更改语言"
             android:textColor="#FF111827"
-            android:textSize="20sp"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="22dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLangZhHans"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/lang_chip_selected_bg"
+                android:backgroundTint="@null"
+                android:elevation="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:stateListAnimator="@null"
+                android:text="简体中文"
+                android:textAllCaps="false"
+                android:textColor="#FF2563EB"
+                android:textSize="13sp"
+                app:backgroundTint="@null"
+                app:elevation="0dp"
+                app:rippleColor="@android:color/transparent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLangZhHant"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/lang_chip_unselected_bg"
+                android:backgroundTint="@null"
+                android:elevation="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:stateListAnimator="@null"
+                android:text="繁體中文"
+                android:textAllCaps="false"
+                android:textColor="#FF9CA3AF"
+                android:textSize="13sp"
+                app:backgroundTint="@null"
+                app:elevation="0dp"
+                app:rippleColor="@android:color/transparent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLangEn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/lang_chip_unselected_bg"
+                android:backgroundTint="@null"
+                android:elevation="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:stateListAnimator="@null"
+                android:text="English"
+                android:textAllCaps="false"
+                android:textColor="#FF9CA3AF"
+                android:textSize="13sp"
+                app:backgroundTint="@null"
+                app:elevation="0dp"
+                app:rippleColor="@android:color/transparent" />
+        </LinearLayout>
+
+        <!-- 界面亮度调节 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="界面亮度调节"
+            android:textColor="#FF111827"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="当前亮度"
+                    android:textColor="#FF6B7280"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="拖动滑块调节"
+                    android:textColor="#FF9CA3AF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvBrightnessPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="50%"
+                android:textColor="#FF2563EB"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sbBrightness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="22dp"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:value="50"
+            android:valueFrom="1"
+            android:valueTo="100"
+            android:stepSize="0"
+            app:labelBehavior="gone"
+            app:tickVisible="false"
+            app:tickColorInactive="#00000000"
+            app:tickColorActive="#00000000"
+            app:haloRadius="10dp"
+            app:haloColor="#00000000"
+            app:thumbRadius="8dp"
+
+            app:thumbStrokeWidth="0dp"
+            app:thumbColor="#004DFF"
+            app:trackColorInactive="#E3EBFF"
+            app:trackColorActive="#004DFF"
+            app:trackHeight="10dp" />
+
+        <!-- 视频流 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="视频流"
+            android:textColor="#FF111827"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="配置视频流地址及 3D 模型臂长显示比例。"
+            android:layout_marginBottom="6dp"
+            android:text="RTSP 视频流地址"
             android:textColor="#FF6B7280"
             android:textSize="12sp" />
 
-        <!-- 视频流 & 臂长比例卡片 -->
+        <EditText
+            android:id="@+id/etSettingsVideoUrl"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="22dp"
+            android:background="@drawable/edittext_light_bg"
+            android:hint="请输入视频流地址"
+            android:imeOptions="actionDone"
+            android:inputType="textUri"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:singleLine="true"
+            android:textColor="#FF111827"
+            android:textColorHint="#FFAAAAAA"
+            android:textSize="13sp" />
+
+        <!-- 原先功能保留：臂长比例（截图未展示，往下滚动可见） -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
+            android:textColor="#FF6B7280"
+            android:textSize="12sp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/card_light_bg"
-            android:elevation="1dp"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="视频流 &amp; 臂长比例"
-                android:textColor="#FF111827"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
-                android:text="RTSP 视频流地址"
-                android:textColor="#FF6B7280"
-                android:textSize="12sp" />
-
-            <EditText
-                android:id="@+id/etSettingsVideoUrl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                android:background="@drawable/edittext_light_bg"
-                android:hint="例如 rtsp://192.168.144.100:554/stream1"
-                android:imeOptions="actionDone"
-                android:inputType="textUri"
-                android:padding="10dp"
-                android:singleLine="true"
-                android:textColor="#FF111827"
-                android:textColorHint="#FFAAAAAA"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="3D 模型臂长比例（与主界面 Web 同步，1 = 默认）"
-                android:textColor="#FF6B7280"
-                android:textSize="12sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -144,7 +280,6 @@
                         android:textColorHint="#FFAAAAAA"
                         android:textSize="13sp" />
                 </LinearLayout>
-            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
