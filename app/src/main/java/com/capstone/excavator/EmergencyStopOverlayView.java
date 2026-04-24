@@ -1,13 +1,13 @@
 package com.capstone.excavator;
 
 import android.content.Context;
+import android.animation.ValueAnimator;
 import android.graphics.Color;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 /**
@@ -27,15 +27,11 @@ public class EmergencyStopOverlayView extends FrameLayout {
         void onEmergencyStopReleased();
     }
 
-    /** 进度条推进帧间隔（毫秒），约等于 60fps */
-    private static final long TICK_INTERVAL_MS = 16L;
-
     private View progressFill;
-    private final Handler holdHandler = new Handler(Looper.getMainLooper());
-    private Runnable tickRunnable;
     private long holdStartTime = 0L;
     private float holdStartScale = 0f;
     private OnDismissListener onDismissListener;
+    private ValueAnimator holdAnimator;
 
     public EmergencyStopOverlayView(Context context) {
         this(context, null);
@@ -104,30 +100,38 @@ public class EmergencyStopOverlayView extends FrameLayout {
             return;
         }
         progressFill.animate().cancel();
+
+        // 用系统动画时钟（基于 Choreographer/VSYNC）推进，避免不同机型上 Handler 16ms 抖动导致卡顿
         holdStartTime = SystemClock.uptimeMillis();
-        tickRunnable = new Runnable() {
+        long remaining = (long) ((1f - holdStartScale) * HOLD_DURATION_MS);
+        remaining = Math.max(0L, remaining);
+
+        holdAnimator = ValueAnimator.ofFloat(holdStartScale, 1f);
+        holdAnimator.setDuration(remaining);
+        holdAnimator.setInterpolator(new LinearInterpolator());
+        holdAnimator.addUpdateListener(anim -> {
+            if (progressFill == null) return;
+            float v = (float) anim.getAnimatedValue();
+            progressFill.setScaleX(v);
+        });
+        holdAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
-            public void run() {
-                long elapsed = SystemClock.uptimeMillis() - holdStartTime;
-                float progress = holdStartScale
-                        + (1f - holdStartScale) * (elapsed / (float) HOLD_DURATION_MS);
-                if (progress >= 1f) {
-                    progressFill.setScaleX(1f);
-                    tickRunnable = null;
+            public void onAnimationEnd(android.animation.Animator animation) {
+                // 若是被 cancel 导致的 end，不触发释放
+                if (holdAnimator == null) return;
+                holdAnimator = null;
+                if (progressFill != null && progressFill.getScaleX() >= 1f) {
                     triggerRelease();
-                    return;
                 }
-                progressFill.setScaleX(progress);
-                holdHandler.postDelayed(this, TICK_INTERVAL_MS);
             }
-        };
-        holdHandler.post(tickRunnable);
+        });
+        holdAnimator.start();
     }
 
     private void cancelHold() {
-        if (tickRunnable != null) {
-            holdHandler.removeCallbacks(tickRunnable);
-            tickRunnable = null;
+        if (holdAnimator != null) {
+            holdAnimator.cancel();
+            holdAnimator = null;
         }
         if (progressFill != null) {
             progressFill.animate().cancel();
@@ -139,9 +143,9 @@ public class EmergencyStopOverlayView extends FrameLayout {
     }
 
     private void resetProgress() {
-        if (tickRunnable != null) {
-            holdHandler.removeCallbacks(tickRunnable);
-            tickRunnable = null;
+        if (holdAnimator != null) {
+            holdAnimator.cancel();
+            holdAnimator = null;
         }
         if (progressFill != null) {
             progressFill.animate().cancel();
