@@ -16,13 +16,13 @@
 
         <!-- 视频画面（16:9 居中全屏） -->
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="730dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <com.skydroid.fpvplayer.FPVWidget
                 android:id="@+id/fpvWidget"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="964dp"
+                android:layout_height="598dp"
                 android:background="#FF000000"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintDimensionRatio="16:9"

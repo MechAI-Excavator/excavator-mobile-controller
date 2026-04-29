@@ -33,6 +33,10 @@
             android:name="com.capstone.excavator.LevelSettingActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
+        <activity
+            android:name="com.capstone.excavator.LevelPrecheckActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
     </application>
 
 </manifest>

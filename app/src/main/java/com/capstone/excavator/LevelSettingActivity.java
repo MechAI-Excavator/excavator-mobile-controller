@@ -1,6 +1,7 @@
 package com.capstone.excavator;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,9 +29,11 @@ public class LevelSettingActivity extends AppCompatActivity {
     // ── 模式切换 ─────────────────────────────────────────────
     private TextView btnModeHeight, btnModeCoord;
     private boolean isHeightMode = true;
+    private View panelHeightMode, panelCoordMode;
 
     // ── 数值输入 ─────────────────────────────────────────────
     private TextView tvTargetHeight, tvFillCut;
+    private TextView tvCoordX, tvCoordY, tvCoordZ;
     private NumpadView numpad;
 
     // ── 距离标注 ─────────────────────────────────────────────
@@ -38,6 +41,8 @@ public class LevelSettingActivity extends AppCompatActivity {
 
     // ── 其他控件 ─────────────────────────────────────────────
     private View btnLevelBack, btnLevelNext;
+    private View btnLevelHelp;
+    private HelpTooltip helpTooltip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,12 +87,19 @@ public class LevelSettingActivity extends AppCompatActivity {
         btnModeHeight = findViewById(R.id.btnModeHeight);
         btnModeCoord  = findViewById(R.id.btnModeCoord);
 
+        panelHeightMode = findViewById(R.id.panelHeightMode);
+        panelCoordMode  = findViewById(R.id.panelCoordMode);
+
         tvTargetHeight = findViewById(R.id.tvTargetHeight);
         tvFillCut      = findViewById(R.id.tvFillCut);
+        tvCoordX       = findViewById(R.id.tvCoordX);
+        tvCoordY       = findViewById(R.id.tvCoordY);
+        tvCoordZ       = findViewById(R.id.tvCoordZ);
         tvDepthLabel   = findViewById(R.id.tvDepthLabel);
 
         btnLevelBack = findViewById(R.id.btnLevelBack);
         btnLevelNext = findViewById(R.id.btnLevelNext);
+        btnLevelHelp = findViewById(R.id.btnLevelHelp);
     }
 
     private void initNumpad() {
@@ -144,6 +156,9 @@ public class LevelSettingActivity extends AppCompatActivity {
             btnModeCoord.setBackground(null);
             btnModeCoord.setTextColor(getColor(R.color.level_unselected));
             btnModeCoord.setTypeface(null, android.graphics.Typeface.NORMAL);
+
+            if (panelHeightMode != null) panelHeightMode.setVisibility(View.VISIBLE);
+            if (panelCoordMode != null) panelCoordMode.setVisibility(View.GONE);
         } else {
             btnModeCoord.setBackground(getDrawable(R.drawable.level_mode_selected_bg));
             btnModeCoord.setTextColor(getColor(R.color.level_selected));
@@ -152,6 +167,9 @@ public class LevelSettingActivity extends AppCompatActivity {
             btnModeHeight.setBackground(null);
             btnModeHeight.setTextColor(getColor(R.color.level_unselected));
             btnModeHeight.setTypeface(null, android.graphics.Typeface.NORMAL);
+
+            if (panelHeightMode != null) panelHeightMode.setVisibility(View.GONE);
+            if (panelCoordMode != null) panelCoordMode.setVisibility(View.VISIBLE);
         }
     }
 
@@ -169,12 +187,36 @@ public class LevelSettingActivity extends AppCompatActivity {
             numpad.setOnConfirmListener(value -> tvFillCut.setText(value));
             numpad.showFor(tvFillCut, tvFillCut, NumpadView.POSITION_ABOVE);
         });
+
+        tvCoordX.setOnClickListener(v -> {
+            if (numpad.isShowing()) { numpad.dismiss(); return; }
+            numpad.setOnConfirmListener(value -> tvCoordX.setText(value));
+            numpad.showFor(tvCoordX, tvCoordX, NumpadView.POSITION_ABOVE);
+        });
+
+        tvCoordY.setOnClickListener(v -> {
+            if (numpad.isShowing()) { numpad.dismiss(); return; }
+            numpad.setOnConfirmListener(value -> tvCoordY.setText(value));
+            numpad.showFor(tvCoordY, tvCoordY, NumpadView.POSITION_ABOVE);
+        });
+
+        tvCoordZ.setOnClickListener(v -> {
+            if (numpad.isShowing()) { numpad.dismiss(); return; }
+            numpad.setOnConfirmListener(value -> tvCoordZ.setText(value));
+            numpad.showFor(tvCoordZ, tvCoordZ, NumpadView.POSITION_ABOVE);
+        });
     }
 
     // ── 按钮动作 ──────────────────────────────────────────────
 
     private void setupActions() {
         btnLevelBack.setOnClickListener(v -> finish());
+
+        helpTooltip = new HelpTooltip(
+                this,
+                "这里是帮助提示内容，你可以在此解释该页面的参数含义。"
+        );
+        helpTooltip.attach(btnLevelHelp);
 
         btnLevelNext.setOnClickListener(v -> {
             String[] refNames = {"左斗尖", "中斗尖", "右斗尖"};
@@ -187,6 +229,14 @@ public class LevelSettingActivity extends AppCompatActivity {
                     "参考点：" + ref + "  模式：" + mode +
                     "\n目标高度：" + height + " m  填挖量：" + fill + " m",
                     Toast.LENGTH_LONG).show();
+
+            startActivity(new Intent(this, LevelPrecheckActivity.class));
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (helpTooltip != null) helpTooltip.dismiss();
     }
 }
