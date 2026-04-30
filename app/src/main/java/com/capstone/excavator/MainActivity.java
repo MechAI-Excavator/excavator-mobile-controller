@@ -269,9 +269,10 @@ public class MainActivity extends AppCompatActivity {
         bottomBar.setOnLevelListener(() -> {
             startActivity(new android.content.Intent(this, LevelSettingActivity.class));
         });
+        
 
         bottomBar.setOnTrenchListener(() -> {
-            Toast.makeText(this, "挖沟", Toast.LENGTH_SHORT).show();
+            startActivity(new android.content.Intent(this, DitchSettingActivity.class));
         });
 
         bottomBar.setOnSlopeListener(() -> {

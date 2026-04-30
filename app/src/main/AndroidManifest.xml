@@ -34,7 +34,15 @@
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity
+            android:name="com.capstone.excavator.DitchSettingActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+        <activity
             android:name="com.capstone.excavator.LevelPrecheckActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name="com.capstone.excavator.DitchWorkSettingActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
     </application>
