@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         bottomBar.setOnSlopeListener(() -> {
-            Toast.makeText(this, "修坡", Toast.LENGTH_SHORT).show();
+            startActivity(new android.content.Intent(this, SlopeRepairSettingActivity.class));
         });
 
         bottomBar.setOnBarToggleListener(() -> {
