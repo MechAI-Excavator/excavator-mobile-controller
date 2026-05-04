@@ -43,4 +43,19 @@
     <string name="man_mode">Manual Mode</string>
     <string name="home">Home</string>
     <string name="stop">Stop</string>
+
+    <!-- 主界面两侧度量条 -->
+    <string name="gauge_left_footer">左斗尖</string>
+    <string name="gauge_right_footer">右斗尖</string>
+
+    <!-- 主界面横向中心度量条 -->
+    <string name="center_gauge_footer_default">参考点: 中斗尖</string>
+
+    <string name="motion_mode_stop">停止</string>
+    <string name="motion_mode_chassis">底盘</string>
+    <string name="motion_mode_bucket">铲斗</string>
+
+    <!-- 作业运行按钮 -->
+    <string name="work_btn_pause">暂停</string>
+    <string name="work_btn_end">结束</string>
 </resources>

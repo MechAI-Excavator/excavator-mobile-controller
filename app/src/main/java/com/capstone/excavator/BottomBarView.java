@@ -6,16 +6,18 @@ import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 
+import androidx.annotation.Nullable;
+
 import eightbitlab.com.blurview.BlurTarget;
 import eightbitlab.com.blurview.BlurView;
 
 /**
  * 底部覆盖层：左右两侧分立的毛玻璃摇杆指示器，中央是 dock 风格的快捷动作按钮
  * （重连 / 找平 / 挖沟 / 修坡 / 设置）。
- *
- * 数据相关的 setter（角度、深度、信号、延迟、LIVE 等）已不再有对应的 UI，
- * 但保留为 no-op 以避免外部调用者编译失败。如后续需要重新展示，
- * 可在布局中加回相应控件并在 {@link #onFinishInflate()} 内绑定。
+ * <p>
+ * 当 {@link WorkRunState} 为 {@link WorkRunState.State#RUNNING} 或
+ * {@link WorkRunState.State#PAUSED} 时，「重连」与「设置」自动被「暂停」和「结束」替换；
+ * 外部可通过 {@link #setOnPauseListener} / {@link #setOnEndListener} 响应点按。
  */
 public class BottomBarView extends FrameLayout {
 
@@ -37,6 +39,9 @@ public class BottomBarView extends FrameLayout {
     private BlurView blurJoystickRight;
     private BlurView blurJoystickLeft;
 
+    private BlurView blurPause;
+    private BlurView blurEnd;
+
     // ── Callbacks ────────────────────────────────────────────────────
 
     private Runnable onReconnectListener;
@@ -44,7 +49,14 @@ public class BottomBarView extends FrameLayout {
     private Runnable onTrenchListener;
     private Runnable onSlopeListener;
     private Runnable onSettingsListener;
-    private OnBarToggleListener onBarToggleListener; // 保留接口；当前布局不再触发
+    private Runnable onPauseListener;
+    private Runnable onEndListener;
+    private OnBarToggleListener onBarToggleListener;
+
+    // ── WorkRunState listener ─────────────────────────────────────────
+
+    private final WorkRunState.OnStateChangeListener workStateListener =
+            (newState, oldState) -> post(() -> applyWorkState(newState));
 
     // ── Constructors ─────────────────────────────────────────────────
 
@@ -63,25 +75,53 @@ public class BottomBarView extends FrameLayout {
         joystickLeft  = findViewById(R.id.joystickLeft);
         joystickRight = findViewById(R.id.joystickRight);
 
-        blurReconnect = findViewById(R.id.btnReconnect);
-        blurWorkGroup = findViewById(R.id.blurWorkGroup);
-        blurSettings  = findViewById(R.id.btnSettings);
+        blurReconnect     = findViewById(R.id.btnReconnect);
+        blurWorkGroup     = findViewById(R.id.blurWorkGroup);
+        blurSettings      = findViewById(R.id.btnSettings);
         blurJoystickRight = findViewById(R.id.blurJoystickRight);
-        blurJoystickLeft = findViewById(R.id.blurJoystickLeft);
+        blurJoystickLeft  = findViewById(R.id.blurJoystickLeft);
+        blurPause         = findViewById(R.id.btnPause);
+        blurEnd           = findViewById(R.id.btnEnd);
 
         bindDockButton(R.id.btnReconnect, () -> onReconnectListener);
         bindDockButton(R.id.btnLevel,     () -> onLevelListener);
         bindDockButton(R.id.btnTrench,    () -> onTrenchListener);
         bindDockButton(R.id.btnSlope,     () -> onSlopeListener);
         bindDockButton(R.id.btnSettings,  () -> onSettingsListener);
+        bindDockButton(R.id.btnPause,     () -> onPauseListener);
+        bindDockButton(R.id.btnEnd,       () -> onEndListener);
+
+        applyWorkState(WorkRunState.getInstance().getState());
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        // 延迟到视图树完成布局后再初始化 BlurView，避免 onAttachedToWindow 时还没测量好
+        WorkRunState.getInstance().addListener(workStateListener);
         post(this::setupDockBlur);
     }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        WorkRunState.getInstance().removeListener(workStateListener);
+    }
+
+    // ── Work state UI ─────────────────────────────────────────────────
+
+    private void applyWorkState(WorkRunState.State state) {
+        boolean active = state == WorkRunState.State.RUNNING || state == WorkRunState.State.PAUSED;
+        setVisible(blurReconnect, !active);
+        setVisible(blurSettings,  !active);
+        setVisible(blurPause,      active);
+        setVisible(blurEnd,        active);
+    }
+
+    private static void setVisible(@Nullable View v, boolean visible) {
+        if (v != null) v.setVisibility(visible ? VISIBLE : GONE);
+    }
+
+    // ── Blur setup ───────────────────────────────────────────────────
 
     private void setupDockBlur() {
         try {
@@ -93,11 +133,13 @@ public class BottomBarView extends FrameLayout {
             final float radius = 18f;
             final int overlay = 0x4D808080;
 
-            setupOneBlur(blurReconnect, target, radius, overlay);
-            setupOneBlur(blurWorkGroup, target, radius, overlay);
-            setupOneBlur(blurSettings,  target, radius, overlay);
+            setupOneBlur(blurReconnect,     target, radius, overlay);
+            setupOneBlur(blurWorkGroup,     target, radius, overlay);
+            setupOneBlur(blurSettings,      target, radius, overlay);
             setupOneBlur(blurJoystickRight, target, radius, overlay);
-            setupOneBlur(blurJoystickLeft, target, radius, overlay);
+            setupOneBlur(blurJoystickLeft,  target, radius, overlay);
+            setupOneBlur(blurPause,         target, radius, overlay);
+            setupOneBlur(blurEnd,           target, radius, overlay);
         } catch (Throwable ignored) {
             // Blur 是装饰，失败不应阻塞 UI
         }
@@ -145,34 +187,28 @@ public class BottomBarView extends FrameLayout {
     public void setOnSlopeListener(Runnable listener)     { this.onSlopeListener     = listener; }
     public void setOnSettingsListener(Runnable listener)  { this.onSettingsListener  = listener; }
 
+    /** 作业运行中：「暂停」按钮点击回调。 */
+    public void setOnPauseListener(Runnable listener)     { this.onPauseListener     = listener; }
+
+    /** 作业运行中：「结束」按钮点击回调。 */
+    public void setOnEndListener(Runnable listener)       { this.onEndListener       = listener; }
+
     public void setOnBarToggleListener(OnBarToggleListener listener) {
         this.onBarToggleListener = listener;
     }
 
-    // ── Legacy data setters (no-op, 当前布局不再展示这些数据) ─────────
+    // ── Legacy data setters (no-op) ───────────────────────────────────
 
     public void setAngles(float boom, float stick, float bucket,
-                          float cabinPitch, float cabinRoll) {
-        // no-op: 当前 UI 不再显示传感器角度，姿态卡片承担显示职责
-    }
+                          float cabinPitch, float cabinRoll) { }
 
-    public void setRtkLatLon(double lat, double lon) {
-        // no-op
-    }
+    public void setRtkLatLon(double lat, double lon) { }
 
-    public void setDepth(double depth) {
-        // no-op
-    }
+    public void setDepth(double depth) { }
 
-    public void setDelay(int ms) {
-        // no-op
-    }
+    public void setDelay(int ms) { }
 
-    public void setSignal(int percent) {
-        // no-op
-    }
+    public void setSignal(int percent) { }
 
-    public void setLiveStatus(boolean connected) {
-        // no-op: LIVE/OFFLINE 状态由 HeaderBarView 显示
-    }
+    public void setLiveStatus(boolean connected) { }
 }

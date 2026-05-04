@@ -7,7 +7,6 @@
     android:layout_height="match_parent">
 
     <!-- ==================== 全屏视频层（底层背景） ==================== -->
-    <!-- 包一层 BlurTarget，让 dock 按钮可以把这里的内容（视频 / 占位图）做毛玻璃 -->
     <eightbitlab.com.blurview.BlurTarget
         android:id="@+id/blurTarget"
         android:layout_width="match_parent"
@@ -31,49 +30,53 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.0"
-                tools:ignore="ContentDescription" />
+                tools:ignore="ContentDescription">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <FrameLayout
+                    android:id="@+id/videoPlaceholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="visible">
 
-        <!-- 无信号占位图（最顶层，offline 时覆盖视频） -->
-        <FrameLayout
-            android:id="@+id/videoPlaceholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="visible">
+                </FrameLayout>
+            </com.skydroid.fpvplayer.FPVWidget>
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/with_no_live_video"
+                android:contentDescription="@null"
                 android:scaleType="centerCrop"
-                android:contentDescription="@null" />
+                android:src="@drawable/with_no_live_video" />
 
-        </FrameLayout>
+            <!-- 占位图放在 videoPlaceholder 内：离线 VISIBLE 时与壳一起显示；在线 GONE 时整层去掉，避免被空 Frame 盖在平板下不显示 -->
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </eightbitlab.com.blurview.BlurTarget>
 
-    <!-- 顶部居中：LIVE 状态胶囊（在急停按钮下方，不属于 HeaderBar） -->
+    <!-- 姿态卡片右侧：LIVE 状态胶囊（与 postureCardBlur 顶对齐） -->
     <eightbitlab.com.blurview.BlurView
         android:id="@+id/livePillBlur"
-        android:layout_width="76dp"
+        android:layout_width="wrap_content"
         android:layout_height="16.66dp"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_marginTop="50dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="210dp"
+        android:layout_marginTop="85dp"
         android:background="@drawable/live_pill_bg"
         android:clipToOutline="true"
-        android:outlineProvider="background"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        android:outlineProvider="background">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
             android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
             android:paddingTop="1dp"
-            android:paddingBottom="1dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp">
+            android:paddingEnd="10dp"
+            android:paddingBottom="1dp">
 
             <View
                 android:id="@+id/livePillDot"
@@ -86,15 +89,85 @@
                 android:id="@+id/livePillText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="实时 · 主相机"
-                android:textColor="#FFFFFF"
-                android:textSize="8sp"
                 android:includeFontPadding="false"
-                android:letterSpacing="0.02" />
+                android:letterSpacing="0.02"
+                android:text="实时"
+                android:textColor="#FFFFFF"
+                android:textSize="8sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.02"
+                android:text=" · 主相机"
+                android:textColor="#7AFFFFFF"
+                android:textSize="8sp" />
 
         </LinearLayout>
 
     </eightbitlab.com.blurview.BlurView>
+
+    <!-- 左侧竖条 + 横向中心度量条（与姿态卡片顶对齐留白） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start|top"
+        android:orientation="horizontal">
+
+        <com.capstone.excavator.LeftActivityPanelView
+            android:layout_width="24.88dp"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="55dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:src="@drawable/back_title" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="9.5dp"
+                android:includeFontPadding="false"
+                android:text="参考点: 中斗尖"
+                android:textColor="#FFFFFF"
+                android:textSize="6.5sp" />
+        </FrameLayout>
+
+
+    <com.capstone.excavator.CenterActivityPanelView
+        android:id="@+id/centerActivityPanelView"
+        android:layout_width="433dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center|top"
+        android:layout_marginTop="55dp"
+        app:centerGaugeRangeMax="1" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="105dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <com.capstone.excavator.CapsuleSpeedDirectionView
+            android:id="@+id/centerCapsuleSpeedDirection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 
     <!-- ==================== 左侧覆盖层：机械臂姿态卡片（毛玻璃底） ==================== -->
     <eightbitlab.com.blurview.BlurView
@@ -102,13 +175,13 @@
         android:layout_width="165dp"
         android:layout_height="165dp"
         android:layout_gravity="start|top"
-        android:background="@drawable/map_card_bg"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="28.44dp"
         android:layout_marginTop="55dp"
-        android:clipToOutline="true"
-        android:outlineProvider="background"
         android:layout_marginBottom="0dp"
-        android:elevation="10dp">
+        android:background="@drawable/map_card_bg"
+        android:clipToOutline="true"
+        android:elevation="10dp"
+        android:outlineProvider="background">
 
         <com.capstone.excavator.PostureCardView
             android:id="@+id/postureCardView"
@@ -124,12 +197,12 @@
         android:layout_height="165dp"
         android:layout_gravity="end|top"
         android:layout_marginTop="55dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="28.44dp"
         android:layout_marginBottom="0dp"
         android:background="@drawable/map_card_bg"
         android:clipToOutline="true"
-        android:outlineProvider="background"
-        android:elevation="10dp">
+        android:elevation="10dp"
+        android:outlineProvider="background">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -141,14 +214,14 @@
                 android:id="@+id/rightPanelHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="8dp"
                 android:clickable="true"
-                android:focusable="true">
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="8dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -156,18 +229,18 @@
                     android:layout_weight="1"
                     android:text="@string/map_title"
                     android:textColor="#FFFFFF"
-                    android:textSize="11sp"
-                    android:textFontWeight="200" />
+                    android:textFontWeight="200"
+                    android:textSize="11sp" />
 
                 <ImageView
                     android:id="@+id/rightPanelCollapseArrow"
                     android:layout_width="10.66dp"
                     android:layout_height="10.66dp"
-                    android:src="@drawable/droparrow"
-                    android:contentDescription="@null"
                     android:clickable="true"
+                    android:contentDescription="@null"
                     android:focusable="true"
-                    android:padding="2dp" />
+                    android:padding="2dp"
+                    android:src="@drawable/droparrow" />
             </LinearLayout>
 
             <!-- 可收起内容区 -->
@@ -184,14 +257,14 @@
                     android:layout_height="124dp"
                     android:background="@android:color/transparent">
 
-            <com.capstone.excavator.MapView
-                android:id="@+id/mapView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                    <com.capstone.excavator.MapView
+                        android:id="@+id/mapView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
 
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="8dp" />
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginBottom="8dp" />
 
                 </FrameLayout>
 
@@ -201,12 +274,55 @@
 
     </eightbitlab.com.blurview.BlurView>
 
+    <com.capstone.excavator.SpeedDirectionIndicatorView
+        android:id="@+id/rightSpeedIndicator"
+        android:layout_width="91.11dp"
+        android:layout_height="82.22dp"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="245dp"
+        android:layout_marginEnd="28.44dp"
+        android:layout_marginBottom="0dp" />
+
+    <com.capstone.excavator.SpeedDirectionIndicatorView
+        android:id="@+id/leftSpeedIndicator"
+        android:layout_width="91.11dp"
+        android:layout_height="82.22dp"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="28.44dp"
+        android:layout_marginTop="245dp"
+        android:layout_marginBottom="0dp" />
+
     <!-- ==================== 底部覆盖层 ==================== -->
     <com.capstone.excavator.BottomBarView
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom" />
+
+    <com.capstone.excavator.MotionModeSegmentView
+        android:id="@+id/motionModeSegment"
+        android:layout_width="37.33dp"
+        android:layout_height="39.11dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="29dp"
+        android:layout_marginBottom="97dp"
+        android:elevation="12dp" />
+
+    <!-- MotionModeSegmentView mode = findViewById(R.id.motionModeSegment);
+mode.setSelectedIndex(MotionModeSegmentView.INDEX_CHASSIS);
+mode.setOnIndexChangeListener(idx -> {
+    // 联机协议、UDP 等
+}); -->
+
+    <com.capstone.excavator.LeftActivityPanelView
+        android:layout_width="24.88dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start|top" />
+
+    <com.capstone.excavator.RightActivityPanelView
+        android:layout_width="24.88dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end|top" />
 
     <!-- ==================== 悬浮展开按钮（bar 收起时显示） ==================== -->
     <TextView
@@ -217,12 +333,12 @@
         android:layout_margin="20dp"
         android:background="@drawable/chip_bg"
         android:clickable="true"
+        android:elevation="6dp"
         android:focusable="true"
         android:gravity="center"
         android:text="▲"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:elevation="6dp"
         android:visibility="gone" />
 
     <!-- ==================== Header Bar ==================== -->
@@ -240,6 +356,22 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:elevation="40dp"
+        android:visibility="gone" />
+
+    <!-- ==================== 通用二次确认弹窗（默认隐藏） ==================== -->
+    <com.capstone.excavator.ConfirmDialogView
+        android:id="@+id/confirmDialog"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="50dp"
+        android:visibility="gone" />
+
+    <!-- ==================== 通用内联 Toast（默认隐藏） ==================== -->
+    <com.capstone.excavator.InlineToastView
+        android:id="@+id/inlineToast"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="51dp"
         android:visibility="gone" />
 
 </FrameLayout>

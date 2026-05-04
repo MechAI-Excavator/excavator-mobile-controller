@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:layout_height="39.11dp"
+    tools:layout_width="37.33dp"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/motion_mode_panel_bg"
+        android:orientation="vertical"
+        android:paddingHorizontal="2dp"
+        android:paddingVertical="2dp">
+
+        <LinearLayout
+            android:id="@+id/motion_mode_row0"
+            style="@style/MotionModeRow">
+
+            <View
+                android:id="@+id/motion_mode_dot0"
+                style="@style/MotionModeDot" />
+
+            <TextView
+                android:id="@+id/motion_mode_label0"
+                style="@style/MotionModeLabel"
+                android:layout_width="16dp"
+                android:text="@string/motion_mode_stop" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/motion_mode_row1"
+            style="@style/MotionModeRow">
+
+            <View
+                android:id="@+id/motion_mode_dot1"
+                style="@style/MotionModeDot" />
+
+            <TextView
+                android:id="@+id/motion_mode_label1"
+                style="@style/MotionModeLabel"
+                android:text="@string/motion_mode_chassis" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/motion_mode_row2"
+            style="@style/MotionModeRow">
+
+            <View
+                android:id="@+id/motion_mode_dot2"
+                style="@style/MotionModeDot" />
+
+            <TextView
+                android:id="@+id/motion_mode_label2"
+                style="@style/MotionModeLabel"
+                android:text="@string/motion_mode_bucket" />
+        </LinearLayout>
+    </LinearLayout>
+</merge>

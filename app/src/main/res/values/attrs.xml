@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VerticalSpectrumGaugeView">
+        <attr name="gaugeFooterText" format="string" />
+        <attr name="gaugeRangeMax" format="float" />
+        <!-- 可选：覆盖 dimens.xml 里同名语义，便于单个实例微调 -->
+        <attr name="gaugeVerticalEdgeMargin" format="dimension" />
+        <attr name="gaugeLabelToChartGap" format="dimension" />
+        <attr name="gaugeLowToFooterSpacing" format="dimension" />
+    </declare-styleable>
+
+    <!-- 横向中心条刻度层（见 view_center_activity_panel.xml） -->
+    <declare-styleable name="CenterGaugeStripView">
+        <attr name="centerGaugeRangeMax" format="float" />
+        <attr name="centerGaugeLeftLabel" format="string" />
+        <attr name="centerGaugeRightLabel" format="string" />
+    </declare-styleable>
+</resources>

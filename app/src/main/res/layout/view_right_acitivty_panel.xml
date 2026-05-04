@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.capstone.excavator.VerticalSpectrumGaugeView
+        android:id="@+id/rightActivityGauge"
+        android:layout_width="24.88dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="37dp"
+        android:layout_marginBottom="0dp"
+        android:background="#82000000"
+        app:gaugeFooterText="@string/gauge_right_footer"
+        app:gaugeRangeMax="10" />
+
+</merge>

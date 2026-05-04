@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- VerticalSpectrumGaugeView：「高 / 低 / footer」与刻度区的竖直间距，改这里即可调 padding 感 -->
+    <!-- 视图顶边 ↔「高」、视图底边 ↔ footer 的竖直边距（原 3dp） -->
+    <dimen name="gauge_vertical_edge_margin">5dp</dimen>
+    <!--「高」下沿 ↔ 刻度区上沿；「低」上沿 ↔ 刻度区下沿（原 2.2dp） -->
+    <dimen name="gauge_label_to_chart_gap">5dp</dimen>
+    <!-- 有 footer 时，为「低」与 footer 之间预留的额外高度（原 2.5dp） -->
+    <dimen name="gauge_low_to_footer_spacing">5dp</dimen>
+</resources>

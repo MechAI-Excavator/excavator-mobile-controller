@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  通用二次确认弹窗（ConfirmDialogView）。
+  使用方：inflate 之后将其叠加到 FrameLayout 最上层（GONE 时隐藏），
+  通过 ConfirmDialogView#show(...) 控制内容与回调。
+  宽 200dp，高 103dp（由外层 FrameLayout 指定）。
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <!-- 蒙层：点击关闭弹窗（可选行为由代码控制） -->
+    <View
+        android:id="@+id/dialogScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/confirm_dialog_scrim"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- 弹窗卡片 -->
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="103dp"
+        android:layout_gravity="center"
+        android:background="@drawable/confirm_dialog_bg"
+        android:elevation="12dp"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:id="@+id/dialogTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#1A1A1A"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            tools:text="确认退出当前任务?" />
+
+        <!-- 副标题（无内容时 GONE） -->
+        <TextView
+            android:id="@+id/dialogSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:textColor="#6B7280"
+            android:textSize="10sp"
+            android:maxLines="2"
+            android:visibility="gone"
+            tools:text="此操作不可撤销" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 按钮行 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- TextView 而非 Button：Material3 会把 Button 升为 MaterialButton，覆盖背景与文字色 -->
+            <TextView
+                android:id="@+id/dialogBtnConfirm"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:background="@drawable/confirm_dialog_btn_outline"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="确认退出"
+                android:textColor="#2563EB"
+                android:textSize="11sp"
+                android:includeFontPadding="false" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="0dp" />
+
+            <TextView
+                android:id="@+id/dialogBtnCancel"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:background="@drawable/confirm_dialog_btn_filled"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="取消"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:includeFontPadding="false" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</merge>

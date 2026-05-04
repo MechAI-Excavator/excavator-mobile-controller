@@ -20,4 +20,16 @@
     <!-- 找平设置页 -->
     <color name="level_selected">#FF2563EB</color>
     <color name="level_unselected">#FF9CA3AF</color>
+
+    <!-- 运动模式三档（MotionModeSegmentView） -->
+    <color name="motion_mode_stop">#FFE53935</color>
+    <color name="motion_mode_chassis">#FF004DFF</color>
+    <color name="motion_mode_bucket">#FFFF8000</color>
+    <color name="motion_mode_idle">#B8B8B8</color>
+    <color name="motion_mode_panel_bg">#3D3836</color>
+    <!-- CSS #0000001A（RRGGBBAA）→ Android #AARRGGBB = #1A000000 -->
+    <color name="motion_mode_row_stop_tint">#1A000000</color>
+    <color name="motion_mode_row_chassis_tint">#1A000000</color>
+    <color name="motion_mode_row_bucket_tint">#1A000000</color>
+
 </resources>

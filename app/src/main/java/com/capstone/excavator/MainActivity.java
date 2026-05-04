@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView livePillText;
     private ObjectAnimator liveDotBreathAnimator;
     private EmergencyStopOverlayView emergencyStopOverlay;
+    private ConfirmDialogView confirmDialog;
+    private InlineToastView inlineToast;
 
     // 驾驶模式状态
     private boolean isManualMode = true;
@@ -117,6 +119,9 @@ public class MainActivity extends AppCompatActivity {
     private Handler udpTimeoutHandler;
     private Runnable udpTimeoutRunnable;
     private static final long UDP_TIMEOUT_MS = 5000; // 5秒没收到数据就切换回模拟数据
+
+    /** 左右 VerticalSpectrumGaugeView 使用临时读数便于联调 UI；接真数据后改为 false 并改 setValue 来源。 */
+    private static final boolean DEBUG_SPECTRUM_GAUGE_DEMO = true;
     private long lastDataReceiveTime = 0;
     // 心跳 RTT 测量相关
     private Handler heartbeatHandler;
@@ -291,8 +296,59 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        // ── 通用弹窗 / Toast ─────────────────────────────────────────
+        confirmDialog = findViewById(R.id.confirmDialog);
+        inlineToast   = findViewById(R.id.inlineToast);
+
+        // 「结束」按钮：弹二次确认弹窗
+        bottomBar.setOnEndListener(() -> {
+            if (confirmDialog == null) return;
+            confirmDialog.show(new ConfirmDialogView.Config.Builder("确认退出当前任务?")
+                    .confirmText("确认退出")
+                    .cancelText("取消")
+                    .onConfirm(() -> {
+                        WorkRunState.getInstance().setState(WorkRunState.State.ENDED);
+                        if (inlineToast != null) inlineToast.showMessage("任务已终止");
+                    })
+                    .build());
+        });
+
+        // 「暂停」按钮：在 RUNNING↔PAUSED 之间切换
+        bottomBar.setOnPauseListener(() -> {
+            WorkRunState.State cur = WorkRunState.getInstance().getState();
+            if (cur == WorkRunState.State.RUNNING) {
+                WorkRunState.getInstance().setState(WorkRunState.State.PAUSED);
+            } else if (cur == WorkRunState.State.PAUSED) {
+                WorkRunState.getInstance().setState(WorkRunState.State.RUNNING);
+            }
+        });
+
         // 初始状态：未连接
         setVideoConnected(false);
+
+        applyTempSpectrumGaugeDemo();
+    }
+
+    private void applyTempSpectrumGaugeDemo() {
+        if (!DEBUG_SPECTRUM_GAUGE_DEMO) {
+            return;
+        }
+        VerticalSpectrumGaugeView leftGauge = findViewById(R.id.leftActivityGauge);
+        VerticalSpectrumGaugeView rightGauge = findViewById(R.id.rightActivityGauge);
+        final float demoRange = 50f;
+        if (leftGauge != null) {
+            leftGauge.setRangeMax(demoRange);
+            leftGauge.setValue(25f);
+        }
+        if (rightGauge != null) {
+            rightGauge.setRangeMax(demoRange);
+            rightGauge.setValue(-18f);
+        }
+        CenterActivityPanelView centerGauge = findViewById(R.id.centerActivityPanelView);
+        if (centerGauge != null) {
+            centerGauge.setRangeMax(1f);
+            centerGauge.setValue(-0.72f);
+        }
     }
 
     private void setupOverlayBlurs() {
@@ -638,13 +694,13 @@ public class MainActivity extends AppCompatActivity {
         if (livePillDot == null || livePillText == null) return;
         if (connected) {
             livePillDot.setBackgroundResource(R.drawable.live_dot_red);
-            livePillText.setText("实时 · 主相机");
+            livePillText.setText("实时");
             startLiveDotBreathing();
         } else {
             stopLiveDotBreathing();
             livePillDot.setAlpha(1f);
             livePillDot.setBackgroundResource(R.drawable.live_dot_off);
-            livePillText.setText("离线 · 主相机");
+            livePillText.setText("离线");
         }
     }
 
@@ -745,7 +801,6 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updateConnectionInfo() {
-        // 真实数据模式下延迟由 onReadData 的包间隔实时更新，无需在此覆盖
         if (!useRealData) {
             if (bottomBar != null) bottomBar.setDelay(-1);
         }

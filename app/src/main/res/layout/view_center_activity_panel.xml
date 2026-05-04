@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  横向中心度量面板：刻度由 CenterGaugeStripView 绘制。
+  圆角整块背景由 CenterActivityPanelView 的 background + clipToOutline 提供。
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <com.capstone.excavator.CenterGaugeStripView
+        android:id="@+id/centerGaugeStrip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:centerGaugeRangeMax="1" />
+
+</merge>

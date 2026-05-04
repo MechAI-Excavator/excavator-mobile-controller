@@ -1,0 +1,149 @@
+package com.capstone.excavator;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.view.View;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
+
+/**
+ * 速度 + 方向示意：界面由 {@code R.layout.view_speed_direction_indicator} 声明，
+ * 背景 / 边距 / 权重 / 字号等请在 XML 与 drawable 中维护。
+ * <p>
+ * {@code green_angle} 为朝下、{@code gray_angle} 为朝上；箭头旋转与 {@link #setDirection(int)} 在代码中同步。
+ * <p>
+ * 使用 {@link #setDirection(int)}、{@link #setSpeed(float)} 或 {@link #setSpeedText(String)} 更新数据。
+ */
+public class SpeedDirectionIndicatorView extends FrameLayout {
+
+    /** 无明确方向：三角与横线均为灰色。 */
+    public static final int DIRECTION_NEUTRAL = 0;
+    /** 下三角与中间横线为绿色（示意一种行进方向，如前进）。 */
+    public static final int DIRECTION_DOWN_HIGHLIGHT = 1;
+    /** 上三角与中间横线为绿色（示意相反方向，如后退）。 */
+    public static final int DIRECTION_UP_HIGHLIGHT = 2;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({DIRECTION_NEUTRAL, DIRECTION_DOWN_HIGHLIGHT, DIRECTION_UP_HIGHLIGHT})
+    public @interface DirectionMode {
+    }
+
+    private ImageView arrowTop;
+    private ImageView arrowBottom;
+    private View speedLine;
+    private TextView speedValue;
+
+    private @DirectionMode int direction = DIRECTION_NEUTRAL;
+    private String speedText = "0";
+
+    public SpeedDirectionIndicatorView(Context context) {
+        this(context, null);
+    }
+
+    public SpeedDirectionIndicatorView(Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public SpeedDirectionIndicatorView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        LayoutInflater.from(context).inflate(R.layout.view_speed_direction_indicator, this, true);
+        bindViews();
+        applyVisualState();
+        syncSpeedTextToView();
+    }
+
+    private void bindViews() {
+        arrowTop = findViewById(R.id.speedArrowTop);
+        arrowBottom = findViewById(R.id.speedArrowBottom);
+        speedLine = findViewById(R.id.speedLine);
+        speedValue = findViewById(R.id.speedValue);
+    }
+
+    /** 设置运动方向高亮侧，取 {@link #DIRECTION_NEUTRAL} 等常量。 */
+    public void setDirection(@DirectionMode int mode) {
+        if (mode != DIRECTION_NEUTRAL && mode != DIRECTION_DOWN_HIGHLIGHT && mode != DIRECTION_UP_HIGHLIGHT) {
+            mode = DIRECTION_NEUTRAL;
+        }
+        if (this.direction != mode) {
+            this.direction = mode;
+            applyVisualState();
+        }
+    }
+
+    public int getDirection() {
+        return direction;
+    }
+
+    /**
+     * 设置速度数值显示；整数显示为不带小数，否则保留一位小数。
+     */
+    public void setSpeed(float speed) {
+        float a = Math.abs(speed);
+        if (a < 0.05f) {
+            speedText = "0";
+        } else if (Math.abs(speed - Math.round(speed)) < 0.05f) {
+            speedText = String.valueOf(Math.round(speed));
+        } else {
+            speedText = String.format(Locale.US, "%.1f", speed);
+        }
+        syncSpeedTextToView();
+    }
+
+    /** 直接设置速度文案（例如单位后缀由外部拼好时可传入整串）。 */
+    public void setSpeedText(@Nullable String text) {
+        speedText = text != null && !text.isEmpty() ? text : "0";
+        syncSpeedTextToView();
+    }
+
+    public String getSpeedText() {
+        return speedText;
+    }
+
+    private void syncSpeedTextToView() {
+        if (speedValue != null) {
+            speedValue.setText(speedText);
+        }
+    }
+
+    /**
+     * 与原先 Canvas 版一致：上槽朝下、下槽朝上；绿/灰资源朝向见类注释。
+     */
+    private void applyVisualState() {
+        if (arrowTop == null || arrowBottom == null || speedLine == null) {
+            return;
+        }
+
+        boolean downOn = direction == DIRECTION_DOWN_HIGHLIGHT;
+        boolean upOn = direction == DIRECTION_UP_HIGHLIGHT;
+        boolean lineOn = downOn || upOn;
+
+        if (downOn) {
+            arrowTop.setImageResource(R.drawable.green_angle);
+            arrowTop.setRotation(0f);
+        } else {
+            arrowTop.setImageResource(R.drawable.gray_angle);
+            arrowTop.setRotation(180f);
+        }
+
+        if (upOn) {
+            arrowBottom.setImageResource(R.drawable.green_angle);
+            arrowBottom.setRotation(180f);
+        } else {
+            arrowBottom.setImageResource(R.drawable.gray_angle);
+            arrowBottom.setRotation(0f);
+        }
+
+        speedLine.setBackgroundResource(lineOn
+                ? R.drawable.speed_indicator_line_active
+                : R.drawable.speed_indicator_line_inactive);
+    }
+}
