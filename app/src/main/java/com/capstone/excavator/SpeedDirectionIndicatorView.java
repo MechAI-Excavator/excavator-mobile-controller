@@ -16,8 +16,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
- * 速度 + 方向示意：界面由 {@code R.layout.view_speed_direction_indicator} 声明，
- * 背景 / 边距 / 权重 / 字号等请在 XML 与 drawable 中维护。
+ * 速度 + 方向示意：界面由 {@code R.layout.view_speed_direction_indicator} 声明；
+ * 速度数字的字体/颜色/粗细见 {@code R.style.SpeedDirectionIndicator_SpeedValue}（{@code res/values/styles_speed_direction_indicator.xml}），
+ * 其余背景 / 边距 / 权重等在布局与 drawable 中维护。
  * <p>
  * {@code green_angle} 为朝下、{@code gray_angle} 为朝上；箭头旋转与 {@link #setDirection(int)} 在代码中同步。
  * <p>

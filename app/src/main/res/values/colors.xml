@@ -32,4 +32,9 @@
     <color name="motion_mode_row_chassis_tint">#1A000000</color>
     <color name="motion_mode_row_bucket_tint">#1A000000</color>
 
+    <!-- 速度方向胶囊（CapsuleSpeedDirectionView） -->
+    <color name="capsule_red">#EA0700</color>
+    <color name="capsule_arrow_dim">#5D4A42</color>
+    <color name="capsule_divider_dim">#3E3E3E40</color>
+
 </resources>

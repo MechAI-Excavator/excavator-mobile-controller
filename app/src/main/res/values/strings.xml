@@ -47,6 +47,8 @@
     <!-- 主界面两侧度量条 -->
     <string name="gauge_left_footer">左斗尖</string>
     <string name="gauge_right_footer">右斗尖</string>
+    <!-- 垂直独立进度条 -->
+    <string name="gauge_vertical_title">垂距</string>
 
     <!-- 主界面横向中心度量条 -->
     <string name="center_gauge_footer_default">参考点: 中斗尖</string>

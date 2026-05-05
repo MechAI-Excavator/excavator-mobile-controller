@@ -15,4 +15,16 @@
         <attr name="centerGaugeLeftLabel" format="string" />
         <attr name="centerGaugeRightLabel" format="string" />
     </declare-styleable>
+
+    <!-- SingleBarGaugeView：顶部标题 + 单向进度条 -->
+    <declare-styleable name="SingleBarGaugeView">
+        <attr name="sbgTitle"    format="string" />
+        <attr name="sbgRangeMax" format="float"  />
+    </declare-styleable>
+
+    <!-- CapsuleSpeedDirectionView：方向高亮由 onCreateDrawableState 合并，子 View duplicateParentState -->
+    <declare-styleable name="CapsuleSpeedDirectionView">
+        <attr name="state_capsule_forward" format="boolean" />
+        <attr name="state_capsule_backward" format="boolean" />
+    </declare-styleable>
 </resources>

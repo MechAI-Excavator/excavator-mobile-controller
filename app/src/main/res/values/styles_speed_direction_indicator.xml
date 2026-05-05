@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 速度数字区：仅维护 typography，布局仍在 view_speed_direction_indicator.xml -->
+    <style name="SpeedDirectionIndicator.SpeedValue" parent="android:Widget.TextView">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">42sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+</resources>

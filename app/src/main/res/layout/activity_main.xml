@@ -36,8 +36,7 @@
                     android:id="@+id/videoPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="visible">
-
+                    android:visibility="visible" >
                 </FrameLayout>
             </com.skydroid.fpvplayer.FPVWidget>
 
@@ -47,10 +46,6 @@
                 android:contentDescription="@null"
                 android:scaleType="centerCrop"
                 android:src="@drawable/with_no_live_video" />
-
-            <!-- 占位图放在 videoPlaceholder 内：离线 VISIBLE 时与壳一起显示；在线 GONE 时整层去掉，避免被空 Frame 盖在平板下不显示 -->
-
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </eightbitlab.com.blurview.BlurTarget>
@@ -109,20 +104,7 @@
     </eightbitlab.com.blurview.BlurView>
 
     <!-- 左侧竖条 + 横向中心度量条（与姿态卡片顶对齐留白） -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="start|top"
-        android:orientation="horizontal">
-
-        <com.capstone.excavator.LeftActivityPanelView
-            android:layout_width="24.88dp"
-            android:layout_height="match_parent" />
-
-    </LinearLayout>
-
-
-        <FrameLayout
+    <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="33dp"
             android:layout_gravity="center_horizontal|top"
@@ -154,12 +136,70 @@
         android:layout_marginTop="55dp"
         app:centerGaugeRangeMax="1" />
 
+    <!-- ==================== riseSpeedBlur ==================== -->
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/riseSpeedBlur"
+        android:layout_width="145dp"
+        android:layout_height="52dp"
+        android:layout_gravity="center|top"
+        android:layout_marginTop="170dp"
+        android:layout_marginBottom="0dp"
+        android:background="@drawable/map_card_bg"
+        android:clipToOutline="true"
+        android:elevation="10dp"
+        android:outlineProvider="background">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="29.77dp"
+                android:layout_marginTop="5dp"
+                android:layout_height="41.77dp"
+                android:contentDescription="@null"
+                android:src="@drawable/rise_speed_icon" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:baselineAligned="true"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:text="35"
+                    android:textColor="#FFFFFF"
+                    android:textSize="36.44sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:includeFontPadding="false"
+                    android:text="cm"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10.66sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+    </eightbitlab.com.blurview.BlurView>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
-        android:layout_marginTop="105dp"
+        android:layout_marginTop="100dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
@@ -280,7 +320,7 @@
         android:layout_height="82.22dp"
         android:layout_gravity="end|top"
         android:layout_marginTop="245dp"
-        android:layout_marginEnd="28.44dp"
+        android:layout_marginEnd="80.44dp"
         android:layout_marginBottom="0dp" />
 
     <com.capstone.excavator.SpeedDirectionIndicatorView
@@ -288,7 +328,7 @@
         android:layout_width="91.11dp"
         android:layout_height="82.22dp"
         android:layout_gravity="start|top"
-        android:layout_marginStart="28.44dp"
+        android:layout_marginStart="80.44dp"
         android:layout_marginTop="245dp"
         android:layout_marginBottom="0dp" />
 
@@ -314,6 +354,7 @@ mode.setOnIndexChangeListener(idx -> {
     // 联机协议、UDP 等
 }); -->
 
+    <!-- 左侧竖条：本处为唯一 LeftActivityPanelView，勿在其它层级再嵌一份（会 duplicate @id/leftActivityGauge，findViewById 会命中错误实例） -->
     <com.capstone.excavator.LeftActivityPanelView
         android:layout_width="24.88dp"
         android:layout_height="match_parent"
@@ -324,22 +365,24 @@ mode.setOnIndexChangeListener(idx -> {
         android:layout_height="match_parent"
         android:layout_gravity="end|top" />
 
-    <!-- ==================== 悬浮展开按钮（bar 收起时显示） ==================== -->
-    <TextView
-        android:id="@+id/btnFloatingToggle"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="20dp"
-        android:background="@drawable/chip_bg"
-        android:clickable="true"
-        android:elevation="6dp"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="▲"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:visibility="gone" />
+    <!-- 垂直独立进度条（VerticalActivityPanelView），37.33×172.44dp，左侧 28.44dp 偏移，顶部 245dp -->
+    <com.capstone.excavator.VerticalActivityPanelView
+        android:id="@+id/verticalActivityPanelLeft"
+        android:layout_width="37.33dp"
+        android:layout_height="172.44dp"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="28.44dp"
+        android:layout_marginTop="245dp" />
+
+
+    <!-- 垂直独立进度条（VerticalActivityPanelView），37.33×172.44dp，左侧 28.44dp 偏移，顶部 245dp -->
+    <com.capstone.excavator.VerticalActivityPanelView
+        android:id="@+id/verticalActivityPanelRight"
+        android:layout_width="37.33dp"
+        android:layout_height="172.44dp"
+        android:layout_gravity="end|top"
+        android:layout_marginEnd="28.44dp"
+        android:layout_marginTop="245dp" />
 
     <!-- ==================== Header Bar ==================== -->
     <!-- HeaderBarView inflates view_header_bar.xml, owns the clock internally -->

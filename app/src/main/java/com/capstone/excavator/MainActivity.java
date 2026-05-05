@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     // ── Other UI ─────────────────────────────────────────────────────
     private PostureCardView postureCardView;
     private BlurView postureCardBlur;
+    private BlurView riseSpeedBlur;
     private FPVWidget fpvWidget;
     private MapView mapView;
     private View mapCardContainer;
@@ -120,7 +121,10 @@ public class MainActivity extends AppCompatActivity {
     private Runnable udpTimeoutRunnable;
     private static final long UDP_TIMEOUT_MS = 5000; // 5秒没收到数据就切换回模拟数据
 
-    /** 左右 VerticalSpectrumGaugeView 使用临时读数便于联调 UI；接真数据后改为 false 并改 setValue 来源。 */
+    /**
+     * 联调 UI：左右 {@link VerticalSpectrumGaugeView}、{@link SpeedDirectionIndicatorView}、中心条等用临时读数；
+     * 接真数据后改为 false，并从协议/UDP 回调里驱动对应 View。
+     */
     private static final boolean DEBUG_SPECTRUM_GAUGE_DEMO = true;
     private long lastDataReceiveTime = 0;
     // 心跳 RTT 测量相关
@@ -218,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         postureCardView = findViewById(R.id.postureCardView);
         postureCardBlur = findViewById(R.id.postureCardBlur);
+        riseSpeedBlur = findViewById(R.id.riseSpeedBlur);
         fpvWidget            = findViewById(R.id.fpvWidget);
         mapView              = findViewById(R.id.mapView);
         mapCardContainer     = findViewById(R.id.mapCardContainer);
@@ -338,16 +343,47 @@ public class MainActivity extends AppCompatActivity {
         final float demoRange = 50f;
         if (leftGauge != null) {
             leftGauge.setRangeMax(demoRange);
-            leftGauge.setValue(25f);
+            leftGauge.setValue(5f);
         }
         if (rightGauge != null) {
             rightGauge.setRangeMax(demoRange);
-            rightGauge.setValue(-18f);
+            rightGauge.setValue(8f);
         }
+
+        // 左右下角速度+方向卡片：与竖条演示值一致（真数据时在解析回调里 setSpeed / setDirection）
+        SpeedDirectionIndicatorView leftSpd = findViewById(R.id.leftSpeedIndicator);
+        SpeedDirectionIndicatorView rightSpd = findViewById(R.id.rightSpeedIndicator);
+        if (leftSpd != null) {
+            leftSpd.setSpeed(5f);
+            leftSpd.setDirection(SpeedDirectionIndicatorView.DIRECTION_DOWN_HIGHLIGHT);
+        }
+        if (rightSpd != null) {
+            rightSpd.setSpeed(8f);
+            rightSpd.setDirection(SpeedDirectionIndicatorView.DIRECTION_UP_HIGHLIGHT);
+        }
+
         CenterActivityPanelView centerGauge = findViewById(R.id.centerActivityPanelView);
         if (centerGauge != null) {
             centerGauge.setRangeMax(1f);
             centerGauge.setValue(-0.72f);
+        }
+
+        CapsuleSpeedDirectionView capsuleSpeedDirection = findViewById(R.id.centerCapsuleSpeedDirection);
+        if (capsuleSpeedDirection != null) {
+            capsuleSpeedDirection.setSpeed(3.5f);
+            capsuleSpeedDirection.setDirection(CapsuleSpeedDirectionView.DIRECTION_UP_HIGHLIGHT);
+            capsuleSpeedDirection.setSpeedText("10");
+        }
+
+        VerticalActivityPanelView verticalPanelLeft  = findViewById(R.id.verticalActivityPanelLeft);
+        VerticalActivityPanelView verticalPanelRight = findViewById(R.id.verticalActivityPanelRight);
+        if (verticalPanelLeft != null) {
+            verticalPanelLeft.getGauge().setRangeMax(50f);
+            verticalPanelLeft.getGauge().setValue(15f);
+        }
+        if (verticalPanelRight != null) {
+            verticalPanelRight.getGauge().setRangeMax(50f);
+            verticalPanelRight.getGauge().setValue(35f);
         }
     }
 
@@ -375,6 +411,11 @@ public class MainActivity extends AppCompatActivity {
             livePillBlur.post(() -> livePillBlur.setupWith(target)
                     .setBlurRadius(liveRadius)
                     .setOverlayColor(liveOverlay));
+        }
+        if (riseSpeedBlur != null) {
+            riseSpeedBlur.post(() -> riseSpeedBlur.setupWith(target)
+                    .setBlurRadius(cardRadius)
+                    .setOverlayColor(cardOverlay));
         }
     }
 

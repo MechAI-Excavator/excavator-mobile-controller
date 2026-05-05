@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.capstone.excavator.SingleBarGaugeView
+        android:id="@+id/verticalActivityGauge"
+        android:layout_width="37.33dp"
+        android:layout_height="172.44dp"
+        android:background="#82000000"
+        app:sbgTitle="@string/gauge_vertical_title"
+        app:sbgRangeMax="10" />
+
+</merge>
