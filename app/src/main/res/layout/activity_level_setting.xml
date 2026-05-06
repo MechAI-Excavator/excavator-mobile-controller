@@ -260,41 +260,57 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="当前参考点"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="当前参考点"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCurrentRef"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0.38"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvCurrentRef"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0.38"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 目标高度（可点击弹 Numpad） -->
@@ -305,43 +321,59 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="目标高度"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="目标高度"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvTargetHeight"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0"
-                            android:textColor="#FF111827"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvTargetHeight"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 填挖量（可点击弹 Numpad） -->
@@ -351,43 +383,59 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="填挖量"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="填挖量"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvFillCut"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0"
-                            android:textColor="#FF111827"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvFillCut"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -410,8 +458,9 @@
                         android:orientation="horizontal">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="2"
                             android:orientation="horizontal">
                             <TextView
                                 android:layout_width="0dp"
@@ -434,8 +483,9 @@
 
                         <TextView
 
-                            android:layout_width="100dp"
+                            android:layout_width="0dp"
                             android:layout_height="36dp"
+                            android:layout_weight="3"
                             android:clickable="true"
                             android:focusable="true"
                             android:gravity="center_vertical|end"
@@ -454,43 +504,59 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="目标经度"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="目标经度"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCoordX"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0"
-                            android:textColor="#FF111827"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvCoordX"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 目标坐标 Y -->
@@ -501,43 +567,59 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="目标纬度"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="目标纬度"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCoordY"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0"
-                            android:textColor="#FF111827"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvCoordY"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 目标坐标 Z -->
@@ -547,43 +629,59 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="填挖量"
-                            android:textColor="#FF374151"
-                            android:textSize="14sp" />
+                            android:layout_weight="2"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="填挖量"
+                                android:textColor="#FF374151"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:text=":"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text=":"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCoordZ"
-                            android:layout_width="100dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:layout_weight="3"
                             android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0"
-                            android:textColor="#FF111827"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvCoordZ"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/level_input_bg"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical|end"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:text="0"
+                                android:textColor="#FF111827"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="m"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>

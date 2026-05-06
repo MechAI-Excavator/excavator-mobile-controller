@@ -59,17 +59,12 @@
 
     <!-- 主内容区：左 / 右 -->
 
-
-    <!-- Step 进度（底部）：当前为第 1 步 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:paddingStart="20dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="12dp"
+
         android:weightSum="100">
 
         <!-- ── 左侧面板 ── -->
@@ -78,6 +73,7 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="14dp"
             android:layout_weight="50"
+            android:background="#00000000"
             android:fillViewport="false"
             android:scrollbars="none">
 
@@ -85,19 +81,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="15dp">
-
-                <!-- Step1 标题 -->
-
+                android:paddingTop="5dp"
+                android:paddingBottom="20dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                >
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:padding="20dp"
                     android:background="@drawable/card_light_bg"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical">
-
+                    android:orientation="vertical"
+                    android:padding="18dp">
                     <!-- t1 -->
                     <TextView
                         android:layout_width="wrap_content"
@@ -126,15 +120,16 @@
                             android:src="@drawable/square_ditch" />
 
                     </LinearLayout>
-                </LinearLayout>
+                    </LinearLayout>
 
 
-                <LinearLayout
-                       android:background="@drawable/card_light_bg"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="18dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/card_light_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
                     <!-- 参数输入（类似 LevelSetting 的输入行） -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -188,7 +183,7 @@
                             android:textSize="13sp" />
                     </LinearLayout>
 
-                        <LinearLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
@@ -372,8 +367,6 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
-
-
     </LinearLayout>
 
     <LinearLayout
