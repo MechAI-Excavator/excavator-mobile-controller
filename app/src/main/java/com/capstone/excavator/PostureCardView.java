@@ -30,6 +30,7 @@ import java.util.Locale;
  */
 public class PostureCardView extends LinearLayout {
 
+    private ExcavatorPostureView excavatorPosture2DView;
     private ExcavatorPostureView excavatorPostureView;
 
     // 底部三行角度文字
@@ -37,11 +38,9 @@ public class PostureCardView extends LinearLayout {
     private TextView tvStick;
     private TextView tvBucket;
 
-    // 2D 示意图叠加角度文字
+    // 2D / 3D Web 页面容器
     private View    view2D;
-    private TextView tvOverlay2DBoom;
-    private TextView tvOverlay2DStick;
-    private TextView tvOverlay2DBucket;
+    private View    view3D;
 
     private TextView btn2D;
     private TextView btn3D;
@@ -70,6 +69,7 @@ public class PostureCardView extends LinearLayout {
 
         inflate(context, R.layout.view_posture_card, this);
 
+        excavatorPosture2DView = findViewById(R.id.excavatorPosture2DView);
         excavatorPostureView = findViewById(R.id.excavatorPostureView);
 //        tvBoom               = findViewById(R.id.tvPostureBoomAngle);
 //        tvStick              = findViewById(R.id.tvPostureStickAngle);
@@ -78,13 +78,16 @@ public class PostureCardView extends LinearLayout {
         btn3D                = findViewById(R.id.btn3D);
 
         view2D           = findViewById(R.id.view2D);
-        tvOverlay2DBoom   = findViewById(R.id.tvOverlay2DBoom);
-        tvOverlay2DStick  = findViewById(R.id.tvOverlay2DStick);
-        tvOverlay2DBucket = findViewById(R.id.tvOverlay2DBucket);
+        view3D           = findViewById(R.id.view3D);
 
         // ExcavatorPostureView 已嵌入卡片，不需要自己的卡片背景和圆角裁切
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setEmbedded(true);
+            excavatorPosture2DView.setDisplayMode(false);
+        }
         if (excavatorPostureView != null) {
             excavatorPostureView.setEmbedded(true);
+            excavatorPostureView.setDisplayMode(true);
         }
 
         // 初始状态：2D 可见，3D 隐藏
@@ -103,6 +106,9 @@ public class PostureCardView extends LinearLayout {
         if (excavatorPostureView != null) {
             excavatorPostureView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
         }
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
+        }
         updateAngleText(boom, stick, bucket);
     }
 
@@ -110,17 +116,26 @@ public class PostureCardView extends LinearLayout {
         if (excavatorPostureView != null) {
             excavatorPostureView.setBucketAngleOffsetDeg(offsetDeg);
         }
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setBucketAngleOffsetDeg(offsetDeg);
+        }
     }
 
     public void setLengthScales(float boomScale, float stickScale) {
         if (excavatorPostureView != null) {
             excavatorPostureView.setLengthScales(boomScale, stickScale);
         }
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setLengthScales(boomScale, stickScale);
+        }
     }
 
     public void setArmLengthsFromMm(double boomMm, double stickMm, double bucketMm) {
         if (excavatorPostureView != null) {
             excavatorPostureView.setArmLengthsFromMm(boomMm, stickMm, bucketMm);
+        }
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setArmLengthsFromMm(boomMm, stickMm, bucketMm);
         }
     }
 
@@ -136,10 +151,6 @@ public class PostureCardView extends LinearLayout {
         if (tvStick  != null) tvStick.setText(stickStr);
         if (tvBucket != null) tvBucket.setText(bucketStr);
 
-        // 2D 叠加层（同步更新，无论当前是否在 2D 模式）
-        if (tvOverlay2DBoom   != null) tvOverlay2DBoom.setText(boomStr);
-        if (tvOverlay2DStick  != null) tvOverlay2DStick.setText(stickStr);
-        if (tvOverlay2DBucket != null) tvOverlay2DBucket.setText(bucketStr);
     }
 
     private void setupToggle() {
@@ -154,6 +165,9 @@ public class PostureCardView extends LinearLayout {
         if (excavatorPostureView != null) {
             excavatorPostureView.setDisplayMode(is3D);
         }
+        if (excavatorPosture2DView != null) {
+            excavatorPosture2DView.setDisplayMode(false);
+        }
         applyModeVisibility();
         applyToggleStyle();
     }
@@ -163,8 +177,8 @@ public class PostureCardView extends LinearLayout {
         if (view2D != null) {
             view2D.setVisibility(is3D ? View.GONE : View.VISIBLE);
         }
-        if (excavatorPostureView != null) {
-            excavatorPostureView.setVisibility(is3D ? View.VISIBLE : View.GONE);
+        if (view3D != null) {
+            view3D.setVisibility(is3D ? View.VISIBLE : View.GONE);
         }
     }
 

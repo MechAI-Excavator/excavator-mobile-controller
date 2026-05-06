@@ -88,7 +88,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- ── 2D 模式：posture.png 底图 + 角度叠加文字 ── -->
+        <!-- ── 2D 模式：Web 页面（与 3D 使用相同 bridge 数据） ── -->
         <FrameLayout
             android:id="@+id/view2D"
             android:layout_width="match_parent"
@@ -98,62 +98,38 @@
             android:layout_marginBottom="6dp"
             android:visibility="visible">
 
-        <ImageView
+        <com.capstone.excavator.Excavator2DPostureView
+            android:id="@+id/excavatorPosture2DView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/posture"
-            android:scaleType="fitCenter"
-            android:adjustViewBounds="true"
-            android:contentDescription="@null" />
-
-        <!-- 大臂角度：左侧居中 -->
-        <TextView
-            android:id="@+id/tvOverlay2DBoom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
-            android:layout_marginStart="2dp"
-            android:layout_marginTop="-12dp"
-            android:text="--"
-            android:textColor="#5C87FF"
-            android:textSize="9sp"
-            android:textStyle="bold" />
-
-        <!-- 斗杆角度：顶部居中（关节处） -->
-        <TextView
-            android:id="@+id/tvOverlay2DStick"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_marginTop="2dp"
-            android:layout_marginLeft="36dp"
-            android:text="--"
-            android:textColor="#3EC4A2"
-            android:textSize="9sp"
-            android:textStyle="bold" />
-
-        <!-- 铲斗角度：右侧中下 -->
-        <TextView
-            android:id="@+id/tvOverlay2DBucket"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_marginEnd="4dp"
-            android:layout_marginBottom="1dp"
-            android:text="--"
-            android:textColor="#FBBF24"
-            android:textSize="9sp"
-            android:textStyle="bold" />
+            android:layout_height="match_parent" />
 
         </FrameLayout>
 
         <!-- ── 3D 模式：WebView（2D 时隐藏，切换后显示） ── -->
-        <com.capstone.excavator.ExcavatorPostureView
-            android:id="@+id/excavatorPostureView"
+
+        <FrameLayout
+            android:id="@+id/view3D"
             android:layout_width="match_parent"
             android:layout_height="139dp"
             android:layout_marginBottom="0dp"
-            android:visibility="gone" />
+            android:visibility="gone">
+
+        <com.capstone.excavator.ExcavatorPostureView
+            android:id="@+id/excavatorPostureView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        
+        <ImageView
+            android:layout_width="21.72dp"
+            android:layout_height="19.44dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginBottom="20dp"
+            android:layout_gravity="start|bottom"
+            android:src="@drawable/coordinate"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null" />
+        </FrameLayout>
 
     </LinearLayout>
 

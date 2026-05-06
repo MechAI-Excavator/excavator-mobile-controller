@@ -40,6 +40,9 @@ import java.util.Locale;
  */
 public class SettingsActivity extends AppCompatActivity {
 
+    public static final String EXTRA_INITIAL_PAGE = "initial_page";
+    public static final int PAGE_GENERAL = 3;
+
     private static final float MIN_ARM_SCALE = 0.1f;
     private static final float MAX_ARM_SCALE = 10f;
 
@@ -75,9 +78,9 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText etArmBoomScale;
     private EditText etArmStickScale;
 
-    private Button btnLangZhHans;
-    private Button btnLangZhHant;
-    private Button btnLangEn;
+    private View btnLangZhHans;
+    private View btnLangZhHant;
+    private View btnLangEn;
     private Slider sbBrightness;
     private TextView tvBrightnessPercent;
 
@@ -95,7 +98,8 @@ public class SettingsActivity extends AppCompatActivity {
         bindJoystickPage();
         bindGeneralPage();
 
-        showPage(0);
+        int initialPage = getIntent().getIntExtra(EXTRA_INITIAL_PAGE, 0);
+        showPage(initialPage);
     }
 
     // ── Navigation ───────────────────────────────────────────────────────────
@@ -120,6 +124,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showPage(int index) {
+        if (index < 0 || index > 3) index = 0;
         currentPage = index;
 
         pageImu.setVisibility(index == 0 ? View.VISIBLE : View.GONE);
@@ -539,14 +544,15 @@ public class SettingsActivity extends AppCompatActivity {
 
         SharedPreferences sp = getSharedPreferences(PREFS_GENERAL_UI, MODE_PRIVATE);
 
-        // Language UI only (no actual locale switching yet)
-        String lang = sp.getString(KEY_LANGUAGE, "zh-Hans");
+        // Language — read / write via LanguageManager so first-run picker and
+        // this Settings page always share the same preference slot.
+        String lang = LanguageManager.getLanguage(this);
         applyLanguageUi(lang);
         View.OnClickListener langClick = v -> {
-            String next = "zh-Hans";
-            if (v == btnLangZhHant) next = "zh-Hant";
-            else if (v == btnLangEn) next = "en";
-            sp.edit().putString(KEY_LANGUAGE, next).apply();
+            String next = LanguageManager.LANG_ZH_HANS;
+            if (v == btnLangZhHant) next = LanguageManager.LANG_ZH_HANT;
+            else if (v == btnLangEn) next = LanguageManager.LANG_EN;
+            LanguageManager.setLanguage(this, next);
             applyLanguageUi(next);
         };
         if (btnLangZhHans != null) btnLangZhHans.setOnClickListener(langClick);
@@ -592,18 +598,28 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void applyLanguageUi(String lang) {
-        boolean isHans = "zh-Hans".equals(lang);
-        boolean isHant = "zh-Hant".equals(lang);
-        boolean isEn = "en".equals(lang);
-        setLangButtonState(btnLangZhHans, isHans);
-        setLangButtonState(btnLangZhHant, isHant);
-        setLangButtonState(btnLangEn, isEn);
+        setLangButtonState(btnLangZhHans, "zh-Hans".equals(lang));
+        setLangButtonState(btnLangZhHant, "zh-Hant".equals(lang));
+        setLangButtonState(btnLangEn,     "en".equals(lang));
     }
 
-    private void setLangButtonState(Button b, boolean selected) {
-        if (b == null) return;
-        b.setBackgroundResource(selected ? R.drawable.lang_chip_selected_bg : R.drawable.lang_chip_unselected_bg);
-        b.setTextColor(selected ? 0xFF2563EB : 0xFF9CA3AF);
+    private void setLangButtonState(View container, boolean selected) {
+        if (container == null) return;
+        TextView label = container instanceof android.widget.FrameLayout
+                ? (TextView)  ((android.widget.FrameLayout) container).getChildAt(0)
+                : null;
+        ImageView badge = container instanceof android.widget.FrameLayout
+                ? (ImageView) ((android.widget.FrameLayout) container).getChildAt(1)
+                : null;
+        if (label != null) {
+            label.setBackgroundResource(selected
+                    ? R.drawable.lang_chip_selected_bg
+                    : R.drawable.lang_chip_unselected_bg);
+            label.setTextColor(selected ? 0xFFFFFFFF : 0xFF9CA3AF);
+        }
+        if (badge != null) {
+            badge.setVisibility(selected ? View.VISIBLE : View.GONE);
+        }
     }
 
     // ── IMU dialog ───────────────────────────────────────────────────────────

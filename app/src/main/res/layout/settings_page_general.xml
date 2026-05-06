@@ -31,70 +31,95 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <!-- 简体中文 -->
+            <FrameLayout
                 android:id="@+id/btnLangZhHans"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginEnd="10dp"
                 android:layout_weight="1"
-                android:background="@drawable/lang_chip_selected_bg"
-                android:backgroundTint="@null"
-                android:elevation="0dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
-                android:stateListAnimator="@null"
-                android:text="简体中文"
-                android:textAllCaps="false"
-                android:textColor="#FF2563EB"
-                android:textSize="13sp"
-                app:backgroundTint="@null"
-                app:elevation="0dp"
-                app:rippleColor="@android:color/transparent" />
+                android:clickable="true"
+                android:focusable="true">
 
-            <com.google.android.material.button.MaterialButton
+                <TextView
+                    android:id="@+id/tvLangZhHans"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/lang_chip_selected_bg"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="简体中文"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/ivLangZhHansBadge"
+                    android:layout_width="21.33dp"
+                    android:layout_height="21.33dp"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/selected_icon"
+                    android:visibility="visible" />
+            </FrameLayout>
+
+            <!-- 繁體中文 -->
+            <FrameLayout
                 android:id="@+id/btnLangZhHant"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginEnd="10dp"
                 android:layout_weight="1"
-                android:background="@drawable/lang_chip_unselected_bg"
-                android:backgroundTint="@null"
-                android:elevation="0dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
-                android:stateListAnimator="@null"
-                android:text="繁體中文"
-                android:textAllCaps="false"
-                android:textColor="#FF9CA3AF"
-                android:textSize="13sp"
-                app:backgroundTint="@null"
-                app:elevation="0dp"
-                app:rippleColor="@android:color/transparent" />
+                android:clickable="true"
+                android:focusable="true">
 
-            <com.google.android.material.button.MaterialButton
+                <TextView
+                    android:id="@+id/tvLangZhHant"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/lang_chip_unselected_bg"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="繁體中文"
+                    android:textColor="#FF9CA3AF"
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/ivLangZhHantBadge"
+                    android:layout_width="21.33dp"
+                    android:layout_height="21.33dp"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/selected_icon"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- English -->
+            <FrameLayout
                 android:id="@+id/btnLangEn"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="36dp"
                 android:layout_weight="1"
-                android:background="@drawable/lang_chip_unselected_bg"
-                android:backgroundTint="@null"
-                android:elevation="0dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
-                android:stateListAnimator="@null"
-                android:text="English"
-                android:textAllCaps="false"
-                android:textColor="#FF9CA3AF"
-                android:textSize="13sp"
-                app:backgroundTint="@null"
-                app:elevation="0dp"
-                app:rippleColor="@android:color/transparent" />
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tvLangEn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/lang_chip_unselected_bg"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="English"
+                    android:textColor="#FF9CA3AF"
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:id="@+id/ivLangEnBadge"
+                    android:layout_width="21.33dp"
+                    android:layout_height="21.33dp"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/selected_icon"
+                    android:visibility="gone" />
+            </FrameLayout>
+
         </LinearLayout>
 
         <!-- 界面亮度调节 -->

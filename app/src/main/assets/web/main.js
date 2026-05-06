@@ -9,6 +9,34 @@ const isDevPanelEnabled = new URLSearchParams(window.location.search).get("dev")
 const scene = new THREE.Scene();
 scene.background = null;
 
+function createSoftEnvironmentTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, "#ffffff");
+  sky.addColorStop(0.42, "#9fb1cc");
+  sky.addColorStop(0.58, "#3b414a");
+  sky.addColorStop(1, "#111318");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const highlight = ctx.createRadialGradient(130, 78, 0, 130, 78, 160);
+  highlight.addColorStop(0, "rgba(255,255,255,0.95)");
+  highlight.addColorStop(0.36, "rgba(255,255,255,0.32)");
+  highlight.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = highlight;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+scene.environment = createSoftEnvironmentTexture();
+
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
 // Default view: oblique ~45° looking at the ground.
 camera.position.set(-35, 25, 40); 
@@ -18,6 +46,9 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
@@ -29,8 +60,11 @@ if (controls) {
   controls.target.set(0, 0.6, 0);
 }
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.35));
-const sun = new THREE.DirectionalLight(0xffffff, 1.05);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.05));
+const rimLight = new THREE.DirectionalLight(0x9fb7ff, 0.85);
+rimLight.position.set(-18, 12, -16);
+scene.add(rimLight);
+const sun = new THREE.DirectionalLight(0xffffff, 1.35);
 // Placeholder until GLB loads; then aligned to model center + overhead offset.
 sun.position.set(0, 18, 2);
 sun.castShadow = true;
@@ -61,7 +95,7 @@ const groundMat = new THREE.MeshPhysicalMaterial({
   roughness: 0.92,
   metalness: 0,
   transparent: true,
-  opacity: 0.28,
+  opacity: 0.05,
   transmission: 0.25,
   thickness: 0.8,
   ior: 1.35
@@ -76,9 +110,40 @@ scene.add(ground);
 const grid = new THREE.GridHelper(groundSize, 160, 0x6f7886, 0x404652);
 grid.position.y = -0.019; // slightly above plane to avoid z-fighting
 grid.material.transparent = true;
-grid.material.opacity = 0.45;
+grid.material.opacity = 0.28;
 grid.material.depthWrite = false;
 scene.add(grid);
+
+function createContactShadowTexture(size = 512) {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.08, size / 2, size / 2, size * 0.48);
+  gradient.addColorStop(0, "rgba(0,0,0,0.34)");
+  gradient.addColorStop(0.45, "rgba(0,0,0,0.18)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+const contactShadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshBasicMaterial({
+    map: createContactShadowTexture(),
+    transparent: true,
+    opacity: 0.75,
+    depthWrite: false
+  })
+);
+contactShadow.rotation.x = -Math.PI / 2;
+contactShadow.position.y = -0.016;
+contactShadow.renderOrder = 0;
+scene.add(contactShadow);
+
 
 if (isDevPanelEnabled) {
   const axes = new THREE.AxesHelper(2.5);
@@ -127,32 +192,41 @@ const lengthAxis = {
 };
 
 const partColors = {
-  theme: 0x004dff,
-  // Whiter/lighter variant for the car body — same hue, blended toward white.
-  themeBody: 0x80aaff
+  theme: 0x365fff,
+  themeEdge: 0x8fa7ff,
+  themeSilhouette: 0x132aff,
+  transparentBody: 0x24282d,
+  transparentBodyEdge: 0x5c6670,
+  silhouette: 0x020304
 };
+
+const EDGE_OUTLINE_KEY = "excavatorEdgeOutline";
+const SILHOUETTE_OUTLINE_KEY = "excavatorSilhouetteOutline";
 
 function degToRad(value) {
   return THREE.MathUtils.degToRad(value);
 }
 
-// IMU protocol (per embedded team):
-//  - Each IMU already reports the LOCAL angle relative to its parent segment
-//    (boom vs cab, stick vs boom, bucket vs stick). No subtraction needed.
-//  - Cab is the reference at 0°, everything downstream is derived from it,
-//    so no rest-pose calibration offset is required either.
-//  - Range: -180° ~ +180°, right-hand rule.
-// Per-joint config: only a sign flip in case Three.js axis points opposite
-// to IMU's right-hand-rule positive direction.  rotZ = sign * imuValue
+// IMU values arrive in the [-180, 180] range. For joints with a calibrated
+// start pose, compare against the start reading with wrap-around normalization
+// so values remain continuous when they cross the +/-180 boundary.
 const IMU_CONFIG = {
   boom:   { sign: -1 },
-  stick:  { sign: -1 },
-  bucket: { sign: 1 }
+  stick:  { inputStart: -171.66, outputStart: 96, sign: 1 },
+  bucket: { inputStart: 35.14, outputStart: 20, sign: -1, scale: 33 / (60 - 35.14) }
 };
+
+function normalizeAngleDelta(value) {
+  return THREE.MathUtils.euclideanModulo(value + 180, 360) - 180;
+}
 
 function imuToLocalAngle(jointName, imuValue) {
   const cfg = IMU_CONFIG[jointName];
   if (!cfg) return imuValue;
+  if (typeof cfg.inputStart === "number" && typeof cfg.outputStart === "number") {
+    const delta = normalizeAngleDelta(imuValue - cfg.inputStart);
+    return cfg.outputStart + cfg.sign * delta * (cfg.scale ?? 1);
+  }
   return cfg.sign * imuValue;
 }
 
@@ -182,8 +256,7 @@ const debugOverlay = (() => {
       el.textContent =
         `source: ${lastSource}\n` +
         `${imuLine}\n` +
-        `rotZ     boom=${fmt(rot.boom?.z)}  stick=${fmt(rot.stick?.z)}  bucket=${fmt(rot.bucket?.z)}\n` +
-        `sign     boom=${IMU_CONFIG.boom.sign}  stick=${IMU_CONFIG.stick.sign}  bucket=${IMU_CONFIG.bucket.sign}`;
+        `rotZ     boom=${fmt(rot.boom?.z)}  stick=${fmt(rot.stick?.z)}  bucket=${fmt(rot.bucket?.z)}`;
     }
   };
 })();
@@ -210,29 +283,95 @@ function enableExcavatorCastShadows(root) {
   });
 }
 
-function tintMeshes(target, colorHex, metalness = 0.35, roughness = 0.7, opacity = 1) {
+function addOrUpdateEdgeOutline(mesh, colorHex, opacity = 0.75) {
+  if (!mesh.geometry) return;
+
+  let outline = mesh.children.find((child) => child.userData?.[EDGE_OUTLINE_KEY]);
+  if (!outline) {
+    outline = new THREE.LineSegments(
+      new THREE.EdgesGeometry(mesh.geometry, 36),
+      new THREE.LineBasicMaterial()
+    );
+    outline.userData[EDGE_OUTLINE_KEY] = true;
+    outline.renderOrder = 2;
+    mesh.add(outline);
+  }
+
+  outline.material.color = new THREE.Color(colorHex);
+  outline.material.transparent = opacity < 1;
+  outline.material.opacity = opacity;
+  outline.material.depthTest = true;
+}
+
+function addOrUpdateSilhouetteOutline(mesh, colorHex, opacity = 0.54, scale = 1.026) {
+  if (!mesh.geometry) return;
+
+  let outline = mesh.children.find((child) => child.userData?.[SILHOUETTE_OUTLINE_KEY]);
+  if (!outline) {
+    outline = new THREE.Mesh(
+      mesh.geometry,
+      new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        depthWrite: false
+      })
+    );
+    outline.userData[SILHOUETTE_OUTLINE_KEY] = true;
+    outline.castShadow = false;
+    outline.receiveShadow = false;
+    outline.renderOrder = 1;
+    mesh.add(outline);
+  }
+
+  outline.scale.setScalar(scale);
+  outline.material.color = new THREE.Color(colorHex);
+  outline.material.transparent = opacity < 1;
+  outline.material.opacity = opacity;
+}
+
+function tintMeshes(
+  target,
+  colorHex,
+  metalness = 0.35,
+  roughness = 0.7,
+  opacity = 1,
+  edgeColorHex = null,
+  edgeOpacity = 0.75,
+  silhouetteColorHex = partColors.silhouette,
+  silhouetteOpacity = 0.48,
+  silhouetteScale = 1.026
+) {
   if (!target) return;
   target.traverse((obj) => {
+    if (obj.userData?.[SILHOUETTE_OUTLINE_KEY]) return;
     if (!obj.isMesh) return;
-    const sourceMat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-    const nextMat = sourceMat ? sourceMat.clone() : new THREE.MeshStandardMaterial();
-    nextMat.color = new THREE.Color(colorHex);
-    if ("metalness" in nextMat) nextMat.metalness = metalness;
-    if ("roughness" in nextMat) nextMat.roughness = roughness;
-    nextMat.transparent = opacity < 1;
-    nextMat.opacity = opacity;
+    const nextMat = new THREE.MeshPhysicalMaterial({
+      color: colorHex,
+      metalness,
+      roughness,
+      transparent: opacity < 1,
+      opacity,
+      clearcoat: opacity < 1 ? 0.75 : 0.45,
+      clearcoatRoughness: opacity < 1 ? 0.2 : 0.26,
+      envMapIntensity: opacity < 1 ? 1.65 : 1.15,
+      transmission: opacity < 1 ? 0.06 : 0,
+      thickness: opacity < 1 ? 0.28 : 0,
+      ior: 1.42,
+      flatShading: false
+    });
+    nextMat.depthWrite = opacity >= 1;
     obj.material = nextMat;
+    if (edgeColorHex !== null) addOrUpdateEdgeOutline(obj, edgeColorHex, edgeOpacity);
+    if (silhouetteColorHex !== null) {
+      addOrUpdateSilhouetteOutline(obj, silhouetteColorHex, silhouetteOpacity, silhouetteScale);
+    }
   });
 }
 
 function applyExcavatorColors() {
-  // Car body: lighter #80AAFF; arm segments: solid theme blue #004DFF (no along-arm fade).
-  tintMeshes(nodes.main, partColors.themeBody, 0.25, 0.65, 1.0);
-  tintMeshes(nodes.car, partColors.themeBody, 0.25, 0.65, 1.0);
-  tintMeshes(nodes.driverCabin, partColors.themeBody, 0.25, 0.65, 1.0);
-  tintMeshes(nodes.track, partColors.themeBody, 0.4, 0.6, 1.0);
-  const armMat = [partColors.theme, 0.3, 0.7, 1.0];
-  tintMeshes(nodes.base, ...armMat);
+  // Default the whole excavator to dark translucent gray, then restore
+  // boom/stick/bucket as solid blue so the arm stays highlighted.
+  tintMeshes(nodes.main, partColors.transparentBody, 0.72, 0.18, 0.72, partColors.transparentBodyEdge, 0.22, partColors.silhouette, 0.34, 1.014);
+  const armMat = [partColors.theme, 0.34, 0.2, 0.9, partColors.themeEdge, 0.16, partColors.themeSilhouette, 0.16, 1.008];
   tintMeshes(nodes.boom, ...armMat);
   tintMeshes(nodes.stick, ...armMat);
   tintMeshes(nodes.bucket, ...armMat);
@@ -309,6 +448,9 @@ loader.load(
     const box = new THREE.Box3().setFromObject(root);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
+    contactShadow.position.x = center.x;
+    contactShadow.position.z = center.z;
+    contactShadow.scale.set(Math.max(size.x * 1.35, 18), Math.max(size.z * 1.35, 18), 1);
     // Fit shadow frustum to model size so the shadow-map boundary stays offscreen.
     shadowExtent = Math.max(60, Math.max(size.x, size.z) * 3.0);
     sun.shadow.camera.left = -shadowExtent;
@@ -433,7 +575,7 @@ window.excavatorController = {
   },
   // Runtime tuning, e.g.:
   //   setImuConfig({ boom: { sign: 1 } })
-  //   setImuConfig({ stick: { offset: -30 } })
+  //   setImuConfig({ stick: { inputStart: -171.66, outputStart: 76 } })
   setImuConfig(partial = {}) {
     Object.keys(partial).forEach((joint) => {
       if (!IMU_CONFIG[joint]) return;

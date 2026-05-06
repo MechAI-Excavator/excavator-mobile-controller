@@ -24,7 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ExcavatorPostureView extends FrameLayout {
-    private static final String WEB_ENTRY_URL =
+    protected static final String WEB_ENTRY_URL =
             "https://appassets.androidplatform.net/assets/web/index.html";
 
     /** 与 gauge_card_bg 一致，便于与主界面侧栏卡片统一 */
@@ -42,6 +42,7 @@ public class ExcavatorPostureView extends FrameLayout {
     private float boomLengthScale = 1f;
     private float stickLengthScale = 1f;
     private float bucketAngleOffsetDeg = 0f;
+    private boolean displayMode3D = true;
     private boolean pageReady = false;
 
     public ExcavatorPostureView(Context context) {
@@ -115,10 +116,15 @@ public class ExcavatorPostureView extends FrameLayout {
             public void onPageFinished(WebView view, String url) {
                 pageReady = true;
                 postCurrentPayload();
+                postDisplayMode();
             }
         });
 
-        webView.loadUrl(WEB_ENTRY_URL);
+        webView.loadUrl(getWebEntryUrl());
+    }
+
+    protected String getWebEntryUrl() {
+        return WEB_ENTRY_URL;
     }
 
     /**
@@ -223,8 +229,13 @@ public class ExcavatorPostureView extends FrameLayout {
      * 切换 2D/3D 显示模式。若 Web 页面实现了 {@code window.setDisplayMode(mode)} 则生效。
      */
     public void setDisplayMode(boolean is3D) {
+        displayMode3D = is3D;
+        postDisplayMode();
+    }
+
+    private void postDisplayMode() {
         if (!pageReady) return;
-        String mode = is3D ? "3d" : "2d";
+        String mode = displayMode3D ? "3d" : "2d";
         String js = "window.setDisplayMode && window.setDisplayMode('" + mode + "');";
         webView.post(() -> webView.evaluateJavascript(js, null));
     }

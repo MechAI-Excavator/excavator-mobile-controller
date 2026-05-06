@@ -180,6 +180,30 @@ public class MainActivity extends AppCompatActivity {
         initSDK();
         startDataUpdates();
         initVideoPlayer();
+        showInitialPrompts();
+    }
+
+    /** 首次启动引导：先选语言，再提示是否配置机器参数。 */
+    private void showInitialPrompts() {
+        if (!LanguageManager.isLanguageChosen(this)) {
+            LanguagePickerDialog.show(this, langCode -> {
+                showFirstRunConfigIfNeeded();
+            });
+        } else {
+            showFirstRunConfigIfNeeded();
+        }
+    }
+
+    /** 首次运行时提示配置机器参数；跳过或配置后都不再自动弹出。 */
+    private void showFirstRunConfigIfNeeded() {
+        FirstRunConfigDialog.showIfNeeded(this, this::openGeneralSettingsPage);
+    }
+
+    private void openGeneralSettingsPage() {
+        Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+        intent.putExtra("current_url", currentVideoUrl);
+        intent.putExtra(SettingsActivity.EXTRA_INITIAL_PAGE, SettingsActivity.PAGE_GENERAL);
+        startActivityForResult(intent, REQUEST_SETTINGS);
     }
     
     /**
