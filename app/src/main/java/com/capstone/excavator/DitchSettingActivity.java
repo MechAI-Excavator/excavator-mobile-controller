@@ -18,6 +18,8 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
     private View btnLevelBack, btnLevelNext;
     private View btnLevelHelp;
     private HelpTooltip helpTooltip;
+    private NumpadView numpad;
+    private boolean discardStateOnStop;
 
     // ── Step1：沟型选择 ───────────────────────────────────────
     private View cardDitchSquare, cardDitchTrapezoid;
@@ -32,6 +34,7 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
     private LinearLayout cardRefLeftB, cardRefMiddleB, cardRefRightB;
     private TextView tvRefLeftB, tvRefMiddleB, tvRefRightB;
     private int selectedRefB = 1;
+    private TextView tvAbDistance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +43,11 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         setContentView(R.layout.activity_ditch_setting);
 
         bindViews();
+        numpad = new NumpadView(this);
+        restoreFromState();
         setupDitchTypeCards();
         setupRefCards();
+        setupInputs();
         setupActions();
     }
 
@@ -85,6 +91,16 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         tvRefLeftB = findViewById(R.id.tvRefLeftB);
         tvRefMiddleB = findViewById(R.id.tvRefMiddleB);
         tvRefRightB = findViewById(R.id.tvRefRightB);
+        tvAbDistance = findViewById(R.id.tvCurrentRef);
+    }
+
+    private void restoreFromState() {
+        selectedDitchType = DitchTaskState.getDitchType();
+        selectedRefA = DitchTaskState.getRefA();
+        selectedRefB = DitchTaskState.getRefB();
+        if (tvAbDistance != null && !DitchTaskState.getAbDistance().isEmpty()) {
+            tvAbDistance.setText(DitchTaskState.getAbDistance());
+        }
     }
 
     private void setupDitchTypeCards() {
@@ -181,10 +197,34 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
             tvRefRightB.setTextColor(getColor(selectedRefB == 2 ? R.color.level_selected : R.color.level_unselected));
     }
 
+    private void setupInputs() {
+        if (tvAbDistance == null) {
+            return;
+        }
+        tvAbDistance.setOnClickListener(v -> {
+            if (numpad != null && numpad.isShowing()) {
+                numpad.dismiss();
+                return;
+            }
+            if (numpad == null) {
+                return;
+            }
+            numpad.setOnConfirmListener(tvAbDistance::setText);
+            numpad.showForAtScreen(tvAbDistance, tvAbDistance,
+                    300, NumpadPositionConfig.SCREEN_Y);
+        });
+    }
+
     // ── 按钮动作 ──────────────────────────────────────────────
 
     private void setupActions() {
-        if (btnLevelBack != null) btnLevelBack.setOnClickListener(v -> finish());
+        if (btnLevelBack != null) {
+            btnLevelBack.setOnClickListener(v -> {
+                discardStateOnStop = true;
+                DitchTaskState.reset();
+                finish();
+            });
+        }
 
         helpTooltip = new HelpTooltip(
                 this,
@@ -198,6 +238,7 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
                 String ditchType = selectedDitchType == 0 ? "方形沟" : "梯形沟";
                 String refA = refNames[Math.max(0, Math.min(2, selectedRefA))];
                 String refB = refNames[Math.max(0, Math.min(2, selectedRefB))];
+                saveCurrentState();
 
                 Toast.makeText(this,
                         "沟型：" + ditchType + "\nA点参考：" + refA + "  B点参考：" + refB,
@@ -208,9 +249,22 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         }
     }
 
+    private void saveCurrentState() {
+        DitchTaskState.updateBase(
+                selectedDitchType,
+                selectedRefA,
+                selectedRefB,
+                tvAbDistance != null ? tvAbDistance.getText().toString() : ""
+        );
+    }
+
     @Override
     protected void onStop() {
+        if (!discardStateOnStop) {
+            saveCurrentState();
+        }
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
+        if (numpad != null && numpad.isShowing()) numpad.dismiss();
     }
 }

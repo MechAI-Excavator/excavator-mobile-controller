@@ -32,9 +32,16 @@ public class HeaderBarView extends LinearLayout {
     private TextView tvModeStatus;
     private TextView tvHeaderConnection;
     private TextView tvCurrentTime;
+    private TextView tvRtkStatus;
+    private TextView tvImuStatus;
     private View connectionDot;
+    private View rtkStatusDot;
+    private View imuStatusDot;
     private TextView btnEmergencyStop;
     private Runnable onEmergencyStopListener;
+
+    private static final int ONLINE_COLOR = 0xAD059669;
+    private static final int OFFLINE_COLOR = 0xFFFF6B6B;
 
     private final Handler clockHandler = new Handler(Looper.getMainLooper());
     private final Runnable clockRunnable = new Runnable() {
@@ -63,12 +70,18 @@ public class HeaderBarView extends LinearLayout {
         setBackgroundColor(0x4D000000);
         inflate(context, R.layout.view_header_bar, this);
         tvCurrentTime      = findViewById(R.id.tvCurrentTime);
+        tvRtkStatus        = findViewById(R.id.tvRtkStatus);
+        tvImuStatus        = findViewById(R.id.tvImuStatus);
+        rtkStatusDot       = findViewById(R.id.rtkStatusDot);
+        imuStatusDot       = findViewById(R.id.imuStatusDot);
         btnEmergencyStop   = findViewById(R.id.btnEmergencyStop);
         if (btnEmergencyStop != null) {
             btnEmergencyStop.setOnClickListener(v -> {
                 if (onEmergencyStopListener != null) onEmergencyStopListener.run();
             });
         }
+        setRtkOnline(false);
+        setImuStatus(0, 4);
     }
 
     /** 外部注册急停按钮点击回调。 */
@@ -96,6 +109,36 @@ public class HeaderBarView extends LinearLayout {
             dot.setColor(color);
             connectionDot.setBackground(dot);
         }
+    }
+
+    public void setRtkOnline(boolean online) {
+        int color = online ? ONLINE_COLOR : OFFLINE_COLOR;
+        if (tvRtkStatus != null) {
+            tvRtkStatus.setText("RTK");
+            tvRtkStatus.setTextColor(color);
+        }
+        setDotColor(rtkStatusDot, color);
+    }
+
+    public void setImuStatus(int onlineCount, int totalCount) {
+        int safeTotal = Math.max(0, totalCount);
+        int safeOnline = Math.max(0, Math.min(onlineCount, safeTotal));
+        int color = safeOnline == safeTotal && safeTotal > 0 ? ONLINE_COLOR : OFFLINE_COLOR;
+        if (tvImuStatus != null) {
+            tvImuStatus.setText("IMU " + safeOnline + "/" + safeTotal);
+            tvImuStatus.setTextColor(color);
+        }
+        setDotColor(imuStatusDot, color);
+    }
+
+    private static void setDotColor(View dotView, int color) {
+        if (dotView == null) {
+            return;
+        }
+        GradientDrawable dot = new GradientDrawable();
+        dot.setShape(GradientDrawable.OVAL);
+        dot.setColor(color);
+        dotView.setBackground(dot);
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────

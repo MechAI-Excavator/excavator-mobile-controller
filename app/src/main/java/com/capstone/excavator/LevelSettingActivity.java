@@ -7,6 +7,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Locale;
+
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -33,6 +35,7 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     // ── 数值输入 ─────────────────────────────────────────────
     private TextView tvTargetHeight, tvFillCut;
     private TextView tvCoordX, tvCoordY, tvCoordZ;
+    private TextView tvCurrentLatLon;
     private NumpadView numpad;
 
     // ── 距离标注 ─────────────────────────────────────────────
@@ -42,6 +45,8 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     private View btnLevelBack, btnLevelNext;
     private View btnLevelHelp;
     private HelpTooltip helpTooltip;
+    private final RtkState.OnRtkChangeListener rtkChangeListener =
+            (lat, lon, valid) -> runOnUiThread(() -> updateCurrentLatLon(lat, lon, valid));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +66,20 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) setFullScreenMode();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        RtkState.addListener(rtkChangeListener);
+        updateCurrentLatLon(RtkState.getLat(), RtkState.getLon(), RtkState.isValid());
+    }
+
+    @Override
+    protected void onStop() {
+        RtkState.removeListener(rtkChangeListener);
+        super.onStop();
+        if (helpTooltip != null) helpTooltip.dismiss();
     }
 
     private void setFullScreenMode() {
@@ -94,11 +113,23 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
         tvCoordX       = findViewById(R.id.tvCoordX);
         tvCoordY       = findViewById(R.id.tvCoordY);
         tvCoordZ       = findViewById(R.id.tvCoordZ);
+        tvCurrentLatLon = findViewById(R.id.tvCurrentLatLon);
         tvDepthLabel   = findViewById(R.id.tvDepthLabel);
 
         btnLevelBack = findViewById(R.id.btnLevelBack);
         btnLevelNext = findViewById(R.id.btnLevelNext);
         btnLevelHelp = findViewById(R.id.btnLevelHelp);
+    }
+
+    private void updateCurrentLatLon(double lat, double lon, boolean valid) {
+        if (tvCurrentLatLon == null) {
+            return;
+        }
+        if (valid) {
+            tvCurrentLatLon.setText(String.format(Locale.US, "%.9f, %.9f", lat, lon));
+        } else {
+            tvCurrentLatLon.setText("暂无RTK");
+        }
     }
 
     private void initNumpad() {
@@ -178,31 +209,36 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
         tvTargetHeight.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
             numpad.setOnConfirmListener(value -> tvTargetHeight.setText(value));
-            numpad.showFor(tvTargetHeight, tvTargetHeight, NumpadView.POSITION_ABOVE);
+            numpad.showForAtScreen(tvTargetHeight, tvTargetHeight,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
 
         tvFillCut.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
             numpad.setOnConfirmListener(value -> tvFillCut.setText(value));
-            numpad.showFor(tvFillCut, tvFillCut, NumpadView.POSITION_ABOVE);
+            numpad.showForAtScreen(tvFillCut, tvFillCut,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
 
         tvCoordX.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
             numpad.setOnConfirmListener(value -> tvCoordX.setText(value));
-            numpad.showFor(tvCoordX, tvCoordX, NumpadView.POSITION_ABOVE);
+            numpad.showForAtScreen(tvCoordX, tvCoordX,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
 
         tvCoordY.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
             numpad.setOnConfirmListener(value -> tvCoordY.setText(value));
-            numpad.showFor(tvCoordY, tvCoordY, NumpadView.POSITION_ABOVE);
+            numpad.showForAtScreen(tvCoordY, tvCoordY,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
 
         tvCoordZ.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
             numpad.setOnConfirmListener(value -> tvCoordZ.setText(value));
-            numpad.showFor(tvCoordZ, tvCoordZ, NumpadView.POSITION_ABOVE);
+            numpad.showForAtScreen(tvCoordZ, tvCoordZ,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
     }
 
@@ -223,6 +259,15 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
             String mode   = isHeightMode ? "高度定点" : "坐标定点";
             String height = tvTargetHeight.getText().toString();
             String fill   = tvFillCut.getText().toString();
+            LevelTaskState.update(
+                    selectedRef,
+                    isHeightMode,
+                    height,
+                    fill,
+                    tvCoordX.getText().toString(),
+                    tvCoordY.getText().toString(),
+                    tvCoordZ.getText().toString()
+            );
 
             Toast.makeText(this,
                     "参考点：" + ref + "  模式：" + mode +
@@ -233,9 +278,4 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
         });
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (helpTooltip != null) helpTooltip.dismiss();
-    }
 }

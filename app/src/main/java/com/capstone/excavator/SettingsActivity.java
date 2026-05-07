@@ -49,10 +49,6 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     private static final String KEY_BRIGHTNESS_PERCENT = "brightness_percent";
     private static final String KEY_LANGUAGE = "language";
 
-    /** 尺寸页 / IMU 页数字键盘在屏幕上的固定锚点（与旧版 IMU 行为一致）。 */
-    private static final int NUMPAD_SCREEN_X = 1260;
-    private static final int NUMPAD_SCREEN_Y = 278;
-
     // ── 导航项 ───────────────────────────────────────────────────────────────
     private LinearLayout navImu;
     private LinearLayout navDimensions;
@@ -257,7 +253,8 @@ public class SettingsActivity extends ScaledAppCompatActivity {
                 refreshImuPreviewLabels();
             });
             // 定位：使用 window 绝对坐标（你可自行调整 x/y）
-            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
     }
 
@@ -452,7 +449,8 @@ public class SettingsActivity extends ScaledAppCompatActivity {
                 DimensionPreferences.save(this, p);
                 refreshDimensionValueLabels();
             });
-            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
     }
 

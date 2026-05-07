@@ -3,6 +3,7 @@ package com.capstone.excavator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +17,7 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
     private View btnHelp;
     private View btnPrev;
     private View btnNext;
+    private View rowTopWidth;
 
     private HelpTooltip helpTooltip;
     private NumpadView numpad;
@@ -24,9 +26,7 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
     private TextView tvWaveParam2;
     private TextView tvWaveParam3;
     private TextView tvWaveParam4;
-
-    private static final int NUMPAD_SCREEN_X = 1260;
-    private static final int NUMPAD_SCREEN_Y = 278;
+    private ImageView imgDitchSectionType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +38,16 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         btnHelp = findViewById(R.id.btnLevelHelp);
         btnPrev = findViewById(R.id.btnDitchPrev);
         btnNext = findViewById(R.id.btnDitchNext);
+        rowTopWidth = findViewById(R.id.rowTopWidth);
 
         tvWaveParam1 = findViewById(R.id.tvWaveParam1);
         tvWaveParam2 = findViewById(R.id.tvWaveParam2);
         tvWaveParam3 = findViewById(R.id.tvWaveParam3);
         tvWaveParam4 = findViewById(R.id.tvWaveParam4);
+        imgDitchSectionType = findViewById(R.id.imgDitchSectionType);
+        restoreInputsFromState();
+        applyDitchSectionTypeImage();
+        applyDitchTypeFields();
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
@@ -54,14 +59,39 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
 
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
+                saveCurrentInputs();
                 startActivity(new Intent(this, DitchWorkSettingActivity.class));
                 finish();
             });
         }
 
         if (btnNext != null) {
-            btnNext.setOnClickListener(v ->
-                    startActivity(new Intent(this, DitchPrecheckActivity.class)));
+            btnNext.setOnClickListener(v -> {
+                saveCurrentInputs();
+                startActivity(new Intent(this, DitchPrecheckActivity.class));
+            });
+        }
+    }
+
+    private void restoreInputsFromState() {
+        setTextIfPresent(tvWaveParam1, DitchTaskState.getSideParam1());
+        setTextIfPresent(tvWaveParam2, DitchTaskState.getSideParam2());
+        setTextIfPresent(tvWaveParam3, DitchTaskState.getSideParam3());
+        setTextIfPresent(tvWaveParam4, DitchTaskState.getSideParam4());
+    }
+
+    private void applyDitchSectionTypeImage() {
+        if (imgDitchSectionType == null) {
+            return;
+        }
+        imgDitchSectionType.setImageResource(DitchTaskState.isSquareDitch()
+                ? R.drawable.square_i1
+                : R.drawable.trapezoid_i1);
+    }
+
+    private void applyDitchTypeFields() {
+        if (rowTopWidth != null) {
+            rowTopWidth.setVisibility(DitchTaskState.isSquareDitch() ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -81,12 +111,33 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
             }
             if (numpad == null) return;
             numpad.setOnConfirmListener(tv::setText);
-            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
+    }
+
+    private static String textOf(TextView tv) {
+        return tv == null ? "" : tv.getText().toString();
+    }
+
+    private void saveCurrentInputs() {
+        DitchTaskState.updateSideParams(
+                textOf(tvWaveParam1),
+                textOf(tvWaveParam2),
+                textOf(tvWaveParam3),
+                textOf(tvWaveParam4)
+        );
+    }
+
+    private static void setTextIfPresent(TextView tv, String value) {
+        if (tv != null && value != null && !value.trim().isEmpty()) {
+            tv.setText(value.trim());
+        }
     }
 
     @Override
     protected void onStop() {
+        saveCurrentInputs();
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
         if (numpad != null && numpad.isShowing()) numpad.dismiss();

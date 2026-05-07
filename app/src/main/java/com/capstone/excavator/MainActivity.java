@@ -135,6 +135,8 @@ public class MainActivity extends ScaledAppCompatActivity {
     private Runnable udpTimeoutRunnable;
     private static final long UDP_TIMEOUT_MS = 5000; // 5秒没收到数据就切换回模拟数据
 
+    private static final int IMU_TOTAL_COUNT = 4;
+
     /**
      * 联调 UI：左右 {@link VerticalSpectrumGaugeView}、{@link SpeedDirectionIndicatorView}、中心条等用临时读数；
      * 接真数据后改为 false，并从协议/UDP 回调里驱动对应 View。
@@ -318,6 +320,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         // ── Header component ────────────────────────────────────────
         headerBar = findViewById(R.id.headerBar);
         headerBar.setMode(isManualMode ? "手动模式" : "自动模式");
+        setSensorStatusesOffline();
 
         // ── 急停覆盖层 ───────────────────────────────────────────────
         emergencyStopOverlay = findViewById(R.id.emergencyStopOverlay);
@@ -950,6 +953,44 @@ public class MainActivity extends ScaledAppCompatActivity {
         }
     }
 
+    private void setSensorStatusesOffline() {
+        RtkState.clear();
+        ImuStatusState.clear();
+        if (headerBar != null) {
+            headerBar.setRtkOnline(false);
+            headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT);
+        }
+    }
+
+    private void updateSensorStatuses(IMUDataParser.ParsedData parsed) {
+        if (parsed == null) {
+            return;
+        }
+        ImuStatusState.setOnlineCount(countOnlineImus(parsed));
+        if (headerBar == null) {
+            return;
+        }
+        headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT);
+        headerBar.setRtkOnline(isValidRtk(parsed.rtkLat, parsed.rtkLon));
+    }
+
+    private int countOnlineImus(IMUDataParser.ParsedData parsed) {
+        int online = 0;
+        if (isFinite(parsed.boomAngle)) online++;
+        if (isFinite(parsed.stickAngle)) online++;
+        if (isFinite(parsed.bucketAngle)) online++;
+        if (isFinite(parsed.cabinPitchAngle) && isFinite(parsed.cabinRollAngle)) online++;
+        return online;
+    }
+
+    private static boolean isFinite(float value) {
+        return !Float.isNaN(value) && !Float.isInfinite(value);
+    }
+
+    private static boolean isValidRtk(double lat, double lon) {
+        return RtkState.isValidCoordinate(lat, lon);
+    }
+
 
     private void startDataUpdates() {
         // 主数据更新Handler（1秒更新一次）
@@ -1239,6 +1280,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         @Override
                         public void run() {
                             useRealData = false; // 连接失败，使用模拟数据
+                            setSensorStatusesOffline();
                             Toast.makeText(MainActivity.this, "UDP连接失败，使用模拟数据", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -1252,6 +1294,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         @Override
                         public void run() {
                             useRealData = false; // 切换回模拟数据
+                            setSensorStatusesOffline();
                             Toast.makeText(MainActivity.this, "UDP断开连接", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -1288,20 +1331,6 @@ public class MainActivity extends ScaledAppCompatActivity {
                             long now = System.currentTimeMillis();
                             lastDataReceiveTime = now;
                             
-                            // 如果之前是模拟数据，切换到真实数据
-                            if (!useRealData) {
-                                useRealData = true;
-                                Log.d("UDP", "收到UDP数据，切换到真实数据模式");
-                            }
-                            
-                            // 取消之前的超时检查
-                            if (udpTimeoutHandler != null && udpTimeoutRunnable != null) {
-                                udpTimeoutHandler.removeCallbacks(udpTimeoutRunnable);
-                            }
-                            
-                            // 重新启动超时检查
-                            startUDPTimeoutCheck();
-                            
                             // 解析数据
                             IMUDataParser.parseData(data, new IMUDataParser.ParseResultCallbackV2() {
                                 @Override
@@ -1315,10 +1344,27 @@ public class MainActivity extends ScaledAppCompatActivity {
                                     // ??RTK?????????
                                     realRtkLat = parsed.rtkLat;
                                     realRtkLon = parsed.rtkLon;
+                                    RtkState.update(parsed.rtkLat, parsed.rtkLon);
+                                    runOnUiThread(() -> {
+                                        // 解析成功后才认为 IMU/RTK 有数据
+                                        if (!useRealData) {
+                                            useRealData = true;
+                                            Log.d("UDP", "收到UDP数据，切换到真实数据模式");
+                                        }
+                                        updateSensorStatuses(parsed);
+                                        if (udpTimeoutHandler != null && udpTimeoutRunnable != null) {
+                                            udpTimeoutHandler.removeCallbacks(udpTimeoutRunnable);
+                                        }
+                                        startUDPTimeoutCheck();
+                                    });
                                 }
                                 @Override
                                 public void onParseError(String error) {
                                     Log.e("UDP", "数据解析失败: " + error);
+                                    runOnUiThread(() -> {
+                                        useRealData = false;
+                                        setSensorStatusesOffline();
+                                    });
                                 }
                             });
                         } else {
@@ -1420,6 +1466,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            setSensorStatusesOffline();
                             Toast.makeText(MainActivity.this, "UDP数据超时，使用模拟数据", Toast.LENGTH_SHORT).show();
                         }
                     });

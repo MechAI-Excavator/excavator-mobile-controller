@@ -1,6 +1,7 @@
 package com.capstone.excavator;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -15,7 +16,26 @@ public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
     private View btnBack;
     private TextView btnPrev;
     private TextView btnStart;
+    private TextView tvPrecheckRepairTypeValue;
+    private TextView tvPrecheckRefAValue;
+    private TextView tvPrecheckRefBValue;
+    private TextView tvPrecheckRefCValue;
+    private TextView tvPrecheckAbDistanceValue;
+    private TextView tvPrecheckAbLiftValue;
+    private TextView tvPrecheckAbHeightDiffValue;
+    private TextView tvPrecheckSlopeRatioValue;
+    private TextView tvPrecheckVerticalHeightValue;
+    private TextView tvPrecheckHorizontalDistanceValue;
+    private TextView tvPrecheckSlopeDirectionValue;
+    private TextView iconPrecheckRtk;
+    private TextView tvPrecheckRtkStatus;
+    private TextView tvPrecheckRtkDesc;
+    private TextView iconPrecheckImu;
+    private TextView tvPrecheckImuStatus;
+    private TextView tvPrecheckImuDesc;
     private HelpTooltip helpTooltip;
+    private final RtkState.OnRtkChangeListener rtkChangeListener =
+            (lat, lon, valid) -> runOnUiThread(this::refreshPrecheckInfo);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +46,23 @@ public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
         btnBack = findViewById(R.id.btnPrecheckBack);
         btnPrev = findViewById(R.id.btnPrecheckPrev);
         btnStart = findViewById(R.id.btnPrecheckStart);
+        tvPrecheckRepairTypeValue = findViewById(R.id.tvPrecheckRepairTypeValue);
+        tvPrecheckRefAValue = findViewById(R.id.tvPrecheckRefAValue);
+        tvPrecheckRefBValue = findViewById(R.id.tvPrecheckRefBValue);
+        tvPrecheckRefCValue = findViewById(R.id.tvPrecheckRefCValue);
+        tvPrecheckAbDistanceValue = findViewById(R.id.tvPrecheckAbDistanceValue);
+        tvPrecheckAbLiftValue = findViewById(R.id.tvPrecheckAbLiftValue);
+        tvPrecheckAbHeightDiffValue = findViewById(R.id.tvPrecheckAbHeightDiffValue);
+        tvPrecheckSlopeRatioValue = findViewById(R.id.tvPrecheckSlopeRatioValue);
+        tvPrecheckVerticalHeightValue = findViewById(R.id.tvPrecheckVerticalHeightValue);
+        tvPrecheckHorizontalDistanceValue = findViewById(R.id.tvPrecheckHorizontalDistanceValue);
+        tvPrecheckSlopeDirectionValue = findViewById(R.id.tvPrecheckSlopeDirectionValue);
+        iconPrecheckRtk = findViewById(R.id.iconPrecheckRtk);
+        tvPrecheckRtkStatus = findViewById(R.id.tvPrecheckRtkStatus);
+        tvPrecheckRtkDesc = findViewById(R.id.tvPrecheckRtkDesc);
+        iconPrecheckImu = findViewById(R.id.iconPrecheckImu);
+        tvPrecheckImuStatus = findViewById(R.id.tvPrecheckImuStatus);
+        tvPrecheckImuDesc = findViewById(R.id.tvPrecheckImuDesc);
 
         View help = findViewById(R.id.btnLevelHelp);
         helpTooltip = new HelpTooltip(
@@ -42,12 +79,21 @@ public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
                 WorkRunState.getInstance().setState(WorkRunState.State.RUNNING);
                 Toast.makeText(this, "开始作业", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, MainActivity.class));
+                SlopeRepairTaskState.reset();
             });
         }
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        RtkState.addListener(rtkChangeListener);
+        refreshPrecheckInfo();
+    }
+
+    @Override
     protected void onStop() {
+        RtkState.removeListener(rtkChangeListener);
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
     }
@@ -67,6 +113,73 @@ public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
             controller.setSystemBarsBehavior(
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         }
+    }
+
+    private void refreshPrecheckInfo() {
+        setText(tvPrecheckRepairTypeValue, SlopeRepairTaskState.getRepairTypeText());
+        setText(tvPrecheckRefAValue, SlopeRepairTaskState.getRefAText());
+        setText(tvPrecheckRefBValue, SlopeRepairTaskState.getRefBText());
+        setText(tvPrecheckRefCValue, SlopeRepairTaskState.getRefCText());
+        setText(tvPrecheckAbDistanceValue, valueWithMeter(SlopeRepairTaskState.getAbDistance()));
+        setText(tvPrecheckAbLiftValue, valueWithMeter(SlopeRepairTaskState.getAbLift()));
+        setText(tvPrecheckAbHeightDiffValue, valueWithMeter(SlopeRepairTaskState.getAbHeightDiff()));
+        setText(tvPrecheckSlopeRatioValue, "1:" + valueOrPlaceholder(SlopeRepairTaskState.getSlopeRatio()));
+        setText(tvPrecheckVerticalHeightValue, valueWithMeter(SlopeRepairTaskState.getVerticalHeight()));
+        setText(tvPrecheckHorizontalDistanceValue, valueWithMeter(SlopeRepairTaskState.getHorizontalDistance()));
+        setText(tvPrecheckSlopeDirectionValue, SlopeRepairTaskState.getSlopeDirectionText());
+        applyRtkStatus();
+        applyImuStatus();
+    }
+
+    private void applyRtkStatus() {
+        boolean valid = RtkState.isValid();
+        int color = valid ? Color.parseColor("#FF22C55E") : Color.parseColor("#FFFF6B6B");
+        if (iconPrecheckRtk != null) {
+            iconPrecheckRtk.setBackgroundResource(valid ? R.drawable.check_green_bg : R.drawable.check_red_bg);
+            iconPrecheckRtk.setText(valid ? "✓" : "!");
+        }
+        if (tvPrecheckRtkStatus != null) {
+            tvPrecheckRtkStatus.setText(valid ? "已连接" : "无数据");
+            tvPrecheckRtkStatus.setTextColor(color);
+        }
+        if (tvPrecheckRtkDesc != null) {
+            tvPrecheckRtkDesc.setText(valid
+                    ? "当前信号良好，符合作业要求"
+                    : "未获取到 RTK 数据，请检查定位状态");
+        }
+    }
+
+    private void applyImuStatus() {
+        int onlineCount = ImuStatusState.getOnlineCount();
+        boolean allOnline = ImuStatusState.isAllOnline();
+        int color = allOnline ? Color.parseColor("#FF22C55E") : Color.parseColor("#FFFF6B6B");
+        if (iconPrecheckImu != null) {
+            iconPrecheckImu.setBackgroundResource(allOnline ? R.drawable.check_green_bg : R.drawable.check_red_bg);
+            iconPrecheckImu.setText(allOnline ? "✓" : "!");
+        }
+        if (tvPrecheckImuStatus != null) {
+            tvPrecheckImuStatus.setText(allOnline ? "数据正常" : "IMU " + onlineCount + "/" + ImuStatusState.TOTAL_COUNT);
+            tvPrecheckImuStatus.setTextColor(color);
+        }
+        if (tvPrecheckImuDesc != null) {
+            tvPrecheckImuDesc.setText(allOnline
+                    ? "IMU 数据已识别，数据正常"
+                    : "IMU 数据不完整，请检查传感器状态");
+        }
+    }
+
+    private static void setText(TextView textView, String value) {
+        if (textView != null) {
+            textView.setText(value);
+        }
+    }
+
+    private static String valueOrPlaceholder(String value) {
+        return value == null || value.trim().isEmpty() ? "--" : value.trim();
+    }
+
+    private static String valueWithMeter(String value) {
+        return valueOrPlaceholder(value) + " m";
     }
 }
 

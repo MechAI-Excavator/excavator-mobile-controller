@@ -3,6 +3,7 @@ package com.capstone.excavator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,8 +17,6 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
     private View btnHelp;
     private View btnPrev;
     private View btnNext;
-    private static final int NUMPAD_SCREEN_X = 1260;
-    private static final int NUMPAD_SCREEN_Y = 278;
 
     private HelpTooltip helpTooltip;
     private NumpadView numpad;
@@ -25,6 +24,7 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
     private TextView tvWaveParam2;
     private TextView tvWaveParam3;
     private TextView tvWaveParam4;
+    private ImageView imgDitchType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +40,9 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
         tvWaveParam2 = findViewById(R.id.tvWaveParam2);
         tvWaveParam3 = findViewById(R.id.tvWaveParam3);
         tvWaveParam4 = findViewById(R.id.tvWaveParam4);
+        imgDitchType = findViewById(R.id.imgDitchType);
+        restoreInputsFromState();
+        applyDitchTypeImage();
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
@@ -51,6 +54,7 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
 
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
+                saveCurrentInputs();
                 startActivity(new Intent(this, DitchSettingActivity.class));
                 finish();
             });
@@ -58,9 +62,35 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
+                saveCurrentInputs();
                 startActivity(new Intent(this, DitchSideWorkSettingActivity.class));
             });
         }
+    }
+
+    private void restoreInputsFromState() {
+        setTextIfPresent(tvWaveParam1, DitchTaskState.getLongitudinalParam1());
+        setTextIfPresent(tvWaveParam2, DitchTaskState.getLongitudinalParam2());
+        setTextIfPresent(tvWaveParam3, DitchTaskState.getLongitudinalParam3());
+        setTextIfPresent(tvWaveParam4, DitchTaskState.getLongitudinalParam4());
+    }
+
+    private void saveCurrentInputs() {
+        DitchTaskState.updateLongitudinalParams(
+                textOf(tvWaveParam1),
+                textOf(tvWaveParam2),
+                textOf(tvWaveParam3),
+                textOf(tvWaveParam4)
+        );
+    }
+
+    private void applyDitchTypeImage() {
+        if (imgDitchType == null) {
+            return;
+        }
+        imgDitchType.setImageResource(DitchTaskState.isSquareDitch()
+                ? R.drawable.square_ditch
+                : R.drawable.trapezoid_ditch);
     }
 
     private void setupInputs() {
@@ -80,12 +110,24 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
             }
             if (numpad == null) return;
             numpad.setOnConfirmListener(tv::setText);
-            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
+    }
+
+    private static String textOf(TextView tv) {
+        return tv == null ? "" : tv.getText().toString();
+    }
+
+    private static void setTextIfPresent(TextView tv, String value) {
+        if (tv != null && value != null && !value.trim().isEmpty()) {
+            tv.setText(value.trim());
+        }
     }
 
     @Override
     protected void onStop() {
+        saveCurrentInputs();
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
         if (numpad != null && numpad.isShowing()) numpad.dismiss();

@@ -4,7 +4,6 @@
     <style name="SpeedDirectionIndicator.SpeedValue" parent="android:Widget.TextView">
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:textSize">42sp</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:includeFontPadding">false</item>
     </style>
 </resources>

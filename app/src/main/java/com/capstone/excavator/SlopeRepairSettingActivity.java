@@ -3,6 +3,7 @@ package com.capstone.excavator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,9 +21,11 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
     private View cardBottomLine;
     private TextView tvTopLine;
     private TextView tvBottomLine;
+    private ImageView imgSlopePreview;
 
     private HelpTooltip helpTooltip;
     private int selectedType = 0; // 0=上开口线 1=下开口线
+    private boolean discardStateOnStop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +34,7 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
         setContentView(R.layout.activity_slope_repair_setting);
 
         bindViews();
+        selectedType = SlopeRepairTaskState.getRepairType();
         setupCards();
         setupActions();
     }
@@ -45,6 +49,7 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
         cardBottomLine = findViewById(R.id.cardDitchTrapezoid);
         tvTopLine = findViewById(R.id.tvDitchSquare);
         tvBottomLine = findViewById(R.id.tvDitchTrapezoid);
+        imgSlopePreview = findViewById(R.id.imgSlopePreview);
     }
 
     private void setupCards() {
@@ -76,23 +81,42 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
         if (tvBottomLine != null) {
             tvBottomLine.setTextColor(getColor(selectedType == 1 ? R.color.level_selected : R.color.level_unselected));
         }
+        if (imgSlopePreview != null) {
+            imgSlopePreview.setImageResource(selectedType == 0
+                    ? R.drawable.slope_top
+                    : R.drawable.slope_bottom);
+        }
     }
 
     private void setupActions() {
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                discardStateOnStop = true;
+                SlopeRepairTaskState.reset();
+                finish();
+            });
+        }
 
         helpTooltip = new HelpTooltip(this, "这里是帮助提示内容，你可以在此解释修坡类型与参数含义。");
         helpTooltip.attach(btnHelp);
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
+                saveCurrentState();
                 startActivity(new Intent(this, SlopeRepairSecondSettingActivity.class));
             });
         }
     }
 
+    private void saveCurrentState() {
+        SlopeRepairTaskState.updateRepairType(selectedType);
+    }
+
     @Override
     protected void onStop() {
+        if (!discardStateOnStop) {
+            saveCurrentState();
+        }
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
     }

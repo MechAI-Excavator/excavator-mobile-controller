@@ -65,12 +65,14 @@
             android:orientation="horizontal">
 
             <View
+                android:id="@+id/rtkStatusDot"
                 android:layout_width="4dp"
                 android:layout_height="4dp"
                 android:layout_marginEnd="6dp"
                 android:background="@drawable/green_dot" />
 
             <TextView
+                android:id="@+id/tvRtkStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="RTK"
@@ -91,12 +93,14 @@
             android:orientation="horizontal">
 
             <View
+                android:id="@+id/imuStatusDot"
                 android:layout_width="4dp"
                 android:layout_height="4dp"
                 android:layout_marginEnd="6dp"
                 android:background="@drawable/green_dot" />
 
             <TextView
+                android:id="@+id/tvImuStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="IMU 4/4"

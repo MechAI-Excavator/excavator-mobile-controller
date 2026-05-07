@@ -6,7 +6,7 @@
         android:id="@+id/verticalActivityGauge"
         android:layout_width="37.33dp"
         android:layout_height="172.44dp"
-        android:background="#82000000"
+        android:background="@drawable/vertical_activity_panel_bg"
         app:sbgTitle="@string/gauge_vertical_title"
         app:sbgRangeMax="10" />
 

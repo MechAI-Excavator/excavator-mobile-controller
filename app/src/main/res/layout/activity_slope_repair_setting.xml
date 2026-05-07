@@ -184,23 +184,24 @@
                 android:textStyle="bold" />
             
             <LinearLayout
-                        android:id="@+id/cardDitchSquare"
-                        android:layout_width="match_parent"
-                        android:layout_height="178dp"
-                        android:layout_marginBottom="8dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                android:id="@+id/cardDitchSquare"
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
 
-                        <ImageView
-                            android:layout_width="175dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginTop="-12dp"
-                            android:contentDescription="@null"
-                            android:scaleType="fitCenter"
-                            android:src="@drawable/slope_repair_preview" />
-                    </LinearLayout>
+                <ImageView
+                    android:id="@+id/imgSlopePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="-12dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/slope_repair_preview" />
+            </LinearLayout>
 
             <!-- 下一步按钮 -->
             <TextView
@@ -225,8 +226,8 @@
         android:id="@+id/levelStepBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginEnd="25dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:layout_marginBottom="16dp"
         android:orientation="horizontal">
 

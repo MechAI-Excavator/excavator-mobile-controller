@@ -25,7 +25,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
         <item name="android:textColor">@color/motion_mode_idle</item>
-        <item name="android:textSize">5.2sp</item>
+        <item name="android:textSize">6sp</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:maxLines">1</item>
         <item name="android:gravity">start|center_vertical</item>

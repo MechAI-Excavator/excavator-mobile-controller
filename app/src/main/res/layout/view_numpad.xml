@@ -5,7 +5,7 @@
   外层容器由 NumpadView 自己添加到 Window/DecorView，支持任意锚点位置。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="214dp"
+    android:layout_width="250dp"
     android:layout_height="wrap_content"
     android:background="@drawable/numpad_bg"
     android:orientation="vertical"
@@ -37,52 +37,96 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <TextView android:id="@+id/key1"  style="@style/NumpadKey" android:text="1" />
-        <TextView android:id="@+id/key2"  style="@style/NumpadKey" android:text="2" />
-        <TextView android:id="@+id/key3"  style="@style/NumpadKey" android:text="3" />
+        <TextView
+            android:id="@+id/key1"
+            style="@style/NumpadKey"
+            android:text="1" />
+
+        <TextView
+            android:id="@+id/key2"
+            style="@style/NumpadKey"
+            android:text="2" />
+
+        <TextView
+            android:id="@+id/key3"
+            style="@style/NumpadKey"
+            android:text="3" />
     </LinearLayout>
 
     <!-- Row 2: 4 5 6 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <TextView android:id="@+id/key4"  style="@style/NumpadKey" android:text="4" />
-        <TextView android:id="@+id/key5"  style="@style/NumpadKey" android:text="5" />
-        <TextView android:id="@+id/key6"  style="@style/NumpadKey" android:text="6" />
+        <TextView
+            android:id="@+id/key4"
+            style="@style/NumpadKey"
+            android:text="4" />
+
+        <TextView
+            android:id="@+id/key5"
+            style="@style/NumpadKey"
+            android:text="5" />
+
+        <TextView
+            android:id="@+id/key6"
+            style="@style/NumpadKey"
+            android:text="6" />
     </LinearLayout>
 
     <!-- Row 3: 7 8 9 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <TextView android:id="@+id/key7"  style="@style/NumpadKey" android:text="7" />
-        <TextView android:id="@+id/key8"  style="@style/NumpadKey" android:text="8" />
-        <TextView android:id="@+id/key9"  style="@style/NumpadKey" android:text="9" />
+        <TextView
+            android:id="@+id/key7"
+            style="@style/NumpadKey"
+            android:text="7" />
+
+        <TextView
+            android:id="@+id/key8"
+            style="@style/NumpadKey"
+            android:text="8" />
+
+        <TextView
+            android:id="@+id/key9"
+            style="@style/NumpadKey"
+            android:text="9" />
     </LinearLayout>
 
     <!-- Row 4: . 0 ← -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <TextView android:id="@+id/keyDot"      style="@style/NumpadKey" android:text="." />
-        <TextView android:id="@+id/key0"        style="@style/NumpadKey" android:text="0" />
-        <TextView android:id="@+id/keyMinus"    style="@style/NumpadKey" android:text="−" />
+        <TextView
+            android:id="@+id/keyDot"
+            style="@style/NumpadKey"
+            android:text="." />
+
+        <TextView
+            android:id="@+id/key0"
+            style="@style/NumpadKey"
+            android:text="0" />
+
+        <TextView
+            android:id="@+id/keyMinus"
+            style="@style/NumpadKey"
+            android:text="−" />
     </LinearLayout>
 
     <!-- 清除 / 确认 -->
@@ -99,12 +143,12 @@
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:background="@drawable/numpad_clear_bg"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="清除"
             android:textColor="#FF374151"
-            android:textSize="15sp"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false" />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/keyConfirm"
@@ -112,12 +156,12 @@
             android:layout_height="48dp"
             android:layout_weight="2"
             android:background="@drawable/numpad_confirm_bg"
+            android:fontFamily="sans-serif-medium"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="确认"
             android:textColor="#FFFFFFFF"
-            android:textSize="15sp"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false" />
+            android:textSize="15sp" />
     </LinearLayout>
 
 </LinearLayout>

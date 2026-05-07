@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:background="#FFF0F4FF"
     android:orientation="vertical">
-
     <!-- 顶部导航栏 -->
     <RelativeLayout
         android:layout_width="match_parent"
@@ -12,7 +11,6 @@
         android:background="#00000000"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
-
         <LinearLayout
             android:id="@+id/btnLevelBack"
             android:layout_width="wrap_content"
@@ -22,12 +20,10 @@
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <ImageView
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:src="@drawable/arrow_back" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -36,7 +32,6 @@
                 android:textColor="#FF2563EB"
                 android:textSize="12sp" />
         </LinearLayout>
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -45,7 +40,6 @@
             android:textColor="#FF111827"
             android:textSize="14sp"
             android:textStyle="bold" />
-
         <ImageView
             android:id="@+id/btnLevelHelp"
             android:layout_width="16dp"
@@ -53,9 +47,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:src="@drawable/answer_icon" />
-
     </RelativeLayout>
-
     <!-- 主内容区：左 / 右 -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -67,7 +59,6 @@
         android:paddingEnd="40dp"
         android:paddingBottom="20dp"
         android:weightSum="100">
-
         <!-- ── 左侧面板 ── -->
         <ScrollView
             android:layout_width="0dp"
@@ -77,13 +68,11 @@
             android:background="@drawable/card_light_bg"
             android:fillViewport="false"
             android:scrollbars="none">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="20dp">
-
                 <!-- Step1 标题 -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -93,7 +82,6 @@
                     android:textColor="#FF111827"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <!-- 参考点选择卡片 -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -101,7 +89,6 @@
                     android:layout_marginBottom="24dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-
                     <!-- 左斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefLeft"
@@ -114,7 +101,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -122,7 +108,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/left_point" />
-
                         <TextView
                             android:id="@+id/tvRefLeft"
                             android:layout_width="wrap_content"
@@ -132,7 +117,6 @@
                             android:textColor="#FF9CA3AF"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 中斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefMiddle"
@@ -145,7 +129,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -153,7 +136,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/middle_point" />
-
                         <TextView
                             android:id="@+id/tvRefMiddle"
                             android:layout_width="wrap_content"
@@ -163,7 +145,6 @@
                             android:textColor="#FF2563EB"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 右斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefRight"
@@ -175,7 +156,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -183,7 +163,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/right_point" />
-
                         <TextView
                             android:id="@+id/tvRefRight"
                             android:layout_width="wrap_content"
@@ -194,7 +173,6 @@
                             android:textSize="10.5sp" />
                     </LinearLayout>
                 </LinearLayout>
-
                 <!-- Step2 标题 -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -204,7 +182,6 @@
                     android:textColor="#FF111827"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <!-- 模式切换：高度定点 / 坐标定点 -->
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -213,7 +190,6 @@
                     android:background="@drawable/level_mode_group_bg"
                     android:orientation="horizontal"
                     android:padding="4dp">
-
                     <TextView
                         android:id="@+id/btnModeHeight"
                         android:layout_width="wrap_content"
@@ -228,7 +204,6 @@
                         android:textColor="#FF2563EB"
                         android:textSize="13sp"
                         android:textStyle="bold" />
-
                     <TextView
                         android:id="@+id/btnModeCoord"
                         android:layout_width="wrap_content"
@@ -242,7 +217,6 @@
                         android:textColor="#FF9CA3AF"
                         android:textSize="13sp" />
                 </LinearLayout>
-
                 <!-- 高度定点内容 A（默认显示） -->
                 <LinearLayout
                     android:id="@+id/panelHeightMode"
@@ -250,7 +224,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="visible">
-
                     <!-- 当前参考点（只读） -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -258,13 +231,11 @@
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -272,7 +243,6 @@
                                 android:text="当前参考点"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -281,37 +251,32 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/tvCurrentRef"
+                            <LinearLayout
+                                style="@style/InputWithSuffixContainer"
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
-                                android:background="@drawable/level_input_bg"
-                                android:gravity="center_vertical|end"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:text="0.38"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
+                                >
+                                <TextView
+                                    android:id="@+id/tvCurrentRef"
+                                    style="@style/InputWithSuffixValue"
+                                    android:text="0.38"
+                                    android:textColor="#FF9CA3AF"
+                                    android:textSize="14sp"
+                                    />
+                                <TextView
+                                    style="@style/InputSuffixUnit"
+                                    android:text="m"
+                                    />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-
                     <!-- 目标高度（可点击弹 Numpad） -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -319,13 +284,11 @@
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -333,7 +296,6 @@
                                 android:text="目标高度"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -342,52 +304,45 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/tvTargetHeight"
+                            <LinearLayout
+                                style="@style/InputWithSuffixContainer"
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
-                                android:background="@drawable/level_input_bg"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center_vertical|end"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:text="0"
-                                android:textColor="#FF111827"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
+                                >
+                                <TextView
+                                    android:id="@+id/tvTargetHeight"
+                                    style="@style/InputWithSuffixValue"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="0"
+                                    android:textColor="#FF111827"
+                                    android:textSize="14sp"
+                                    />
+                                <TextView
+                                    style="@style/InputSuffixUnit"
+                                    android:text="m"
+                                    />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-
                     <!-- 填挖量（可点击弹 Numpad） -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -395,7 +350,6 @@
                                 android:text="填挖量"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -404,41 +358,35 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/tvFillCut"
+                            <LinearLayout
+                                style="@style/InputWithSuffixContainer"
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
-                                android:background="@drawable/level_input_bg"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center_vertical|end"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:text="0"
-                                android:textColor="#FF111827"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
+                                >
+                                <TextView
+                                    android:id="@+id/tvFillCut"
+                                    style="@style/InputWithSuffixValue"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="0"
+                                    android:textColor="#FF111827"
+                                    android:textSize="14sp"
+                                    />
+                                <TextView
+                                    style="@style/InputSuffixUnit"
+                                    android:text="m"
+                                    />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-
                 </LinearLayout>
-
                 <!-- 坐标定点内容 B（选中时显示） -->
                 <LinearLayout
                     android:id="@+id/panelCoordMode"
@@ -446,8 +394,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone">
-
-
                     <!-- 目标坐标 X -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -455,7 +401,6 @@
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -468,7 +413,6 @@
                                 android:text="当前经纬度"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -476,12 +420,9 @@
                                 android:text=":"
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
-
                         </LinearLayout>
-
-
                         <TextView
-
+                            android:id="@+id/tvCurrentLatLon"
                             android:layout_width="0dp"
                             android:layout_height="36dp"
                             android:layout_weight="3"
@@ -490,11 +431,10 @@
                             android:gravity="center_vertical|end"
                             android:paddingStart="8dp"
                             android:paddingEnd="8dp"
-                            android:text="120.123456"
+                            android:text="暂无RTK"
                             android:textColor="#FF111827"
                             android:textSize="14sp" />
                     </LinearLayout>
-
                     <!-- 目标坐标 X -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -502,13 +442,11 @@
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -516,7 +454,6 @@
                                 android:text="目标经度"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -525,14 +462,12 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:id="@+id/tvCoordX"
                                 android:layout_width="0dp"
@@ -547,17 +482,8 @@
                                 android:text="0"
                                 android:textColor="#FF111827"
                                 android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
-
                     <!-- 目标坐标 Y -->
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -565,13 +491,11 @@
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -579,7 +503,6 @@
                                 android:text="目标纬度"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -588,14 +511,12 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:id="@+id/tvCoordY"
                                 android:layout_width="0dp"
@@ -610,30 +531,19 @@
                                 android:text="0"
                                 android:textColor="#FF111827"
                                 android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
-
                     <!-- 目标坐标 Z -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="2"
                             android:orientation="horizontal">
-
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -641,7 +551,6 @@
                                 android:text="填挖量"
                                 android:textColor="#FF374151"
                                 android:textSize="14sp" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -650,44 +559,37 @@
                                 android:textColor="#FF9CA3AF"
                                 android:textSize="14sp" />
                         </LinearLayout>
-
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/tvCoordZ"
+                            <LinearLayout
+                                style="@style/InputWithSuffixContainer"
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
-                                android:background="@drawable/level_input_bg"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center_vertical|end"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:text="0"
-                                android:textColor="#FF111827"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="m"
-                                android:textColor="#FF9CA3AF"
-                                android:textSize="13sp" />
+                                >
+                                <TextView
+                                    android:id="@+id/tvCoordZ"
+                                    style="@style/InputWithSuffixValue"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:text="0"
+                                    android:textColor="#FF111827"
+                                    android:textSize="14sp"
+                                    />
+                                <TextView
+                                    style="@style/InputSuffixUnit"
+                                    android:text="m"
+                                    />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-
                 </LinearLayout>
-
             </LinearLayout>
         </ScrollView>
-
         <!-- ── 右侧预览面板 ── -->
         <LinearLayout
             android:layout_width="0dp"
@@ -696,7 +598,6 @@
             android:background="@drawable/card_light_bg"
             android:orientation="vertical"
             android:padding="20dp">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -705,20 +606,17 @@
                 android:textColor="#FF111827"
                 android:textSize="16sp"
                 android:textStyle="bold" />
-
             <!-- 预览图 + 距离标注叠加层 -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1">
-
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
                     android:src="@drawable/excavator_example02" />
-
                 <!--
                   距离标注：锚定在铲斗右下区域（对应图片右侧 ~65% 横，~72% 纵）
                   layout_gravity="bottom|end" + margin 来模拟绝对定位
@@ -733,14 +631,12 @@
                     android:layout_marginBottom="74dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-
                     <!-- 红色上下箭头 + 中间虚线 -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -750,56 +646,45 @@
                             android:textColor="#FFEF4444"
                             android:textSize="12sp"
                             android:textStyle="bold" />
-
                         <!-- 用小矩形段堆叠实现虚线（兼容所有机型，不依赖 dash 属性） -->
                         <LinearLayout
                             android:layout_width="1dp"
                             android:layout_height="32dp"
                             android:gravity="center"
                             android:orientation="vertical">
-
                             <View
                                 android:layout_width="2dp"
                                 android:layout_height="2dp"
                                 android:background="@drawable/level_dash_segment" />
-
                             <Space
                                 android:layout_width="1dp"
                                 android:layout_height="2dp" />
-
                             <View
                                 android:layout_width="2dp"
                                 android:layout_height="2dp"
                                 android:background="@drawable/level_dash_segment" />
-
                             <Space
                                 android:layout_width="1dp"
                                 android:layout_height="2dp" />
-
                             <View
                                 android:layout_width="2dp"
                                 android:layout_height="2dp"
                                 android:background="@drawable/level_dash_segment" />
-
                             <Space
                                 android:layout_width="1dp"
                                 android:layout_height="2dp" />
-
                             <View
                                 android:layout_width="2dp"
                                 android:layout_height="2dp"
                                 android:background="@drawable/level_dash_segment" />
-
                             <Space
                                 android:layout_width="1dp"
                                 android:layout_height="2dp" />
-
                             <View
                                 android:layout_width="2dp"
                                 android:layout_height="2dp"
                                 android:background="@drawable/level_dash_segment" />
                         </LinearLayout>
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -810,7 +695,6 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
                     <!-- 距离数值 -->
                     <TextView
                         android:id="@+id/tvDepthLabel"
@@ -821,9 +705,7 @@
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
             </FrameLayout>
-
             <!-- 下一步按钮 -->
             <TextView
                 android:id="@+id/btnLevelNext"
@@ -839,32 +721,27 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
-
     </LinearLayout>
-
     <!-- Step 进度（底部）：当前为第 1 步 -->
     <LinearLayout
         android:id="@+id/levelStepBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginEnd="25dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:layout_marginBottom="16dp"
         android:orientation="horizontal">
-
         <View
             android:id="@+id/step1"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_active" />
-
         <Space
             android:layout_width="30dp"
             android:layout_marginEnd="0dp"
             android:layout_marginStart="0dp"
             android:layout_height="1dp" />
-
         <View
             android:id="@+id/step2"
             android:layout_width="0dp"
@@ -872,5 +749,4 @@
             android:layout_weight="1"
             android:background="@drawable/level_step_inactive" />
     </LinearLayout>
-
 </LinearLayout>

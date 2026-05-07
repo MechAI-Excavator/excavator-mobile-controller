@@ -130,7 +130,7 @@
 
     <com.capstone.excavator.CenterActivityPanelView
         android:id="@+id/centerActivityPanelView"
-        android:layout_width="530dp"
+        android:layout_width="524dp"
         android:layout_height="20dp"
         android:layout_gravity="center|top"
         android:layout_marginTop="55dp"
@@ -342,8 +342,8 @@
 
     <com.capstone.excavator.MotionModeSegmentView
         android:id="@+id/motionModeSegment"
-        android:layout_width="37.33dp"
-        android:layout_height="39.11dp"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
         android:layout_gravity="bottom|start"
         android:layout_marginStart="29dp"
         android:layout_marginBottom="97dp"

@@ -33,10 +33,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     private TextView tvAbLift;
     private TextView tvAbHeightDiff;
 
-    // Fixed popup position for landscape UI
-    private static final int NUMPAD_SCREEN_X = 1260;
-    private static final int NUMPAD_SCREEN_Y = 278;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +40,7 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         setContentView(R.layout.activity_slope_repair_second_setting);
 
         bindViews();
+        restoreFromState();
         setupHelp();
         setupRefCards();
         setupInputs();
@@ -75,6 +72,14 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         tvAbHeightDiff = findViewById(R.id.tvAbHeightDiff);
 
         numpad = new NumpadView(this);
+    }
+
+    private void restoreFromState() {
+        selectedRefA = SlopeRepairTaskState.getRefA();
+        selectedRefB = SlopeRepairTaskState.getRefB();
+        setTextIfPresent(tvAbDistance, SlopeRepairTaskState.getAbDistance());
+        setTextIfPresent(tvAbLift, SlopeRepairTaskState.getAbLift());
+        setTextIfPresent(tvAbHeightDiff, SlopeRepairTaskState.getAbHeightDiff());
     }
 
     private void setupHelp() {
@@ -146,7 +151,8 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
             }
             if (numpad == null) return;
             numpad.setOnConfirmListener(tv::setText);
-            numpad.showForAtScreen(tv, tv, NUMPAD_SCREEN_X, NUMPAD_SCREEN_Y);
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
     }
 
@@ -154,18 +160,43 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
         if (btnPrev != null) {
-            btnPrev.setOnClickListener(v -> finish());
+            btnPrev.setOnClickListener(v -> {
+                saveCurrentState();
+                finish();
+            });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
+                saveCurrentState();
                 startActivity(new Intent(this, SlopeRepairThirdSettingActivity.class));
             });
         }
     }
 
+    private void saveCurrentState() {
+        SlopeRepairTaskState.updateSecondStep(
+                selectedRefA,
+                selectedRefB,
+                textOf(tvAbDistance),
+                textOf(tvAbLift),
+                textOf(tvAbHeightDiff)
+        );
+    }
+
+    private static String textOf(TextView tv) {
+        return tv == null ? "" : tv.getText().toString();
+    }
+
+    private static void setTextIfPresent(TextView tv, String value) {
+        if (tv != null && value != null && !value.trim().isEmpty()) {
+            tv.setText(value.trim());
+        }
+    }
+
     @Override
     protected void onStop() {
+        saveCurrentState();
         super.onStop();
         if (helpTooltip != null) helpTooltip.dismiss();
         if (numpad != null && numpad.isShowing()) numpad.dismiss();

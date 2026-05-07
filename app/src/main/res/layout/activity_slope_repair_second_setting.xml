@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="#FFF0F4FF"
     android:orientation="vertical">
-
     <!-- 顶部导航栏 -->
     <RelativeLayout
         android:layout_width="match_parent"
@@ -13,7 +12,6 @@
         android:background="#00000000"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
-
         <LinearLayout
             android:id="@+id/btnLevelBack"
             android:layout_width="wrap_content"
@@ -23,12 +21,10 @@
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <ImageView
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:src="@drawable/arrow_back" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -37,7 +33,6 @@
                 android:textColor="#FF2563EB"
                 android:textSize="12sp" />
         </LinearLayout>
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -46,7 +41,6 @@
             android:textColor="#FF111827"
             android:textSize="14sp"
             android:textStyle="bold" />
-
         <ImageView
             android:id="@+id/btnLevelHelp"
             android:layout_width="16dp"
@@ -54,9 +48,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:src="@drawable/answer_icon" />
-
     </RelativeLayout>
-
     <!-- 主内容区：左 / 右 -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -68,7 +60,6 @@
         android:paddingEnd="40dp"
         android:paddingBottom="20dp"
         android:weightSum="100">
-
         <!-- ── 右侧预览面板（交换后在左侧显示） ── -->
         <LinearLayout
             android:layout_width="0dp"
@@ -78,7 +69,6 @@
             android:background="@drawable/card_light_bg"
             android:orientation="vertical"
             android:padding="20dp">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,7 +77,6 @@
                 android:textColor="#FF111827"
                 android:textSize="16sp"
                 android:textStyle="bold" />
-
                 <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,7 +85,6 @@
                 android:textColor="#FF111827"
                 android:textSize="16sp"
                 android:textStyle="normal" />
-
                   <!-- 参考点选择卡片 -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -104,7 +92,6 @@
                     android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-
                     <!-- 左斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefLeftA"
@@ -117,7 +104,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -125,7 +111,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/left_point" />
-
                         <TextView
                             android:id="@+id/tvRefLeftA"
                             android:layout_width="wrap_content"
@@ -135,7 +120,6 @@
                             android:textColor="#FF9CA3AF"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 中斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefMiddleA"
@@ -148,7 +132,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -156,7 +139,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/middle_point" />
-
                         <TextView
                             android:id="@+id/tvRefMiddleA"
                             android:layout_width="wrap_content"
@@ -166,7 +148,6 @@
                             android:textColor="#FF2563EB"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 右斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefRightA"
@@ -178,7 +159,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -186,7 +166,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/right_point" />
-
                         <TextView
                             android:id="@+id/tvRefRightA"
                             android:layout_width="wrap_content"
@@ -197,7 +176,6 @@
                             android:textSize="10.5sp" />
                     </LinearLayout>
                 </LinearLayout>
-
                 <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -206,7 +184,6 @@
                 android:textColor="#FF111827"
                 android:textSize="16sp"
                 android:textStyle="normal" />
-
                   <!-- 参考点选择卡片 -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -214,7 +191,6 @@
                     android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-
                     <!-- 左斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefLeftB"
@@ -227,7 +203,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -235,7 +210,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/left_point" />
-
                         <TextView
                             android:id="@+id/tvRefLeftB"
                             android:layout_width="wrap_content"
@@ -245,7 +219,6 @@
                             android:textColor="#FF9CA3AF"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 中斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefMiddleB"
@@ -258,7 +231,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -266,7 +238,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/middle_point" />
-
                         <TextView
                             android:id="@+id/tvRefMiddleB"
                             android:layout_width="wrap_content"
@@ -276,7 +247,6 @@
                             android:textColor="#FF2563EB"
                             android:textSize="10.5sp" />
                     </LinearLayout>
-
                     <!-- 右斗尖 -->
                     <LinearLayout
                         android:id="@+id/cardRefRightB"
@@ -288,7 +258,6 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
                             android:layout_width="110dp"
                             android:layout_height="match_parent"
@@ -296,7 +265,6 @@
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
                             android:src="@drawable/right_point" />
-
                         <TextView
                             android:id="@+id/tvRefRightB"
                             android:layout_width="wrap_content"
@@ -307,15 +275,12 @@
                             android:textSize="10.5sp" />
                     </LinearLayout>
                 </LinearLayout>
-
-   
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -323,7 +288,6 @@
                             android:text="AB距离"
                             android:textColor="#FF374151"
                             android:textSize="14sp" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -331,38 +295,32 @@
                             android:text=":"
                             android:textColor="#FF9CA3AF"
                             android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvAbDistance"
+                        <LinearLayout
+                            style="@style/InputWithSuffixContainer"
                             android:layout_width="236dp"
                             android:layout_height="36dp"
-                            android:background="@drawable/level_input_bg"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical|end"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:text="0.38"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                            >
+                            <TextView
+                                android:id="@+id/tvAbDistance"
+                                style="@style/InputWithSuffixValue"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:text="0.38"
+                                android:textColor="#FF9CA3AF"
+                                android:textSize="14sp"
+                                />
+                            <TextView
+                                style="@style/InputSuffixUnit"
+                                android:text="m"
+                                />
+                        </LinearLayout>
                     </LinearLayout>
-
-
                             <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                                 <TextView
                                     android:layout_width="177dp"
                                     android:layout_height="wrap_content"
@@ -370,7 +328,6 @@
                                     android:text="AB点升降量"
                                     android:textColor="#FF374151"
                                     android:textSize="14sp" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -378,38 +335,32 @@
                             android:text=":"
                             android:textColor="#FF9CA3AF"
                             android:textSize="14sp" />
-
-                                <TextView
-                                    android:id="@+id/tvAbLift"
+                                <LinearLayout
+                                    style="@style/InputWithSuffixContainer"
                                     android:layout_width="236dp"
                                     android:layout_height="36dp"
-                                    android:background="@drawable/level_input_bg"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:gravity="center_vertical|end"
-                                    android:paddingStart="8dp"
-                                    android:paddingEnd="8dp"
-                                    android:text="0.38"
-                                    android:textColor="#FF9CA3AF"
-                                    android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                                    >
+                                    <TextView
+                                        android:id="@+id/tvAbLift"
+                                        style="@style/InputWithSuffixValue"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="0.38"
+                                        android:textColor="#FF9CA3AF"
+                                        android:textSize="14sp"
+                                        />
+                                    <TextView
+                                        style="@style/InputSuffixUnit"
+                                        android:text="m"
+                                        />
+                                </LinearLayout>
                     </LinearLayout>
-
-
                             <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
-
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -417,7 +368,6 @@
                             android:text="AB高差"
                             android:textColor="#FF374151"
                             android:textSize="14sp" />
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -425,32 +375,28 @@
                             android:text=":"
                             android:textColor="#FF9CA3AF"
                             android:textSize="14sp" />
-
-                                <TextView
-                                    android:id="@+id/tvAbHeightDiff"
+                                <LinearLayout
+                                    style="@style/InputWithSuffixContainer"
                                     android:layout_width="236dp"
                                     android:layout_height="36dp"
-                                    android:background="@drawable/level_input_bg"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:gravity="center_vertical|end"
-                                    android:paddingStart="8dp"
-                                    android:paddingEnd="8dp"
-                                    android:text="0.38"
-                                    android:textColor="#FF9CA3AF"
-                                    android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="m"
-                            android:textColor="#FF9CA3AF"
-                            android:textSize="13sp" />
+                                    >
+                                    <TextView
+                                        android:id="@+id/tvAbHeightDiff"
+                                        style="@style/InputWithSuffixValue"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="0.38"
+                                        android:textColor="#FF9CA3AF"
+                                        android:textSize="14sp"
+                                        />
+                                    <TextView
+                                        style="@style/InputSuffixUnit"
+                                        android:text="m"
+                                        />
+                                </LinearLayout>
                     </LinearLayout>
         </LinearLayout>
-
-        <!-- ── 左侧面板（交换后在右侧显示） ── -->
+        <!-- ── 右侧面板（交换后在右侧显示） ── -->
         <ScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -458,13 +404,11 @@
             android:background="@drawable/card_light_bg"
             android:fillViewport="false"
             android:scrollbars="none">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="20dp">
-
                 <!-- Step1 标题 -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -474,36 +418,31 @@
                     android:textColor="#FF111827"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="vertical">
-
                     <!-- t1 -->
                     <LinearLayout
                         android:id="@+id/cardDitchSquare"
                         android:layout_width="match_parent"
-                        android:layout_height="178dp"
+                        android:layout_height="340dp"
                         android:layout_marginBottom="8dp"
                         android:clickable="true"
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical">
-
                         <ImageView
-                            android:layout_width="175dp"
+                            android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:layout_marginTop="-12dp"
                             android:contentDescription="@null"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/slope_repair_preview" />
+                            android:src="@drawable/slope_step2" />
                     </LinearLayout>
-
                 </LinearLayout>
-
                 <!-- 上一步 / 下一步 -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -511,11 +450,10 @@
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="10dp"
                     android:orientation="horizontal">
-
                     <TextView
                         android:id="@+id/btnDitchPrev"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/button_outline_bg"
                         android:clickable="true"
@@ -524,15 +462,13 @@
                         android:text="上一步"
                         android:textColor="#FF6B7280"
                         android:textSize="14sp" />
-
                     <Space
                         android:layout_width="14dp"
                         android:layout_height="1dp" />
-
                     <TextView
                         android:id="@+id/btnSlopeRepairNext"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/button_blue_bg"
                         android:clickable="true"
@@ -545,59 +481,49 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
-
     </LinearLayout>
-
     <!-- Step 进度（底部）：当前为第 1 步 -->
     <LinearLayout
         android:id="@+id/levelStepBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginEnd="25dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:layout_marginBottom="16dp"
         android:orientation="horizontal">
-
         <View
             android:id="@+id/step1"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_active" />
-
         <Space
             android:layout_width="30dp"
             android:layout_marginEnd="0dp"
             android:layout_marginStart="0dp"
             android:layout_height="1dp" />
-
         <View
             android:id="@+id/step2"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_inactive" />
-
-
                <Space
             android:layout_width="30dp"
             android:layout_marginEnd="0dp"
             android:layout_marginStart="0dp"
             android:layout_height="1dp" />
-
         <View
             android:id="@+id/step3"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_inactive" />
-
                <Space
             android:layout_width="30dp"
             android:layout_marginEnd="0dp"
             android:layout_marginStart="0dp"
             android:layout_height="1dp" />
-
         <View
             android:id="@+id/step4"
             android:layout_width="0dp"
@@ -605,5 +531,4 @@
             android:layout_weight="1"
             android:background="@drawable/level_step_inactive" />
     </LinearLayout>
-
 </LinearLayout>
