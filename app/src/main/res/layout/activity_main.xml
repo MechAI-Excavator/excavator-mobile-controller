@@ -275,12 +275,12 @@
 
                 <ImageView
                     android:id="@+id/rightPanelCollapseArrow"
-                    android:layout_width="10.66dp"
-                    android:layout_height="10.66dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:clickable="true"
                     android:contentDescription="@null"
                     android:focusable="true"
-                    android:padding="2dp"
+                    android:padding="8dp"
                     android:src="@drawable/droparrow" />
             </LinearLayout>
 
