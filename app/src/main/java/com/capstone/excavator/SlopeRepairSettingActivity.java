@@ -93,7 +93,7 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
             btnBack.setOnClickListener(v -> {
                 discardStateOnStop = true;
                 SlopeRepairTaskState.reset();
-                finish();
+                navigateToMain();
             });
         }
 

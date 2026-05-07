@@ -168,7 +168,12 @@ public class SlopeRepairThirdSettingActivity extends ScaledAppCompatActivity {
     }
 
     private void setupActions() {
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                SlopeRepairTaskState.reset();
+                navigateToMain();
+            });
+        }
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentState();

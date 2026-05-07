@@ -44,7 +44,12 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
         restoreInputsFromState();
         applyDitchTypeImage();
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                DitchTaskState.reset();
+                navigateToMain();
+            });
+        }
 
         helpTooltip = new HelpTooltip(this, "这里是帮助提示内容，你可以在此解释纵波参数的含义。");
         helpTooltip.attach(btnHelp);

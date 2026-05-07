@@ -57,7 +57,7 @@ public class LevelPrecheckActivity extends ScaledAppCompatActivity {
         );
         helpTooltip.attach(help);
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> navigateToMain());
         if (btnPrev != null) btnPrev.setOnClickListener(v -> finish());
         if (btnStart != null) {
             btnStart.setOnClickListener(v -> {

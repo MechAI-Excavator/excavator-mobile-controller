@@ -222,7 +222,7 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
             btnLevelBack.setOnClickListener(v -> {
                 discardStateOnStop = true;
                 DitchTaskState.reset();
-                finish();
+                navigateToMain();
             });
         }
 

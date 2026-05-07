@@ -164,7 +164,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     private void bindTopBar() {
         TextView btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> navigateToMain());
 
         View btnSave = findViewById(R.id.btnSaveVideoUrl);
         btnSave.setOnClickListener(v -> saveAll());

@@ -245,7 +245,7 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     // ── 按钮动作 ──────────────────────────────────────────────
 
     private void setupActions() {
-        btnLevelBack.setOnClickListener(v -> finish());
+        btnLevelBack.setOnClickListener(v -> navigateToMain());
 
         helpTooltip = new HelpTooltip(
                 this,

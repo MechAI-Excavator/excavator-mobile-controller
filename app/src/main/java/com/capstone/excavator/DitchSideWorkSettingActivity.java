@@ -49,7 +49,12 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         applyDitchSectionTypeImage();
         applyDitchTypeFields();
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                DitchTaskState.reset();
+                navigateToMain();
+            });
+        }
 
         helpTooltip = new HelpTooltip(this, "这里是帮助提示内容，你可以在此解释横波/侧向参数的含义。");
         helpTooltip.attach(btnHelp);
