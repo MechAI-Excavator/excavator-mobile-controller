@@ -7,12 +7,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-public class SlopeRepairSecondSettingActivity extends AppCompatActivity {
+public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
 
     private View btnBack;
     private View btnHelp;

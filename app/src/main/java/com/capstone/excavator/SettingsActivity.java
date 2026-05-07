@@ -18,7 +18,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 import androidx.core.graphics.drawable.DrawableCompat;
@@ -38,7 +37,7 @@ import java.util.Locale;
  * 左侧导航栏：4 个 menu item（IMU 安装角度 / 尺寸信息 / 摇杆通道映射 / 通用设置）。
  * 右侧 FrameLayout：每个 menu 对应一个 <include> 子页，切换时 VISIBLE/GONE 互换。
  */
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends ScaledAppCompatActivity {
 
     public static final String EXTRA_INITIAL_PAGE = "initial_page";
     public static final int PAGE_GENERAL = 3;

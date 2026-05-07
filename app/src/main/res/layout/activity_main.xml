@@ -36,8 +36,7 @@
                     android:id="@+id/videoPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="visible" >
-                </FrameLayout>
+                    android:visibility="visible"></FrameLayout>
             </com.skydroid.fpvplayer.FPVWidget>
 
             <ImageView
@@ -57,7 +56,7 @@
         android:layout_height="16.66dp"
         android:layout_gravity="top|start"
         android:layout_marginStart="210dp"
-        android:layout_marginTop="85dp"
+        android:layout_marginTop="55dp"
         android:background="@drawable/live_pill_bg"
         android:clipToOutline="true"
         android:elevation="8dp"
@@ -105,32 +104,33 @@
 
     <!-- 左侧竖条 + 横向中心度量条（与姿态卡片顶对齐留白） -->
     <FrameLayout
+        android:id="@+id/referencePointTitleBar"
+        android:layout_width="match_parent"
+        android:layout_height="33dp"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="55dp">
+
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="33dp"
-            android:layout_gravity="center_horizontal|top"
-            android:layout_marginTop="55dp">
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:src="@drawable/back_title" />
 
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:src="@drawable/back_title" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="9.5dp"
-                android:includeFontPadding="false"
-                android:text="参考点: 中斗尖"
-                android:textColor="#FFFFFF"
-                android:textSize="6.5sp" />
-        </FrameLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="9.5dp"
+            android:includeFontPadding="false"
+            android:text="参考点: 中斗尖"
+            android:textColor="#FFFFFF"
+            android:textSize="6.5sp" />
+    </FrameLayout>
 
 
     <com.capstone.excavator.CenterActivityPanelView
         android:id="@+id/centerActivityPanelView"
-        android:layout_width="433dp"
+        android:layout_width="530dp"
         android:layout_height="20dp"
         android:layout_gravity="center|top"
         android:layout_marginTop="55dp"
@@ -142,7 +142,7 @@
         android:layout_width="145dp"
         android:layout_height="52dp"
         android:layout_gravity="center|top"
-        android:layout_marginTop="170dp"
+        android:layout_marginTop="55dp"
         android:layout_marginBottom="0dp"
         android:background="@drawable/map_card_bg"
         android:clipToOutline="true"
@@ -194,8 +194,9 @@
 
 
     </eightbitlab.com.blurview.BlurView>
-
+    <!-- ==================== centerCapsuleSpeedDirection ==================== -->
     <LinearLayout
+        android:id="@+id/centerCapsuleSpeedDirectionContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
@@ -320,7 +321,7 @@
         android:layout_height="82.22dp"
         android:layout_gravity="end|top"
         android:layout_marginTop="245dp"
-        android:layout_marginEnd="80.44dp"
+        android:layout_marginEnd="60.44dp"
         android:layout_marginBottom="0dp" />
 
     <com.capstone.excavator.SpeedDirectionIndicatorView
@@ -328,7 +329,7 @@
         android:layout_width="91.11dp"
         android:layout_height="82.22dp"
         android:layout_gravity="start|top"
-        android:layout_marginStart="80.44dp"
+        android:layout_marginStart="60.44dp"
         android:layout_marginTop="245dp"
         android:layout_marginBottom="0dp" />
 
@@ -356,11 +357,13 @@ mode.setOnIndexChangeListener(idx -> {
 
     <!-- 左侧竖条：本处为唯一 LeftActivityPanelView，勿在其它层级再嵌一份（会 duplicate @id/leftActivityGauge，findViewById 会命中错误实例） -->
     <com.capstone.excavator.LeftActivityPanelView
+        android:id="@+id/leftActivityPanel"
         android:layout_width="24.88dp"
         android:layout_height="match_parent"
         android:layout_gravity="start|top" />
 
     <com.capstone.excavator.RightActivityPanelView
+        android:id="@+id/rightActivityPanel"
         android:layout_width="24.88dp"
         android:layout_height="match_parent"
         android:layout_gravity="end|top" />

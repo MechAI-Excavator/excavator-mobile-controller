@@ -19,7 +19,6 @@ import android.widget.Toast;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -52,7 +51,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends ScaledAppCompatActivity {
     
     // ── Components ───────────────────────────────────────────────────
     private HeaderBarView headerBar;
@@ -73,10 +72,25 @@ public class MainActivity extends AppCompatActivity {
     private BlurView livePillBlur;
     private View livePillDot;
     private TextView livePillText;
+    private View referencePointTitleBar;
+    private View centerActivityPanelView;
+    private View centerCapsuleSpeedDirectionContainer;
+    private View leftActivityPanel;
+    private View rightActivityPanel;
+    private View verticalActivityPanelLeft;
+    private View verticalActivityPanelRight;
+    private View leftSpeedIndicator;
+    private View rightSpeedIndicator;
+    private MotionModeSegmentView motionModeSegment;
     private ObjectAnimator liveDotBreathAnimator;
     private EmergencyStopOverlayView emergencyStopOverlay;
     private ConfirmDialogView confirmDialog;
     private InlineToastView inlineToast;
+
+    private final TaskTypeState.OnTypeChangeListener taskTypeListener =
+            (newType, oldType) -> runOnUiThread(this::applyTaskOverlayVisibility);
+    private final WorkRunState.OnStateChangeListener workStateListener =
+            (newState, oldState) -> runOnUiThread(this::applyTaskOverlayVisibility);
 
     // 驾驶模式状态
     private boolean isManualMode = true;
@@ -142,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
     private int ch2Value = 0; // 右摇杆上下
     private int ch3Value = 0; // 左摇杆上下
     private int ch4Value = 0; // 左摇杆左右
+    private int ch5Value = 0; // 模式切换
 
     // 信号强度相关
     private KeyListener<Integer> keySignalQualityListener;
@@ -181,6 +196,21 @@ public class MainActivity extends AppCompatActivity {
         startDataUpdates();
         initVideoPlayer();
         showInitialPrompts();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        TaskTypeState.getInstance().addListener(taskTypeListener);
+        WorkRunState.getInstance().addListener(workStateListener);
+        applyTaskOverlayVisibility();
+    }
+
+    @Override
+    protected void onStop() {
+        TaskTypeState.getInstance().removeListener(taskTypeListener);
+        WorkRunState.getInstance().removeListener(workStateListener);
+        super.onStop();
     }
 
     /** 首次启动引导：先选语言，再提示是否配置机器参数。 */
@@ -258,6 +288,16 @@ public class MainActivity extends AppCompatActivity {
         livePillBlur         = findViewById(R.id.livePillBlur);
         livePillDot          = findViewById(R.id.livePillDot);
         livePillText         = findViewById(R.id.livePillText);
+        referencePointTitleBar = findViewById(R.id.referencePointTitleBar);
+        centerActivityPanelView = findViewById(R.id.centerActivityPanelView);
+        centerCapsuleSpeedDirectionContainer = findViewById(R.id.centerCapsuleSpeedDirectionContainer);
+        leftActivityPanel = findViewById(R.id.leftActivityPanel);
+        rightActivityPanel = findViewById(R.id.rightActivityPanel);
+        verticalActivityPanelLeft = findViewById(R.id.verticalActivityPanelLeft);
+        verticalActivityPanelRight = findViewById(R.id.verticalActivityPanelRight);
+        leftSpeedIndicator = findViewById(R.id.leftSpeedIndicator);
+        rightSpeedIndicator = findViewById(R.id.rightSpeedIndicator);
+        motionModeSegment = findViewById(R.id.motionModeSegment);
 
         // Sync right map card height to posture card height after layout.
         if (postureCardView != null && mapCardContainer != null) {
@@ -337,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
                     .cancelText("取消")
                     .onConfirm(() -> {
                         WorkRunState.getInstance().setState(WorkRunState.State.ENDED);
+                        TaskTypeState.getInstance().setType(TaskTypeState.Type.NONE);
                         if (inlineToast != null) inlineToast.showMessage("任务已终止");
                     })
                     .build());
@@ -355,7 +396,96 @@ public class MainActivity extends AppCompatActivity {
         // 初始状态：未连接
         setVideoConnected(false);
 
+        applyTaskOverlayVisibility();
         applyTempSpectrumGaugeDemo();
+    }
+
+    private void applyTaskOverlayVisibility() {
+        TaskTypeState.Type taskType = TaskTypeState.getInstance().getType();
+        WorkRunState.State workState = WorkRunState.getInstance().getState();
+        boolean taskActive = taskType != TaskTypeState.Type.NONE
+                && (workState == WorkRunState.State.RUNNING || workState == WorkRunState.State.PAUSED);
+        boolean slopeTask = taskActive && taskType == TaskTypeState.Type.SLOPE;
+        boolean ditchTask = taskActive && taskType == TaskTypeState.Type.DITCH;
+        boolean levelOrDitchTask = taskActive
+                && (taskType == TaskTypeState.Type.LEVEL || taskType == TaskTypeState.Type.DITCH);
+
+        setVisible(riseSpeedBlur, slopeTask);
+        setVisible(verticalActivityPanelLeft, slopeTask);
+        setVisible(verticalActivityPanelRight, slopeTask);
+
+        setVisible(leftActivityPanel, levelOrDitchTask);
+        setVisible(rightActivityPanel, levelOrDitchTask);
+
+        setVisible(centerActivityPanelView, ditchTask);
+        setVisible(referencePointTitleBar, ditchTask);
+        setVisible(centerCapsuleSpeedDirectionContainer, ditchTask);
+        setTopMarginDp(livePillBlur, ditchTask ? 85f : 55f);
+        setStartMarginDp(leftSpeedIndicator, slopeTask ? 80.44f : 28.44f);
+        setEndMarginDp(rightSpeedIndicator, slopeTask ? 80.44f : 28.44f);
+
+        setVisible(leftSpeedIndicator, taskActive);
+        setVisible(rightSpeedIndicator, taskActive);
+    }
+
+    private static void setVisible(View view, boolean visible) {
+        if (view != null) {
+            view.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void setTopMarginDp(View view, float topMarginDp) {
+        if (view == null) {
+            return;
+        }
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (!(layoutParams instanceof ViewGroup.MarginLayoutParams)) {
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) layoutParams;
+        int topMarginPx = Math.round(topMarginDp * getResources().getDisplayMetrics().density);
+        if (marginLayoutParams.topMargin == topMarginPx) {
+            return;
+        }
+        marginLayoutParams.topMargin = topMarginPx;
+        view.setLayoutParams(marginLayoutParams);
+    }
+
+    private void setStartMarginDp(View view, float startMarginDp) {
+        if (view == null) {
+            return;
+        }
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (!(layoutParams instanceof ViewGroup.MarginLayoutParams)) {
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) layoutParams;
+        int startMarginPx = Math.round(startMarginDp * getResources().getDisplayMetrics().density);
+        if (marginLayoutParams.getMarginStart() == startMarginPx) {
+            return;
+        }
+        marginLayoutParams.setMarginStart(startMarginPx);
+        view.setLayoutParams(marginLayoutParams);
+    }
+
+    private void setEndMarginDp(View view, float endMarginDp) {
+        if (view == null) {
+            return;
+        }
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (!(layoutParams instanceof ViewGroup.MarginLayoutParams)) {
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) layoutParams;
+        int endMarginPx = Math.round(endMarginDp * getResources().getDisplayMetrics().density);
+        if (marginLayoutParams.getMarginEnd() == endMarginPx) {
+            return;
+        }
+        marginLayoutParams.setMarginEnd(endMarginPx);
+        view.setLayoutParams(marginLayoutParams);
     }
 
     private void applyTempSpectrumGaugeDemo() {
@@ -979,19 +1109,20 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(int[] value) {
                     // 区间【-450，450】
                     // value 是摇杆值数组
-                    if (value != null && value.length >= 4) {
+                    if (value != null && value.length >= 5) {
                         // 减去1500作为初始值
                         ch1Value = value[0] - 1500; // 右摇杆左右
                         ch2Value = value[1] - 1500; // 右摇杆上下
                         ch3Value = value[2] - 1500; // 左摇杆上下
                         ch4Value = value[3] - 1500; // 左摇杆左右
-
+                        ch5Value = value[4] - 1500; // 模式切换
                         runOnUiThread(() -> {
                             if (bottomBar != null) {
                                 // JoystickIndicatorView 约定：y 上为正；遥控器通道通常 y 下为正，因此统一取反
                                 bottomBar.setJoystickLeft(ch4Value, ch3Value);
                                 bottomBar.setJoystickRight(ch1Value, -ch2Value);
                             }
+                            updateMotionModeFromChannel(ch5Value);
                         });
                     }
                 }
@@ -1001,6 +1132,22 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("MainActivity", "摇杆值获取失败: " + (e != null ? e.getMessage() : "未知错误"));
                 }
             });
+    }
+
+    private void updateMotionModeFromChannel(int channelValue) {
+        if (motionModeSegment == null) {
+            return;
+        }
+
+        int selectedIndex;
+        if (channelValue <= -225) {
+            selectedIndex = MotionModeSegmentView.INDEX_STOP;
+        } else if (channelValue >= 225) {
+            selectedIndex = MotionModeSegmentView.INDEX_BUCKET;
+        } else {
+            selectedIndex = MotionModeSegmentView.INDEX_CHASSIS;
+        }
+        motionModeSegment.setSelectedIndex(selectedIndex);
     }
     
     /**

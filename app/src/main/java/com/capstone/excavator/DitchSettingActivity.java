@@ -7,13 +7,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 
-public class DitchSettingActivity extends AppCompatActivity {
+public class DitchSettingActivity extends ScaledAppCompatActivity {
 
     // ── 其他控件 ─────────────────────────────────────────────
     private View btnLevelBack, btnLevelNext;

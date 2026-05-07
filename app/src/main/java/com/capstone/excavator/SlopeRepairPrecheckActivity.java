@@ -6,12 +6,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-public class SlopeRepairPrecheckActivity extends AppCompatActivity {
+public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
 
     private View btnBack;
     private TextView btnPrev;
@@ -39,6 +38,8 @@ public class SlopeRepairPrecheckActivity extends AppCompatActivity {
         if (btnPrev != null) btnPrev.setOnClickListener(v -> finish());
         if (btnStart != null) {
             btnStart.setOnClickListener(v -> {
+                TaskTypeState.getInstance().setType(TaskTypeState.Type.SLOPE);
+                WorkRunState.getInstance().setState(WorkRunState.State.RUNNING);
                 Toast.makeText(this, "开始作业", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, MainActivity.class));
             });

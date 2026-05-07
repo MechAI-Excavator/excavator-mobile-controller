@@ -7,7 +7,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -19,7 +18,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
  * Step2：高度定点 / 坐标定点 模式切换 + 输入目标高度 & 填挖量（NumpadView）
  * 右侧：挖机预览图 + 下一步按钮
  */
-public class LevelSettingActivity extends AppCompatActivity {
+public class LevelSettingActivity extends ScaledAppCompatActivity {
 
     // ── 参考点选择 ───────────────────────────────────────────
     private LinearLayout cardRefLeft, cardRefMiddle, cardRefRight;

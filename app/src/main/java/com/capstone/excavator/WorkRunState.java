@@ -34,7 +34,7 @@ public final class WorkRunState {
 
     private static final WorkRunState INSTANCE = new WorkRunState();
 
-    private volatile State current = State.RUNNING;
+    private volatile State current = State.IDLE;
     private final CopyOnWriteArrayList<OnStateChangeListener> listeners = new CopyOnWriteArrayList<>();
 
     private WorkRunState() {
