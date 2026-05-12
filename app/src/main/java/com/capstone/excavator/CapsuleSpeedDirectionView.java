@@ -3,6 +3,8 @@ package com.capstone.excavator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -12,6 +14,9 @@ import androidx.annotation.Nullable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+
+import eightbitlab.com.blurview.BlurTarget;
+import eightbitlab.com.blurview.BlurView;
 
 /**
  * 横向胶囊：青铜竖渐变底、左为「右指三角 + 竖线 + 左指三角」、右侧大号速度数；
@@ -30,6 +35,7 @@ public class CapsuleSpeedDirectionView extends FrameLayout {
     }
 
     private TextView speedValue;
+    private BlurView capsuleSpeedPillBlur;
 
     private @DirectionMode int direction = DIRECTION_NEUTRAL;
     private String speedText = "0";
@@ -45,9 +51,17 @@ public class CapsuleSpeedDirectionView extends FrameLayout {
     public CapsuleSpeedDirectionView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         LayoutInflater.from(context).inflate(R.layout.view_capsule_speed_direction, this, true);
+        capsuleSpeedPillBlur = findViewById(R.id.capsuleSpeedPillBlur);
         speedValue = findViewById(R.id.capsuleSpeedValue);
+        setupBlur();
         syncSpeedTextToView();
         refreshDrawableState();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        setupBlur();
     }
 
     @Override
@@ -100,5 +114,22 @@ public class CapsuleSpeedDirectionView extends FrameLayout {
         if (speedValue != null) {
             speedValue.setText(speedText);
         }
+    }
+
+    private void setupBlur() {
+        if (capsuleSpeedPillBlur == null) return;
+        capsuleSpeedPillBlur.post(() -> {
+            try {
+                View targetView = getRootView().findViewById(R.id.blurTarget);
+                if (!(targetView instanceof BlurTarget)) return;
+                capsuleSpeedPillBlur.setupWith((BlurTarget) targetView)
+                        .setBlurRadius(18f)
+                        .setOverlayColor(0x4D808080);
+                capsuleSpeedPillBlur.setClipToOutline(true);
+                capsuleSpeedPillBlur.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+            } catch (Throwable ignored) {
+                // Blur is decorative; keep the speed indicator usable if setup fails.
+            }
+        });
     }
 }

@@ -280,11 +280,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
         TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
         TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
-
-        wireModelCard(R.id.cardDimCAT303, R.id.checkDimCAT303, DimensionPreferences.MODEL_CAT_303);
-        wireModelCard(R.id.cardDimCAT312, R.id.checkDimCAT312, DimensionPreferences.MODEL_CAT_312);
+        
+        wireModelCard(R.id.cardDimCAT301, R.id.checkDimCAT301, DimensionPreferences.MODEL_CAT_301);
         wireModelCard(R.id.cardDimCAT320, R.id.checkDimCAT320, DimensionPreferences.MODEL_CAT_320);
-        wireModelCard(R.id.cardDimCAT330, R.id.checkDimCAT330, DimensionPreferences.MODEL_CAT_330);
         wireModelCard(R.id.cardDimCAT336, R.id.checkDimCAT336, DimensionPreferences.MODEL_CAT_336);
 
         View.OnClickListener tabSelectListener = v -> showDimensionsSubTab(
@@ -352,16 +350,14 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     private void refreshDimensionModelSelectionUi(String selectedModel) {
         int[] cardIds = {
-                R.id.cardDimCAT303, R.id.cardDimCAT312, R.id.cardDimCAT320,
-                R.id.cardDimCAT330, R.id.cardDimCAT336
+                R.id.cardDimCAT301, R.id.cardDimCAT320, R.id.cardDimCAT336,
         };
         int[] checkIds = {
-                R.id.checkDimCAT303, R.id.checkDimCAT312, R.id.checkDimCAT320,
-                R.id.checkDimCAT330, R.id.checkDimCAT336
+                R.id.checkDimCAT301, R.id.checkDimCAT320, R.id.checkDimCAT336
         };
         String[] modelIds = {
-                DimensionPreferences.MODEL_CAT_303, DimensionPreferences.MODEL_CAT_312,
-                DimensionPreferences.MODEL_CAT_320, DimensionPreferences.MODEL_CAT_330,
+                DimensionPreferences.MODEL_CAT_301,
+                DimensionPreferences.MODEL_CAT_320,
                 DimensionPreferences.MODEL_CAT_336
         };
         float d = getResources().getDisplayMetrics().density;
