@@ -317,7 +317,7 @@
 
     <com.capstone.excavator.SpeedDirectionIndicatorView
         android:id="@+id/rightSpeedIndicator"
-        android:layout_width="91.11dp"
+        android:layout_width="120dp"
         android:layout_height="82.22dp"
         android:layout_gravity="end|top"
         android:layout_marginTop="245dp"
@@ -326,7 +326,7 @@
 
     <com.capstone.excavator.SpeedDirectionIndicatorView
         android:id="@+id/leftSpeedIndicator"
-        android:layout_width="91.11dp"
+        android:layout_width="120dp"
         android:layout_height="82.22dp"
         android:layout_gravity="start|top"
         android:layout_marginStart="60.44dp"

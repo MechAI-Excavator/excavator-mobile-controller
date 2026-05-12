@@ -24,7 +24,6 @@
                 android:id="@+id/joystickLeft"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-
         </eightbitlab.com.blurview.BlurView>
 
         <!-- ── 中央 dock：5 个动作按钮（图标 + 文本） ───────────── -->
@@ -32,7 +31,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center|bottom"
-
             android:orientation="horizontal">
 
             <!-- 重连（默认态显示，作业运行中/暂停时隐藏） -->
@@ -118,9 +116,7 @@
                         android:text="暂停"
                         android:textColor="#FFFFFF"
                         android:textSize="10.6sp" />
-
                 </LinearLayout>
-
             </eightbitlab.com.blurview.BlurView>
 
 

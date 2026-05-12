@@ -14,6 +14,9 @@ public final class LevelTaskState {
     private static volatile String targetLat = "";
     private static volatile String targetZ = "";
 
+    private static volatile double targetHeightM = Double.NaN;
+    private static volatile double fillCutM = Double.NaN;
+
     private LevelTaskState() {
     }
 
@@ -26,6 +29,9 @@ public final class LevelTaskState {
         targetLon = safe(lon);
         targetLat = safe(lat);
         targetZ = safe(z);
+
+        targetHeightM = parseMeters(targetHeight);
+        fillCutM = parseMeters(fillCut);
     }
 
     public static int getReferencePoint() {
@@ -72,6 +78,31 @@ public final class LevelTaskState {
         return targetZ;
     }
 
+    /** 桶尖到地面距离（米），无数据时返回 NaN。 */
+    public static double getTargetHeightM() {
+        return targetHeightM;
+    }
+
+    /** 填挖量（米），通常为负，无数据返回 NaN。 */
+    public static double getFillCutM() {
+        return fillCutM;
+    }
+
+    /**
+     * 当前参考点和（米）= 目标高度 + 填挖量，
+     * 物理含义：在「设置时刻」斗尖相对设计面的高度差。
+     */
+    public static double getReferenceSumM() {
+        if (Double.isNaN(targetHeightM) || Double.isNaN(fillCutM)) {
+            return Double.NaN;
+        }
+        return targetHeightM + fillCutM;
+    }
+
+    public static boolean hasNumericValues() {
+        return !Double.isNaN(targetHeightM) && !Double.isNaN(fillCutM);
+    }
+
     private static int normalizeRef(int ref) {
         if (ref < REF_LEFT || ref > REF_RIGHT) {
             return REF_MIDDLE;
@@ -81,5 +112,16 @@ public final class LevelTaskState {
 
     private static String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private static double parseMeters(String value) {
+        if (value == null) return Double.NaN;
+        String s = value.trim().replace('−', '-');
+        if (s.isEmpty() || s.equals("--")) return Double.NaN;
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
     }
 }

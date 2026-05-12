@@ -47,7 +47,6 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         restoreFromState();
         setupDitchTypeCards();
         setupRefCards();
-        setupInputs();
         setupActions();
     }
 
@@ -197,25 +196,6 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
             tvRefRightB.setTextColor(getColor(selectedRefB == 2 ? R.color.level_selected : R.color.level_unselected));
     }
 
-    private void setupInputs() {
-        if (tvAbDistance == null) {
-            return;
-        }
-        tvAbDistance.setOnClickListener(v -> {
-            if (numpad != null && numpad.isShowing()) {
-                numpad.dismiss();
-                return;
-            }
-            if (numpad == null) {
-                return;
-            }
-            numpad.setOnConfirmListener(tvAbDistance::setText);
-            numpad.showForAtScreen(tvAbDistance, tvAbDistance,
-                    300, NumpadPositionConfig.SCREEN_Y);
-        });
-    }
-
-    // ── 按钮动作 ──────────────────────────────────────────────
 
     private void setupActions() {
         if (btnLevelBack != null) {

@@ -2,7 +2,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:layout_height="82.22dp"
-    tools:layout_width="91.11dp"
+    tools:layout_width="120dp"
     tools:parentTag="android.widget.FrameLayout">
 
     <LinearLayout
@@ -19,11 +19,10 @@
 
         <!-- 左侧：下三角 / 横线 / 上三角，权重与间距可在 XML 调 -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="28dp"
             android:layout_height="match_parent"
-            android:layout_weight="84"
-            android:gravity="center"
             android:layout_marginEnd="2dp"
+            android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
@@ -60,10 +59,17 @@
         <TextView
             android:id="@+id/speedValue"
             style="@style/SpeedDirectionIndicator.SpeedValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="32"
+            android:layout_weight="1"
+            android:minWidth="60dp"
             android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="none"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="14sp"
+            android:autoSizeMaxTextSize="42sp"
+            android:autoSizeStepGranularity="1sp"
             android:text="0" />
     </LinearLayout>
 </merge>

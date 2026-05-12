@@ -230,7 +230,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        id="panelHeightModeWrapper"
+                        >
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -258,7 +260,7 @@
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
                             <LinearLayout
-                                style="@style/InputWithSuffixContainer"
+                  
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
@@ -566,7 +568,7 @@
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal">
                             <LinearLayout
-                                style="@style/InputWithSuffixContainer"
+    
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"

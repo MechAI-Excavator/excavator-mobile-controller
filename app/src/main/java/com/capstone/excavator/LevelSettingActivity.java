@@ -2,6 +2,7 @@ package com.capstone.excavator;
 
 import android.os.Bundle;
 import android.content.Intent;
+import android.graphics.Color;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -40,6 +41,14 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
 
     // ── 距离标注 ─────────────────────────────────────────────
     private TextView tvDepthLabel;
+    private TextView tvCurrentRef;
+
+    // ── 计算/管理状态 ─────────────────────────────────────────
+    // 约定：
+    // - tvTargetHeight：用户输入“铲斗到地面距离”（通常为正）
+    // - tvFillCut：填挖量（通常为负，可自动计算，也允许手动覆盖）
+    // - tvCurrentRef / tvDepthLabel：显示“两个数之和”（distance + fillCut）
+    private boolean fillCutAuto = true;
 
     // ── 其他控件 ─────────────────────────────────────────────
     private View btnLevelBack, btnLevelNext;
@@ -59,6 +68,8 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
         setupRefCards();
         setupModeToggle();
         setupInputs();
+        restoreFromState();
+        refreshDerivedViews();
         setupActions();
     }
 
@@ -110,6 +121,7 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
 
         tvTargetHeight = findViewById(R.id.tvTargetHeight);
         tvFillCut      = findViewById(R.id.tvFillCut);
+        tvCurrentRef   = findViewById(R.id.tvCurrentRef);
         tvCoordX       = findViewById(R.id.tvCoordX);
         tvCoordY       = findViewById(R.id.tvCoordY);
         tvCoordZ       = findViewById(R.id.tvCoordZ);
@@ -136,6 +148,30 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
         numpad = new NumpadView(this);
     }
 
+    private void restoreFromState() {
+        selectedRef = LevelTaskState.getReferencePoint();
+        isHeightMode = LevelTaskState.isHeightMode();
+        applyRefSelection();
+        applyModeSelection();
+
+        if (tvTargetHeight != null && !LevelTaskState.getTargetHeight().isEmpty()) {
+            tvTargetHeight.setText(LevelTaskState.getTargetHeight());
+        }
+        if (tvFillCut != null && !LevelTaskState.getFillCut().isEmpty()) {
+            tvFillCut.setText(LevelTaskState.getFillCut());
+            fillCutAuto = false;
+        }
+        if (tvCoordX != null && !LevelTaskState.getTargetLon().isEmpty()) {
+            tvCoordX.setText(LevelTaskState.getTargetLon());
+        }
+        if (tvCoordY != null && !LevelTaskState.getTargetLat().isEmpty()) {
+            tvCoordY.setText(LevelTaskState.getTargetLat());
+        }
+        if (tvCoordZ != null && !LevelTaskState.getTargetZ().isEmpty()) {
+            tvCoordZ.setText(LevelTaskState.getTargetZ());
+        }
+    }
+
     // ── 参考点卡片 ────────────────────────────────────────────
 
     private void setupRefCards() {
@@ -148,6 +184,7 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     private void selectRef(int index) {
         selectedRef = index;
         applyRefSelection();
+        refreshDerivedViews();
     }
 
     private void applyRefSelection() {
@@ -175,6 +212,7 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     private void setMode(boolean heightMode) {
         isHeightMode = heightMode;
         applyModeSelection();
+        refreshDerivedViews();
     }
 
     private void applyModeSelection() {
@@ -208,14 +246,23 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
     private void setupInputs() {
         tvTargetHeight.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
-            numpad.setOnConfirmListener(value -> tvTargetHeight.setText(value));
+            numpad.setOnConfirmListener(value -> {
+                tvTargetHeight.setText(value);
+                // 只要用户修改“距离”，默认恢复自动计算填挖量
+                fillCutAuto = true;
+                refreshDerivedViews();
+            });
             numpad.showForAtScreen(tvTargetHeight, tvTargetHeight,
                     NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
 
         tvFillCut.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
-            numpad.setOnConfirmListener(value -> tvFillCut.setText(value));
+            numpad.setOnConfirmListener(value -> {
+                tvFillCut.setText(value);
+                fillCutAuto = false; // 手动覆盖
+                refreshDerivedViews();
+            });
             numpad.showForAtScreen(tvFillCut, tvFillCut,
                     NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
@@ -236,10 +283,80 @@ public class LevelSettingActivity extends ScaledAppCompatActivity {
 
         tvCoordZ.setOnClickListener(v -> {
             if (numpad.isShowing()) { numpad.dismiss(); return; }
-            numpad.setOnConfirmListener(value -> tvCoordZ.setText(value));
+            numpad.setOnConfirmListener(value -> {
+                tvCoordZ.setText(value);
+                refreshDerivedViews();
+            });
             numpad.showForAtScreen(tvCoordZ, tvCoordZ,
                     NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
         });
+    }
+
+    private void refreshDerivedViews() {
+        if (tvTargetHeight == null || tvFillCut == null || tvCurrentRef == null || tvDepthLabel == null) {
+            return;
+        }
+
+        Double distance = parseDoubleOrNull(tvTargetHeight.getText());
+        Double fillCut = parseDoubleOrNull(tvFillCut.getText());
+
+        if (fillCutAuto) {
+            // 当前工程内没有更上游的传感器/协议计算逻辑，这里给一个稳定且可替换的默认策略：
+            // 让填挖量保持“通常为负”的期望，并随着距离变化而变化。
+            if (distance != null) {
+                fillCut = -Math.abs(distance);
+                tvFillCut.setText(formatMetersValue(fillCut));
+            }
+        }
+
+        if (distance == null || fillCut == null) {
+            tvCurrentRef.setText("--");
+            tvDepthLabel.setText("-- m");
+            cacheState();
+            return;
+        }
+
+        double sum = distance + fillCut;
+        String sumText = formatMetersValue(sum);
+        tvCurrentRef.setText(sumText);
+
+        // 预览叠加层显示同一个“和”的数值（带单位）
+        tvDepthLabel.setText(sumText + " m");
+        tvDepthLabel.setTextColor(sum < 0 ? Color.parseColor("#FFEF4444") : Color.parseColor("#FF22C55E"));
+
+        cacheState();
+    }
+
+    private void cacheState() {
+        // 页面内随改随存，保证下一页/返回时状态一致
+        LevelTaskState.update(
+                selectedRef,
+                isHeightMode,
+                tvTargetHeight == null ? "" : tvTargetHeight.getText().toString(),
+                tvFillCut == null ? "" : tvFillCut.getText().toString(),
+                tvCoordX == null ? "" : tvCoordX.getText().toString(),
+                tvCoordY == null ? "" : tvCoordY.getText().toString(),
+                tvCoordZ == null ? "" : tvCoordZ.getText().toString()
+        );
+    }
+
+    private static Double parseDoubleOrNull(CharSequence text) {
+        if (text == null) return null;
+        String s = text.toString().trim();
+        if (s.isEmpty() || s.equals("--")) return null;
+        // 兼容 “−” (U+2212) 负号
+        s = s.replace('−', '-');
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String formatMetersValue(double v) {
+        // 使用 2 位小数，且把普通 '-' 替换为更像 UI 的 “−”
+        String s = String.format(Locale.US, "%.2f", v);
+        return s.startsWith("-") ? "−" + s.substring(1) : s;
     }
 
     // ── 按钮动作 ──────────────────────────────────────────────

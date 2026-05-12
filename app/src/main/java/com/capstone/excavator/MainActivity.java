@@ -107,9 +107,6 @@ public class MainActivity extends ScaledAppCompatActivity {
     private Random random = new Random();
     private int angleIndex = 0;
     private int angleUpdateCounter = 0; // 用于控制角度更新频率
-    
-    // 机械臂角度轮换数据
-    private List<AngleSet> angleSets = new ArrayList<>();
 
     // IMU angle solver config (fill in linkage dimensions and IMU offsets if available)
     private final ImuAngleConverter.Config imuAngleConfig = ImuAngleConverter.createDefaultConfig();
@@ -129,6 +126,46 @@ public class MainActivity extends ScaledAppCompatActivity {
     private float relativeBoomAngle = 0f; // 结算后角度
     private float relativeStickAngle = 0f;
     private float relativeBucketAngle = 0f;
+
+    // ── 找平作业：设计面（臂局部坐标）快照 ──────────────────────────────
+    /** 设计面在臂局部 z 坐标的值；null 表示尚未快照。 */
+    private Double levelDesignZLocal = null;
+    /** 上一帧是否处于「LEVEL 作业 + RUNNING」状态，用于触发自动快照。 */
+    private boolean levelTaskRunningPrev = false;
+    private VerticalSpectrumGaugeView leftActivityGauge;
+    private VerticalSpectrumGaugeView rightActivityGauge;
+
+    // ── 度量条单位 / 每格分辨率配置 ──────────────────────────────────────
+    /** 与 {@link VerticalSpectrumGaugeView#SLOTS_PER_HALF} 保持一致（一侧的格子数）。 */
+    private static final int GAUGE_SLOTS_PER_HALF = 19;
+
+    /** 度量条单位：CM=长度（找平/挖渠），DEG=角度（其他场景）。 */
+    private enum GaugeUnit { CM, DEG }
+
+    /**
+     * 每格代表的物理量。默认 3cm / 3°；范围（一侧）= {@link #GAUGE_SLOTS_PER_HALF} × 每格量。
+     * 改这里可以全局调整指示条灵敏度。
+     */
+    private static final class GaugeUnitConfig {
+        final float cmPerSlot;
+        final float degPerSlot;
+        GaugeUnitConfig(float cmPerSlot, float degPerSlot) {
+            this.cmPerSlot = cmPerSlot;
+            this.degPerSlot = degPerSlot;
+        }
+        float rangeFor(GaugeUnit u) {
+            return GAUGE_SLOTS_PER_HALF * (u == GaugeUnit.CM ? cmPerSlot : degPerSlot);
+        }
+    }
+    private final GaugeUnitConfig gaugeUnitConfig = new GaugeUnitConfig(3f, 3f);
+    /** 当前左/右活动度量条用的单位：找平任务下为 CM。 */
+    private GaugeUnit currentGaugeUnit = GaugeUnit.CM;
+
+    /** 缓存的左/右速度+方向指示器（避免重复 findViewById）。 */
+    private SpeedDirectionIndicatorView leftSpeedDirView;
+    private SpeedDirectionIndicatorView rightSpeedDirView;
+    /** dz 绝对值大于此阈值（cm）时，把方向箭头按符号高亮，否则中性。 */
+    private static final float GAUGE_DIR_THRESHOLD_CM = 0.5f;
     
     // UDP数据接收超时相关
     private Handler udpTimeoutHandler;
@@ -137,11 +174,6 @@ public class MainActivity extends ScaledAppCompatActivity {
 
     private static final int IMU_TOTAL_COUNT = 4;
 
-    /**
-     * 联调 UI：左右 {@link VerticalSpectrumGaugeView}、{@link SpeedDirectionIndicatorView}、中心条等用临时读数；
-     * 接真数据后改为 false，并从协议/UDP 回调里驱动对应 View。
-     */
-    private static final boolean DEBUG_SPECTRUM_GAUGE_DEMO = true;
     private long lastDataReceiveTime = 0;
     // 心跳 RTT 测量相关
     private Handler heartbeatHandler;
@@ -193,7 +225,6 @@ public class MainActivity extends ScaledAppCompatActivity {
         initMap();
         initImuAngleConfig();
         applyStoredArmLengthScalesToWebView();
-        initAngleSets();
         initSDK();
         startDataUpdates();
         initVideoPlayer();
@@ -400,7 +431,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         setVideoConnected(false);
 
         applyTaskOverlayVisibility();
-        applyTempSpectrumGaugeDemo();
+        setupActivityGaugeViews();
     }
 
     private void applyTaskOverlayVisibility() {
@@ -429,6 +460,141 @@ public class MainActivity extends ScaledAppCompatActivity {
 
         setVisible(leftSpeedIndicator, taskActive);
         setVisible(rightSpeedIndicator, taskActive);
+
+        boolean levelRunning = taskActive
+                && taskType == TaskTypeState.Type.LEVEL
+                && workState == WorkRunState.State.RUNNING;
+        handleLevelTaskRunningTransition(levelRunning);
+    }
+
+    /**
+     * LEVEL 作业进入 RUNNING 时，快照「设计面在臂局部坐标的 z 值」：
+     * z_design = z_tip(now) - (距离 + 填挖量)
+     *
+     * 这要求：用户在 LevelSettingActivity 输入的「目标高度=斗尖到地面距离」是在
+     * 「即将开始作业的当前姿态」下测量的。若中途变姿，可加一个「重新校准」按钮再次调用此处。
+     */
+    private void handleLevelTaskRunningTransition(boolean levelRunning) {
+        if (levelRunning && !levelTaskRunningPrev) {
+            // 找平任务进入运行：强制 CM 单位，必要时拍快照
+            setGaugeUnit(GaugeUnit.CM);
+            snapshotLevelDesignSurface();
+        } else if (!levelRunning && levelTaskRunningPrev) {
+            levelDesignZLocal = null;
+            if (leftActivityGauge != null) leftActivityGauge.setValue(0f);
+            if (rightActivityGauge != null) rightActivityGauge.setValue(0f);
+        }
+        levelTaskRunningPrev = levelRunning;
+    }
+
+    private void snapshotLevelDesignSurface() {
+        if (!useRealData || !LevelTaskState.hasNumericValues()) {
+            // 没有真实 IMU 或没有数值时不快照，保持 null（gauge 显示 0）
+            levelDesignZLocal = null;
+            return;
+        }
+        double zTipNow = currentBucketTipZ();
+        double sum = LevelTaskState.getReferenceSumM();
+        if (Double.isNaN(zTipNow) || Double.isNaN(sum)) {
+            levelDesignZLocal = null;
+            return;
+        }
+        levelDesignZLocal = zTipNow - sum;
+        Log.d("LevelGauge", "snapshot z_design=" + levelDesignZLocal
+                + " (z_tip=" + zTipNow + ", sum=" + sum + ")");
+    }
+
+    /**
+     * 用当前 IMU 角度 + 当前已加载的臂长配置，按知识库 §5 求斗尖 z（臂局部坐标）。
+     */
+    private double currentBucketTipZ() {
+        if (imuAngleConfig == null) return Double.NaN;
+        ImuAngleConverter.Dimensions dim = imuAngleConfig.dimensions;
+        if (dim == null || dim.boomLength <= 0 || dim.stickLength <= 0 || dim.bucketLength <= 0) {
+            return Double.NaN;
+        }
+        return ArmForwardKinematics.bucketTipZ(
+                realBoomAngle, realStickAngle, realBucketAngle,
+                dim.boomLength, dim.stickLength, dim.bucketLength);
+    }
+
+    /**
+     * 由 IMU 数据驱动左右度量条：显示 dz = z_tip − z_design（找平任务：cm）。
+     * 正：斗尖在设计面之上（还要挖）；负：低于设计面（超挖）。
+     * 量程由 {@link #gaugeUnitConfig} 控制。
+     */
+    private void refreshLevelDepthGauges() {
+        if (leftActivityGauge == null && rightActivityGauge == null
+                && leftSpeedDirView == null && rightSpeedDirView == null) {
+            return;
+        }
+        // 真实数据未到位 / 任务未运行 / 设计面未快照 → 把所有 UI 置零再返回。
+        if (!levelTaskRunningPrev || levelDesignZLocal == null || !useRealData) {
+            if (leftActivityGauge != null) leftActivityGauge.setValue(0f);
+            if (rightActivityGauge != null) rightActivityGauge.setValue(0f);
+            applySpeedIndicators(0f);
+            return;
+        }
+        double zTipNow = currentBucketTipZ();
+        if (Double.isNaN(zTipNow)) {
+            return;
+        }
+        float value;
+        if (currentGaugeUnit == GaugeUnit.CM) {
+            value = (float) ((zTipNow - levelDesignZLocal) * 100.0); // m → cm
+        } else {
+            // 角度模式下保留扩展位，暂时直接用 dz(米) 数值。
+            value = (float) (zTipNow - levelDesignZLocal);
+        }
+        if (leftActivityGauge != null) leftActivityGauge.setValue(value);
+        if (rightActivityGauge != null) rightActivityGauge.setValue(value);
+        applySpeedIndicators(value);
+    }
+
+    /** 把当前 {@link #currentGaugeUnit} 对应的量程下发给左右度量条。 */
+    private void applyGaugeUnitToViews() {
+        float range = gaugeUnitConfig.rangeFor(currentGaugeUnit);
+        if (leftActivityGauge != null) {
+            leftActivityGauge.setRangeMax(range);
+            leftActivityGauge.setValue(0f);
+        }
+        if (rightActivityGauge != null) {
+            rightActivityGauge.setRangeMax(range);
+            rightActivityGauge.setValue(0f);
+        }
+    }
+
+    /** 切换度量条单位（cm/°），同步刷新量程。 */
+    private void setGaugeUnit(GaugeUnit unit) {
+        if (unit == null || unit == currentGaugeUnit) return;
+        currentGaugeUnit = unit;
+        applyGaugeUnitToViews();
+    }
+
+    /**
+     * 把 dz 数值（cm）同步喂给左右速度方向卡片：
+     * - 速度数字显示 |valueCm|
+     * - 方向：valueCm 远大于 0 → DOWN（铲斗在设计面之上，需再下挖），
+     *         远小于 0 → UP（已超挖，需抬起），接近 0 → NEUTRAL
+     */
+    private void applySpeedIndicators(float valueCm) {
+        int dir;
+        if (valueCm > GAUGE_DIR_THRESHOLD_CM) {
+            dir = SpeedDirectionIndicatorView.DIRECTION_DOWN_HIGHLIGHT;
+        } else if (valueCm <= -GAUGE_DIR_THRESHOLD_CM) {
+            dir = SpeedDirectionIndicatorView.DIRECTION_UP_HIGHLIGHT;
+        } else {
+            dir = SpeedDirectionIndicatorView.DIRECTION_NEUTRAL;
+        }
+        float mag = Math.abs(valueCm);
+        if (leftSpeedDirView != null) {
+            leftSpeedDirView.setSpeed(mag);
+            leftSpeedDirView.setDirection(dir);
+        }
+        if (rightSpeedDirView != null) {
+            rightSpeedDirView.setSpeed(mag);
+            rightSpeedDirView.setDirection(dir);
+        }
     }
 
     private static void setVisible(View view, boolean visible) {
@@ -491,57 +657,21 @@ public class MainActivity extends ScaledAppCompatActivity {
         view.setLayoutParams(marginLayoutParams);
     }
 
-    private void applyTempSpectrumGaugeDemo() {
-        if (!DEBUG_SPECTRUM_GAUGE_DEMO) {
-            return;
+    /**
+     * 左右活动量表 / 速度方向卡片的一次性绑定：
+     * - 仅做 findViewById + 量程下发（量程来自 {@link #gaugeUnitConfig}）。
+     * - 数据由 {@link #refreshLevelDepthGauges()} 在 IMU/UDP 回调里推送。
+     */
+    private void setupActivityGaugeViews() {
+        if (leftActivityGauge == null) {
+            leftActivityGauge = findViewById(R.id.leftActivityGauge);
         }
-        VerticalSpectrumGaugeView leftGauge = findViewById(R.id.leftActivityGauge);
-        VerticalSpectrumGaugeView rightGauge = findViewById(R.id.rightActivityGauge);
-        final float demoRange = 50f;
-        if (leftGauge != null) {
-            leftGauge.setRangeMax(demoRange);
-            leftGauge.setValue(5f);
+        if (rightActivityGauge == null) {
+            rightActivityGauge = findViewById(R.id.rightActivityGauge);
         }
-        if (rightGauge != null) {
-            rightGauge.setRangeMax(demoRange);
-            rightGauge.setValue(8f);
-        }
-
-        // 左右下角速度+方向卡片：与竖条演示值一致（真数据时在解析回调里 setSpeed / setDirection）
-        SpeedDirectionIndicatorView leftSpd = findViewById(R.id.leftSpeedIndicator);
-        SpeedDirectionIndicatorView rightSpd = findViewById(R.id.rightSpeedIndicator);
-        if (leftSpd != null) {
-            leftSpd.setSpeed(5f);
-            leftSpd.setDirection(SpeedDirectionIndicatorView.DIRECTION_DOWN_HIGHLIGHT);
-        }
-        if (rightSpd != null) {
-            rightSpd.setSpeed(8f);
-            rightSpd.setDirection(SpeedDirectionIndicatorView.DIRECTION_UP_HIGHLIGHT);
-        }
-
-        CenterActivityPanelView centerGauge = findViewById(R.id.centerActivityPanelView);
-        if (centerGauge != null) {
-            centerGauge.setRangeMax(1f);
-            centerGauge.setValue(-0.72f);
-        }
-
-        CapsuleSpeedDirectionView capsuleSpeedDirection = findViewById(R.id.centerCapsuleSpeedDirection);
-        if (capsuleSpeedDirection != null) {
-            capsuleSpeedDirection.setSpeed(3.5f);
-            capsuleSpeedDirection.setDirection(CapsuleSpeedDirectionView.DIRECTION_UP_HIGHLIGHT);
-            capsuleSpeedDirection.setSpeedText("10");
-        }
-
-        VerticalActivityPanelView verticalPanelLeft  = findViewById(R.id.verticalActivityPanelLeft);
-        VerticalActivityPanelView verticalPanelRight = findViewById(R.id.verticalActivityPanelRight);
-        if (verticalPanelLeft != null) {
-            verticalPanelLeft.getGauge().setRangeMax(50f);
-            verticalPanelLeft.getGauge().setValue(15f);
-        }
-        if (verticalPanelRight != null) {
-            verticalPanelRight.getGauge().setRangeMax(50f);
-            verticalPanelRight.getGauge().setValue(35f);
-        }
+        leftSpeedDirView = findViewById(R.id.leftSpeedIndicator);
+        rightSpeedDirView = findViewById(R.id.rightSpeedIndicator);
+        applyGaugeUnitToViews();
     }
 
     private void setupOverlayBlurs() {
@@ -660,128 +790,6 @@ public class MainActivity extends ScaledAppCompatActivity {
         //
         mapView.setFixedLocation(22.87502952106135, 113.48885581740602);
         OverpassMapHelper.loadOfflineMap(this, mapView);
-    }
-
-    private void initAngleSets() {
-        // 初始化机械臂角度数据，使用绝对值系统
-        // 0度=水平，正值=向上，负值=向下
-        // 铲斗：正值=展开，负值=收回
-
-        angleSets.add(new AngleSet(- 27.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 37.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 47.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 57.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 67.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 77.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 87.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(- 97.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-107.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-117.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-127.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-137.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-147.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-157.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-167.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(-177.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 177.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 167.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 157.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 147.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 137.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 127.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 117.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet( 107.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  97.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  87.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  77.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  67.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  57.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  47.85f, -158.33f, -95.09f));
-        angleSets.add(new AngleSet(  37.85f, -158.33f, -95.09f));
-
-        angleSets.add(new AngleSet(- 58.33f,- 27.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 37.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 47.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 57.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 67.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 77.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 87.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,- 97.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-107.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-117.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-127.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-137.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-147.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-157.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-167.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,-177.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 177.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 167.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 157.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 147.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 137.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 127.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 117.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f, 107.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  97.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  87.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  77.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  67.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  57.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  47.85f,  -95.09f));
-        angleSets.add(new AngleSet(- 58.33f,  37.85f,  -95.09f));
-
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 27.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 37.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 47.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 57.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 67.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 77.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 87.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,- 97.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-107.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-117.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-127.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-137.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-147.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-157.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-167.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,-177.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 177.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 167.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 157.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 147.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 137.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 127.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 117.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f, 107.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  97.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  87.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  77.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  67.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  57.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  47.85f));
-        angleSets.add(new AngleSet(- 58.33f,  95.09f,  37.85f));
-        
-        // angleSets.add(new AngleSet(0f, 0f, 0f));        // 第1组：初始位置（所有角度0度）
-        
-        // // 挖掘动作（向下时铲斗展开）
-        // angleSets.add(new AngleSet(-25f, -40f, 25f));   // 第2组：挖掘位置（大臂向下25度，小臂向下40度，铲斗展开25度）
-        // angleSets.add(new AngleSet(-30f, -50f, 30f));   // 第3组：深挖位置（大臂向下30度，小臂向下50度，铲斗展开30度）
-        // angleSets.add(new AngleSet(-15f, -30f, 20f));   // 第4组：浅挖位置（大臂向下15度，小臂向下30度，铲斗展开20度）
-        // angleSets.add(new AngleSet(-20f, -35f, 28f));   // 第5组：挖掘并展开（大臂向下20度，小臂向下35度，铲斗展开28度）
-        
-        // // 举升动作（向上时铲斗收回）
-        // angleSets.add(new AngleSet(15f, 20f, -15f));    // 第6组：举升位置（大臂向上15度，小臂向上20度，铲斗收回15度）
-        // angleSets.add(new AngleSet(10f, 25f, -10f));    // 第7组：伸展位置（大臂向上10度，小臂向上25度，铲斗收回10度）
-        // angleSets.add(new AngleSet(20f, 15f, -20f));    // 第8组：高举位置（大臂向上20度，小臂向上15度，铲斗收回20度）
-        // angleSets.add(new AngleSet(5f, 30f, -5f));      // 第9组：前伸位置（大臂向上5度，小臂向上30度，铲斗收回5度）
-        
-        // // 过渡动作
-        // angleSets.add(new AngleSet(-10f, -20f, 15f));   // 第10组：准备挖掘（大臂向下10度，小臂向下20度，铲斗展开15度）
-        // angleSets.add(new AngleSet(8f, 18f, -12f));     // 第11组：准备倾倒（大臂向上8度，小臂向上18度，铲斗收回12度）
-        // angleSets.add(new AngleSet(-18f, -32f, 22f));   // 第12组：持续挖掘（大臂向下18度，小臂向下32度，铲斗展开22度）
-        // angleSets.add(new AngleSet(12f, 22f, -18f));    // 第13组：举升倾倒（大臂向上12度，小臂向上22度，铲斗收回18度）
     }
     
     /**
@@ -1064,28 +1072,6 @@ public class MainActivity extends ScaledAppCompatActivity {
             rawCabinPitch = realCabinPitchAngle;
             rawCabinRoll = realCabinRollAngle;
         }
-        //  else {
-        //     if (angleSets.isEmpty()) {
-        //         return;
-        //     }
-        //     // 使用模拟数据（每1秒切换一次角度）
-        //     angleUpdateCounter++;
-        //     if (angleUpdateCounter >= 1) {
-        //         angleIndex = (angleIndex + 1) % angleSets.size();
-        //         angleUpdateCounter = 0;
-        //     }
-
-        //     // 轮换角度数据（原始IMU角度）
-        //     AngleSet currentSet = angleSets.get(angleIndex);
-        //     rawBoom = currentSet.boom;
-        //     rawStick = currentSet.stick;
-        //     rawBucket = currentSet.bucket;
-
-        //     // 模拟座舱 IMU：与 angleIndex 同步平滑变化，幅值不超过 ±45°（再大易像翻车）
-        //     double phase = angleIndex * 0.18;
-        //     rawCabinPitch = (float) (45.0 * Math.sin(phase));
-        //     rawCabinRoll = (float) (45.0 * Math.cos(phase * 1.07));
-        // }
 
         // 解算相对角度（统一入口，模拟/真实都使用）
         ImuAngleConverter.RelativeAngles relative = ImuAngleConverter.toRelativeAngles(
@@ -1115,6 +1101,8 @@ public class MainActivity extends ScaledAppCompatActivity {
             bottomBar.setAngles(relativeBoomAngle, relativeStickAngle, relativeBucketAngle,
                     rawCabinPitch, rawCabinRoll);
         }
+        // 找平度量条：每次解算后驱动 dz = z_tip - z_design
+        refreshLevelDepthGauges();
     }
     
     private void updatePositioning() {
@@ -1347,7 +1335,8 @@ public class MainActivity extends ScaledAppCompatActivity {
                                     RtkState.update(parsed.rtkLat, parsed.rtkLon);
                                     runOnUiThread(() -> {
                                         // 解析成功后才认为 IMU/RTK 有数据
-                                        if (!useRealData) {
+                                        boolean justWentReal = !useRealData;
+                                        if (justWentReal) {
                                             useRealData = true;
                                             Log.d("UDP", "收到UDP数据，切换到真实数据模式");
                                         }
@@ -1356,6 +1345,14 @@ public class MainActivity extends ScaledAppCompatActivity {
                                             udpTimeoutHandler.removeCallbacks(udpTimeoutRunnable);
                                         }
                                         startUDPTimeoutCheck();
+
+                                        // 找平度量条：
+                                        // (a) 刚切到真实数据 & 当前是 LEVEL+RUNNING 但没快照 → 现在补一次快照
+                                        // (b) 每次 UDP 包：刷新 dz，让指示条跟随 IMU 实时变化
+                                        if (levelTaskRunningPrev && levelDesignZLocal == null) {
+                                            snapshotLevelDesignSurface();
+                                        }
+                                        refreshLevelDepthGauges();
                                     });
                                 }
                                 @Override

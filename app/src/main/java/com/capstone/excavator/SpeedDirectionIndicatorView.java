@@ -2,6 +2,7 @@ package com.capstone.excavator;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -25,6 +26,10 @@ import java.util.Locale;
  * 使用 {@link #setDirection(int)}、{@link #setSpeed(float)} 或 {@link #setSpeedText(String)} 更新数据。
  */
 public class SpeedDirectionIndicatorView extends FrameLayout {
+
+    private static final float SPEED_TEXT_SIZE_NORMAL_SP = 42f;
+    private static final float SPEED_TEXT_SIZE_THREE_DIGITS_SP = 28f;
+    private static final float SPEED_TEXT_SIZE_LONG_SP = 22f;
 
     /** 无明确方向：三角与横线均为灰色。 */
     public static final int DIRECTION_NEUTRAL = 0;
@@ -91,6 +96,9 @@ public class SpeedDirectionIndicatorView extends FrameLayout {
         float a = Math.abs(speed);
         if (a < 0.05f) {
             speedText = "0";
+        } else if (a >= 10f) {
+            // 两位数及以上优先显示整数，避免 "123.4" 这种长文本挤占箭头区。
+            speedText = String.valueOf(Math.round(speed));
         } else if (Math.abs(speed - Math.round(speed)) < 0.05f) {
             speedText = String.valueOf(Math.round(speed));
         } else {
@@ -111,8 +119,33 @@ public class SpeedDirectionIndicatorView extends FrameLayout {
 
     private void syncSpeedTextToView() {
         if (speedValue != null) {
+            speedValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, resolveSpeedTextSizeSp(speedText));
             speedValue.setText(speedText);
         }
+    }
+
+    private static float resolveSpeedTextSizeSp(String text) {
+        int digits = countDigits(text);
+        if (digits <= 2) {
+            return SPEED_TEXT_SIZE_NORMAL_SP;
+        }
+        if (digits == 3) {
+            return SPEED_TEXT_SIZE_THREE_DIGITS_SP;
+        }
+        return SPEED_TEXT_SIZE_LONG_SP;
+    }
+
+    private static int countDigits(@Nullable String text) {
+        if (text == null) {
+            return 0;
+        }
+        int digits = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isDigit(text.charAt(i))) {
+                digits++;
+            }
+        }
+        return digits;
     }
 
     /**

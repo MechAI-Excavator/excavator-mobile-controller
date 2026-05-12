@@ -378,7 +378,7 @@
                             android:textColor="#FF9CA3AF"
                             android:textSize="14sp" />
                         <LinearLayout
-                            style="@style/InputWithSuffixContainer"
+        
                             android:layout_width="284dp"
                             android:layout_height="36dp"
                             >
@@ -386,6 +386,7 @@
                                 android:id="@+id/tvCurrentRef"
                                 style="@style/InputWithSuffixValue"
                                 android:clickable="true"
+                                android:layout_marginStart="30dp"
                                 android:focusable="true"
                                 android:text="0.38"
                                 android:textColor="#FF97A4C2"
