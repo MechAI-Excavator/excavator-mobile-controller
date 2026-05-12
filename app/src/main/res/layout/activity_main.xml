@@ -13,38 +13,42 @@
         android:layout_height="match_parent"
         android:background="#FFFFFF0A">
 
-        <!-- 视频画面（16:9 居中全屏） -->
+        <!-- 视频层：铺满 blurTarget（比例由 FPVWidget 内部/码流决定，不在此强制 16:9 以免留黑边） -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <com.skydroid.fpvplayer.FPVWidget
                 android:id="@+id/fpvWidget"
-                android:layout_width="964dp"
-                android:layout_height="598dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:background="#FF000000"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintDimensionRatio="16:9"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0"
                 tools:ignore="ContentDescription">
 
                 <FrameLayout
                     android:id="@+id/videoPlaceholder"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="visible"></FrameLayout>
+                    android:visibility="visible" />
             </com.skydroid.fpvplayer.FPVWidget>
 
+            <!-- 必须在 FPVWidget 之后：盖在图传 Surface 上方；有信号时在代码里设为 GONE -->
             <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:id="@+id/noLiveVideoOverlay"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:contentDescription="@null"
                 android:scaleType="centerCrop"
-                android:src="@drawable/with_no_live_video" />
+                android:src="@drawable/with_no_live_video"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </eightbitlab.com.blurview.BlurTarget>

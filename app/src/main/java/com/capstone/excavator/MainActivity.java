@@ -65,6 +65,7 @@ public class MainActivity extends ScaledAppCompatActivity {
     private View mapCardContainer;
     private BlurView rightPanelBlur;
     private View videoPlaceholder;
+    private View noLiveVideoOverlay;
     private TextView btnFloatingToggle;
     private View rightPanelHeader;
     private View rightPanelBody;
@@ -318,6 +319,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         rightPanelBody       = findViewById(R.id.rightPanelBody);
         rightPanelCollapseArrow = findViewById(R.id.rightPanelCollapseArrow);
         videoPlaceholder     = findViewById(R.id.videoPlaceholder);
+        noLiveVideoOverlay   = findViewById(R.id.noLiveVideoOverlay);
         livePillBlur         = findViewById(R.id.livePillBlur);
         livePillDot          = findViewById(R.id.livePillDot);
         livePillText         = findViewById(R.id.livePillText);
@@ -893,7 +895,8 @@ public class MainActivity extends ScaledAppCompatActivity {
         if (headerBar != null) headerBar.setConnected(connected);
         if (videoPlaceholder != null)
             videoPlaceholder.setVisibility(connected ? View.GONE : View.VISIBLE);
-        updateLivePill(connected);
+        if (noLiveVideoOverlay != null)
+            noLiveVideoOverlay.setVisibility(connected ? View.GONE : View.VISIBLE);
     }
 
     private void updateLivePill(boolean connected) {
