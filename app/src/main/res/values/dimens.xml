@@ -7,4 +7,5 @@
     <dimen name="gauge_label_to_chart_gap">5dp</dimen>
     <!-- 有 footer 时，为「低」与 footer 之间预留的额外高度（原 2.5dp） -->
     <dimen name="gauge_low_to_footer_spacing">5dp</dimen>
+    <dimen name="inline_toast_download_min_width">280dp</dimen>
 </resources>

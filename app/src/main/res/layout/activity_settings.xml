@@ -436,12 +436,14 @@
             android:id="@+id/settingsConfirmDialog"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:elevation="8dp"
             android:visibility="gone" />
 
         <com.capstone.excavator.InlineToastView
             android:id="@+id/settingsInlineToast"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:elevation="9dp"
             android:visibility="gone" />
 
     </FrameLayout>

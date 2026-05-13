@@ -1,35 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   通用内联 Toast（InlineToastView）。
-  叠加在父 FrameLayout 中，宽 186dp，高 67.11dp，居中显示。
-  样式由 inline_toast_bg.xml 维护。
+  短时提示：小卡片 + 单行/双行文案。
+  下载中：见 InlineToastView#showDownloadProgress（标题 + 进度条 + 副文案）。
 -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="android.widget.FrameLayout">
 
     <LinearLayout
+        android:id="@+id/toastCard"
         android:layout_width="186dp"
-        android:layout_height="67.11dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@drawable/inline_toast_bg"
-        android:gravity="center"
+        android:elevation="8dp"
+        android:gravity="center_horizontal"
+        android:minHeight="67.11dp"
         android:orientation="vertical"
         android:paddingStart="16dp"
+        android:paddingTop="14dp"
         android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="14dp">
+
+        <TextView
+            android:id="@+id/toastTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#FFFFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="正在下载更新"
+            tools:visibility="visible" />
+
+        <ProgressBar
+            android:id="@+id/toastProgress"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:indeterminate="true"
+            android:indeterminateTint="#FFFFFFFF"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/toastMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
             android:gravity="center"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:maxLines="2"
-            tools:text="任务已终止" />
-
+            android:lineSpacingExtra="2dp"
+            android:textColor="#E6FFFFFF"
+            android:textSize="13sp"
+            android:maxLines="4"
+            tools:text="请保持网络连接，安装包校验完成后将打开安装界面。" />
     </LinearLayout>
 
 </merge>

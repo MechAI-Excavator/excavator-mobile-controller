@@ -8,12 +8,23 @@ android {
     // 升级到较新的 Android SDK（Android 14 / API 34）
     compileSdk 34
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId 'com.capstone.excavator'
         minSdk 24
         targetSdk 34
+        // versionCode 必须为 ≥1 的正整数（Android / AGP / Play 均不允许 0），发版时递增；
+        // 检查更新请求里用 BuildConfig.VERSION_CODE。若业务上需要「第 0 版」语义，用 versionName（如 0.1.0）表达即可。
         versionCode 1
         versionName '1.0'
+
+        // 热更新检查（可按环境改 debug/release 或拆 flavor）
+        buildConfigField 'String', 'UPDATE_API_BASE', '"http://192.168.20.145:3000"'
+        buildConfigField 'String', 'UPDATE_API_KEY', '"capstone_app_updater_key"'
+        buildConfigField 'String', 'UPDATE_CHANNEL', '"prod"'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -32,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'androidx.webkit:webkit:1.11.0'

@@ -7,6 +7,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,11 +32,14 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.slider.Slider;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 设置页面。
@@ -87,11 +92,12 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     private Slider sbBrightness;
     private TextView tvBrightnessPercent;
 
-    /** 模拟「是否有新版本」；改为 {@code true} 可测升级确认弹窗。 */
-    private boolean isNeedUpdate = true;
-
     private InlineToastView settingsInlineToast;
     private ConfirmDialogView settingsConfirmDialog;
+
+    private final ExecutorService updateExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private volatile boolean updateCheckInFlight;
 
     private final ArrayList<DimensionModelCardBinding> dimensionModelCardBindings = new ArrayList<>();
 
@@ -685,23 +691,131 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     }
 
     private void onCheckUpdateClicked() {
-        if (isNeedUpdate) {
-            if (settingsConfirmDialog == null) return;
-            settingsConfirmDialog.show(new ConfirmDialogView.Config.Builder("发现新版本")
-                    .subtitle("优化产品体验，修复若干问题")
-                    .confirmText("立即升级")
-                    .cancelText("稍后再说")
-                    .confirmButtonStyle(ConfirmDialogView.ButtonStyle.FILLED)
-                    .cancelButtonStyle(ConfirmDialogView.ButtonStyle.OUTLINE)
-                    .onConfirm(() -> {
-                        // 立即升级：后续由业务接入（下载 / 安装等）
-                    })
-                    .build());
-        } else {
+        if (updateCheckInFlight) {
+            return;
+        }
+        if (settingsInlineToast == null) {
+            return;
+        }
+        updateCheckInFlight = true;
+        settingsInlineToast.showMessage("正在检查更新…", 8000L);
+        updateExecutor.execute(() -> {
+            try {
+                AppUpdateClient.CheckUpdateResult r = AppUpdateClient.checkUpdateSync();
+                mainHandler.post(() -> {
+                    updateCheckInFlight = false;
+                    if (isFinishing()) {
+                        return;
+                    }
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    handleCheckUpdateResult(r);
+                });
+            } catch (IOException e) {
+                mainHandler.post(() -> {
+                    updateCheckInFlight = false;
+                    if (isFinishing()) {
+                        return;
+                    }
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    Toast.makeText(this,
+                            "检查更新失败：" + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void handleCheckUpdateResult(AppUpdateClient.CheckUpdateResult r) {
+        if (!r.httpOk) {
+            Toast.makeText(this,
+                    "检查更新失败：" + (r.httpError != null ? r.httpError : ("HTTP " + r.httpCode)),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!r.hasUpdate || r.apkUrl.isEmpty()) {
             if (settingsInlineToast != null) {
                 settingsInlineToast.showMessage("已是最新版本");
             }
+            return;
         }
+        if (settingsConfirmDialog == null) {
+            return;
+        }
+        String subtitle = AppUpdateClient.formatSubtitle(r);
+        settingsConfirmDialog.show(new ConfirmDialogView.Config.Builder("发现新版本")
+                .subtitle(subtitle)
+                .confirmText("立即升级")
+                .cancelText("稍后再说")
+                .confirmButtonStyle(ConfirmDialogView.ButtonStyle.FILLED)
+                .cancelButtonStyle(ConfirmDialogView.ButtonStyle.OUTLINE)
+                .onConfirm(() -> downloadAndInstallApk(r))
+                .build());
+    }
+
+    private void downloadAndInstallApk(AppUpdateClient.CheckUpdateResult r) {
+        if (settingsInlineToast != null) {
+            settingsInlineToast.showDownloadProgress(
+                    "正在下载更新",
+                    "请保持网络连接，请勿退出本页。下载完成后将校验安装包并打开系统安装界面。",
+                    300_000L);
+        }
+        updateExecutor.execute(() -> {
+            File dir = getExternalFilesDir("apk");
+            if (dir == null) {
+                mainHandler.post(() -> {
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    Toast.makeText(this, "无法访问存储目录", Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
+            if (!dir.exists() && !dir.mkdirs()) {
+                mainHandler.post(() -> {
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    Toast.makeText(this, "无法创建下载目录", Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
+            File apk = new File(dir, "app-update-" + r.remoteVersionCode + ".apk");
+            try {
+                AppUpdateClient.downloadApkSync(r.apkUrl, apk);
+                if (!r.sha256.isEmpty() && !AppUpdateClient.verifySha256(apk, r.sha256)) {
+                    throw new IOException("安装包校验失败，请删除缓存后重试");
+                }
+                mainHandler.post(() -> {
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    boolean started = AppUpdateClient.tryStartInstall(SettingsActivity.this, apk);
+                    if (!started) {
+                        Toast.makeText(SettingsActivity.this,
+                                "无法打开安装程序。请到系统设置允许本应用「安装未知应用」，"
+                                        + "或使用文件管理打开：\n" + apk.getAbsolutePath(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+            } catch (Exception e) {
+                if (apk.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    apk.delete();
+                }
+                mainHandler.post(() -> {
+                    if (settingsInlineToast != null) {
+                        settingsInlineToast.hide();
+                    }
+                    Toast.makeText(SettingsActivity.this,
+                            "下载失败：" + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
 
     private void applyBrightnessPercent(int percent) {
@@ -921,5 +1035,11 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) setFullScreenMode();
+    }
+
+    @Override
+    protected void onDestroy() {
+        updateExecutor.shutdownNow();
+        super.onDestroy();
     }
 }
