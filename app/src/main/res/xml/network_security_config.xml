@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 天地图 JS API 与瓦片仍大量使用 HTTP；WebView 自 https 主文档加载时需明文 + 混合内容策略 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">tianditu.gov.cn</domain>
+        <domain includeSubdomains="true">tianditu.com</domain>
+    </domain-config>
+</network-security-config>

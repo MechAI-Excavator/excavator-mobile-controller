@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="keywords" content="天地图"/>
+    <title>天地图</title>
+    <meta name="referrer" content="origin-when-cross-origin" />
+    <script>
+        var timer = null;
+        window.addEventListener('DOMContentLoaded', () => {
+            timer = setTimeout(() => {
+                const findCopyright = document.body.querySelector('.tdt-bottom');
+                if (findCopyright) {
+                   console.log('findCopyright', findCopyright);
+                   findCopyright.style.opacity = '0';
+                   clearTimeout(timer);
+                }
+            }, 500);
+        });
+
+        window.addEventListener('unload', () => {
+            clearTimeout(timer);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(timer);
+        });
+    </script>
+    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=5374efdf7216f82394d5c814436b1fa0"></script>
+    <style type="text/css">body,html{width:100%;height:100%;margin:0;font-family:"Microsoft YaHei";background:transparent}#mapDiv{width:100%;height:100%;min-height:120px;border-radius:10px;overflow:hidden}input,b,p{margin-left:5px;font-size:14px}</style>
+    <script>
+        var map;
+        var zoom = 15;
+        var DEFAULT_LAT = 28.2416021;
+        var DEFAULT_LNG = 113.0938459;
+        var DEFAULT_HEADING = 0;
+        var NATIVE_POSE_PENDING = null;
+        window.TiandituBridge = {
+            setVehiclePose: function (lat, lng, headingDeg) {
+                var la = parseFloat(lat);
+                var ln = parseFloat(lng);
+                var he = parseFloat(headingDeg);
+                if (!isFinite(la)) la = DEFAULT_LAT;
+                if (!isFinite(ln)) ln = DEFAULT_LNG;
+                if (!isFinite(he)) he = DEFAULT_HEADING;
+                if (!map || !window.mapMarker) {
+                    NATIVE_POSE_PENDING = { lat: la, lng: ln, heading: he };
+                    return;
+                }
+                var ll = new T.LngLat(ln, la);
+                window.mapMarker.setLngLat(ll);
+                window.setMarkerHeading(he);
+                // Android 端会周期性注入 RTK；若只挪标注不平移地图，标注会很快跑出视口（浏览器单测 HTML 时无此注入，故现象不同）。
+                try {
+                    var z = typeof map.getZoom === 'function' ? map.getZoom() : zoom;
+                    map.centerAndZoom(ll, z);
+                } catch (ignore) {}
+            }
+        };
+        function onLoad() {
+            map = new T.Map('mapDiv', {
+                projection: 'EPSG:4326'
+            });
+            map.centerAndZoom(new T.LngLat(DEFAULT_LNG, DEFAULT_LAT), zoom);
+            map.setStyle('black');
+            var w = 45;
+            var h = 45;
+            var icon = new T.Icon({
+                iconUrl: new URL('location_current.png', window.location.href).href,
+                iconSize: new T.Point(w, h),
+                // 正方形导航箭头：锚点与旋转轴都用中心，避免绕底边“甩动”
+                iconAnchor: new T.Point(Math.floor(w / 2), Math.floor(h / 2)),
+            });
+
+            var marker = new T.Marker(new T.LngLat(DEFAULT_LNG, DEFAULT_LAT), { icon: icon });
+            map.addOverLay(marker);
+
+            var lastHeading = 0;
+            function applyMarkerHeading() {
+                var el = marker.getElement();
+                if (!el) return;
+                var p = el._tdt_pos;
+                if (!p) return;
+                var deg = lastHeading;
+                el.style.transformOrigin = '50% 50%';
+                if (T.oQ.any3d) {
+                    var tr = T.oQ.ie3d
+                        ? 'translate(' + p.x + 'px,' + p.y + 'px)'
+                        : 'translate3d(' + p.x + 'px,' + p.y + 'px,0)';
+                    el.style[T._Q.uq] = tr + ' rotate(' + deg + 'deg)';
+                } else {
+                    el.style.transformOrigin = '50% 50%';
+                    el.style.left = p.x + 'px';
+                    el.style.top = p.y + 'px';
+                    el.style[T._Q.uq] = 'rotate(' + deg + 'deg)';
+                }
+            }
+            function scheduleApplyMarkerHeading() {
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(applyMarkerHeading);
+                });
+            }
+            window.mapMarker = marker;
+            window.setMarkerHeading = function (deg) {
+                lastHeading = Number(deg) || 0;
+                applyMarkerHeading();
+            };
+            // 不在每次 move 上改 DOM transform：WebView 上与天地图内部更新易打架，出现闪一下后标注异常/消失。
+            map.on('moveend', scheduleApplyMarkerHeading);
+            map.on('zoomend', scheduleApplyMarkerHeading);
+            setTimeout(applyMarkerHeading, 0);
+            if (NATIVE_POSE_PENDING) {
+                var q = NATIVE_POSE_PENDING;
+                NATIVE_POSE_PENDING = null;
+                window.mapMarker.setLngLat(new T.LngLat(q.lng, q.lat));
+                window.setMarkerHeading(q.heading);
+            }
+        }
+    </script>
+</head>
+<body onLoad="onLoad()">
+<div id="mapDiv"></div>
+</body>
+</html>

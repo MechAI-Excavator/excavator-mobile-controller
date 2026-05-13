@@ -73,7 +73,12 @@
 
     </LinearLayout>
 
-    <!-- ─── 主体：左侧导航 + 右侧内容 ─────────────────────────── -->
+    <!-- 蒙层 / Toast 叠在整个「导航 + 内容」之上（含左侧菜单），不包含顶部栏 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -426,5 +431,19 @@
         </FrameLayout>
 
     </LinearLayout>
+
+        <com.capstone.excavator.ConfirmDialogView
+            android:id="@+id/settingsConfirmDialog"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <com.capstone.excavator.InlineToastView
+            android:id="@+id/settingsInlineToast"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </LinearLayout>

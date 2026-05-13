@@ -107,25 +107,15 @@ public final class DimensionPreferences {
         e.apply();
     }
 
-    /** 机型卡片上的大臂 / 小臂参考长度（米）。 */
+    /** 机型卡片上的大臂 / 小臂参考长度（米），数据来自 {@link DimensionModelCatalog}。 */
     public static double presetBoomM(String modelId) {
-        if (modelId == null) return 2.9;
-        switch (modelId) {
-            case MODEL_CAT_301: return 2.9;
-            case MODEL_CAT_320: return 5.8;
-            case MODEL_CAT_336: return 6.8;
-            default: return 2.9;
-        }
+        DimensionModelCatalog.Entry e = DimensionModelCatalog.findByModelId(modelId);
+        return e != null ? e.boomPresetM : 2.9;
     }
 
     public static double presetStickM(String modelId) {
-        if (modelId == null) return 1.5;
-        switch (modelId) {
-            case MODEL_CAT_301: return 1.5;
-            case MODEL_CAT_320: return 2.9;
-            case MODEL_CAT_336: return 3.4;
-            default: return 1.5;
-        }
+        DimensionModelCatalog.Entry e = DimensionModelCatalog.findByModelId(modelId);
+        return e != null ? e.stickPresetM : 1.5;
     }
 
     /**

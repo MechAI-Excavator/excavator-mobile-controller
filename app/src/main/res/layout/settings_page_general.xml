@@ -198,7 +198,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="2dp"
             android:text="视频流"
             android:textColor="#FF111827"
             android:textSize="17sp"
@@ -227,6 +227,65 @@
             android:textColor="#FF111827"
             android:textColorHint="#FFAAAAAA"
             android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:text="系统信息"
+            android:textColor="#FF111827"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- 左侧标签：0dp + weight=1 占满中间空隙，右侧 value 自然顶到末端（等同 space-between） -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="当前版本"
+                android:textColor="#FF0C0C0C"
+                android:textSize="14sp" />
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_horizontal|center_vertical|end"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.0.0"
+                    android:textColor="#FF0C0C0C"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btnCheckUpdate"
+                    android:layout_width="116.44dp"
+                    android:layout_height="38.22dp"
+                    android:layout_marginStart="30dp"
+                    android:background="@drawable/button_blue_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:text="检查更新"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="normal" />
+            </LinearLayout>
+        </LinearLayout>
+
+
 
         <!-- 原先功能保留：臂长比例（截图未展示，往下滚动可见） -->
         <TextView

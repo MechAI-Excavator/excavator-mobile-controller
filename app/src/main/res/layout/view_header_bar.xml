@@ -18,13 +18,13 @@
             android:paddingEnd="15dp">
 
 
-        <ImageView
-            android:layout_width="116dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
-            android:scaleType="centerCrop"
-            android:src="@drawable/black_logo"
-            tools:ignore="ContentDescription" />
+            <ImageView
+                android:layout_width="116dp"
+                android:layout_height="19.63dp"
+                android:layout_gravity="center_vertical"
+                android:scaleType="centerCrop"
+                android:src="@drawable/black_logo"
+                tools:ignore="ContentDescription" />
 
         <FrameLayout
             android:id="@+id/pillConnected"

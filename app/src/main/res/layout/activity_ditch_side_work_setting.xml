@@ -130,8 +130,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="沟深"
-                            android:textColor="#FF374151"
+                            android:text="沟深 (H)"
+                            android:textColor="#FF000000"
                             android:textSize="14sp" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -170,8 +170,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="左宽"
-                            android:textColor="#FF374151"
+                            android:text="左宽 (L)"
+                            android:textColor="#FF000000"
                             android:textSize="14sp" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -211,8 +211,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="右宽"
-                            android:textColor="#FF374151"
+                            android:text="右宽 (R)"
+                            android:textColor="#FF000000"
                             android:textSize="14sp" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -252,8 +252,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="上口宽"
-                            android:textColor="#FF374151"
+                            android:text="上口宽 (W)"
+                            android:textColor="#FF000000"
                             android:textSize="14sp" />
                         <TextView
                             android:layout_width="wrap_content"

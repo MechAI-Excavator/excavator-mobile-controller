@@ -295,22 +295,27 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- 定位地图卡片 -->
+                <!-- 定位地图卡片：内缩 + 圆角描边，黑色天地图与右侧 BlurView 毛玻璃衔接 -->
                 <FrameLayout
                     android:id="@+id/mapCardContainer"
                     android:layout_width="match_parent"
                     android:layout_height="124dp"
-                    android:background="@android:color/transparent">
+                    android:background="@android:color/transparent"
+                    >
 
-                    <com.capstone.excavator.MapView
+                    <!-- <com.capstone.excavator.MapView
                         android:id="@+id/mapView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
 
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="8dp" /> -->
 
+                    <com.capstone.excavator.ExcavatorMapWeb
+                        android:id="@+id/mapView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
                 </FrameLayout>
 
             </LinearLayout>

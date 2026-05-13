@@ -101,6 +101,8 @@ public class ExcavatorPostureView extends FrameLayout {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
 
+        applyExtraWebSettings(settings);
+
         webView.setBackgroundColor(Color.TRANSPARENT);
         webView.setOverScrollMode(OVER_SCROLL_NEVER);
 
@@ -125,6 +127,13 @@ public class ExcavatorPostureView extends FrameLayout {
 
     protected String getWebEntryUrl() {
         return WEB_ENTRY_URL;
+    }
+
+    /**
+     * 子类可覆写以调整 {@link WebSettings}（例如天地图页需允许 HTTPS 页加载 HTTP 子资源）。
+     */
+    protected void applyExtraWebSettings(WebSettings settings) {
+        // default: no-op
     }
 
     /**
@@ -238,6 +247,17 @@ public class ExcavatorPostureView extends FrameLayout {
         String mode = displayMode3D ? "3d" : "2d";
         String js = "window.setDisplayMode && window.setDisplayMode('" + mode + "');";
         webView.post(() -> webView.evaluateJavascript(js, null));
+    }
+
+    /**
+     * 子类（如天地图页）在页面未实现 {@code applyExcavatorPayload} 时也可安全注入脚本。
+     */
+    protected void postJavascriptToWebView(String script) {
+        webView.post(() -> {
+            if (webView.isAttachedToWindow()) {
+                webView.evaluateJavascript(script, null);
+            }
+        });
     }
 
     @Override

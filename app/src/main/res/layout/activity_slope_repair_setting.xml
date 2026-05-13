@@ -184,7 +184,7 @@
                 android:textStyle="bold" />
             
             <LinearLayout
-                android:id="@+id/cardDitchSquare"
+                android:id="@+id/panelSlopePreview"
                 android:layout_width="match_parent"
                 android:layout_height="350dp"
                 android:layout_marginBottom="8dp"

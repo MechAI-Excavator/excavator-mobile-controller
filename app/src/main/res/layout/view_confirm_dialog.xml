@@ -3,6 +3,8 @@
   通用二次确认弹窗（ConfirmDialogView）。
   使用方：inflate 之后将其叠加到 FrameLayout 最上层（GONE 时隐藏），
   通过 ConfirmDialogView#show(...) 控制内容与回调。
+  左/右按钮默认外观见下方；亦可在 Config.Builder 中通过
+  confirmButtonStyle / cancelButtonStyle 覆盖（FILLED / OUTLINE）。
   宽 200dp，高 103dp（由外层 FrameLayout 指定）。
 -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"

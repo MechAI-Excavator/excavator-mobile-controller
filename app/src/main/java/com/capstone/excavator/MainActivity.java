@@ -61,7 +61,7 @@ public class MainActivity extends ScaledAppCompatActivity {
     private BlurView postureCardBlur;
     private BlurView riseSpeedBlur;
     private FPVWidget fpvWidget;
-    private MapView mapView;
+    private ExcavatorMapWeb mapView;
     private View mapCardContainer;
     private BlurView rightPanelBlur;
     private View videoPlaceholder;
@@ -123,6 +123,10 @@ public class MainActivity extends ScaledAppCompatActivity {
     // RTK?????????
     private double realRtkLat = 0.0;
     private double realRtkLon = 0.0;
+
+    /** 与 {@link #updatePositioning()} 模拟 RTK 一致，避免 initMap 与首秒定时器注入坐标不一致。 */
+    private static final double SIM_RTK_DEFAULT_LAT = 28.2416021;
+    private static final double SIM_RTK_DEFAULT_LON = 113.0938459;
 
     private float relativeBoomAngle = 0f; // 结算后角度
     private float relativeStickAngle = 0f;
@@ -790,8 +794,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         if (mapView == null) return;
         // Fixed GPS location (requirement #1)
         //
-        mapView.setFixedLocation(22.87502952106135, 113.48885581740602);
-        OverpassMapHelper.loadOfflineMap(this, mapView);
+        mapView.setFixedLocation(SIM_RTK_DEFAULT_LAT, SIM_RTK_DEFAULT_LON);
     }
     
     /**
@@ -1117,9 +1120,9 @@ public class MainActivity extends ScaledAppCompatActivity {
             lat = realRtkLat;
             lon = realRtkLon;
         } else {
-            // RTK默认位置
-            lat = 28.2416021;
-            lon = 113.0938459;
+            // RTK默认位置（与 initMap / index.html 默认中心一致）
+            lat = SIM_RTK_DEFAULT_LAT;
+            lon = SIM_RTK_DEFAULT_LON;
         }
 
         if (mapView != null) mapView.setFixedLocation(lat, lon);

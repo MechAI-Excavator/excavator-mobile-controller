@@ -1,6 +1,7 @@
 package com.capstone.excavator;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 /**
  * 通用二次确认弹窗（全屏 FrameLayout 覆盖层）。
@@ -20,6 +22,14 @@ import androidx.annotation.Nullable;
  */
 public class ConfirmDialogView extends FrameLayout {
 
+    /** 底部左 / 右按钮外观（对应 {@code confirm_dialog_btn_outline} / {@code confirm_dialog_btn_filled}）。 */
+    public enum ButtonStyle {
+        /** 描边 + 蓝色字 */
+        OUTLINE,
+        /** 实心填充 + 白字 */
+        FILLED
+    }
+
     // ── 配置 ─────────────────────────────────────────────────────────
 
     /**
@@ -29,6 +39,8 @@ public class ConfirmDialogView extends FrameLayout {
      *   <li>{@link #subtitle}：副标题，为 null 或空串时不显示</li>
      *   <li>{@link #confirmText}：左按钮文字，默认「确认退出」</li>
      *   <li>{@link #cancelText}：右按钮文字，默认「取消」</li>
+     *   <li>{@link #confirmButtonStyle}：左按钮样式，默认 {@link ButtonStyle#OUTLINE}</li>
+     *   <li>{@link #cancelButtonStyle}：右按钮样式，默认 {@link ButtonStyle#FILLED}</li>
      *   <li>{@link #onConfirm}：点「确认」回调</li>
      *   <li>{@link #onCancel}：点「取消」或蒙层回调</li>
      *   <li>{@link #dismissOnScrim}：点蒙层是否关闭（默认 true）</li>
@@ -39,6 +51,8 @@ public class ConfirmDialogView extends FrameLayout {
         @Nullable public final String subtitle;
         public final String confirmText;
         public final String cancelText;
+        public final ButtonStyle confirmButtonStyle;
+        public final ButtonStyle cancelButtonStyle;
         @Nullable public final Runnable onConfirm;
         @Nullable public final Runnable onCancel;
         public final boolean dismissOnScrim;
@@ -48,6 +62,8 @@ public class ConfirmDialogView extends FrameLayout {
             this.subtitle       = b.subtitle;
             this.confirmText    = b.confirmText;
             this.cancelText     = b.cancelText;
+            this.confirmButtonStyle = b.confirmButtonStyle;
+            this.cancelButtonStyle  = b.cancelButtonStyle;
             this.onConfirm      = b.onConfirm;
             this.onCancel       = b.onCancel;
             this.dismissOnScrim = b.dismissOnScrim;
@@ -58,6 +74,8 @@ public class ConfirmDialogView extends FrameLayout {
             private String subtitle;
             private String confirmText  = "确认退出";
             private String cancelText   = "取消";
+            private ButtonStyle confirmButtonStyle = ButtonStyle.OUTLINE;
+            private ButtonStyle cancelButtonStyle  = ButtonStyle.FILLED;
             private Runnable onConfirm;
             private Runnable onCancel;
             private boolean dismissOnScrim = true;
@@ -67,6 +85,14 @@ public class ConfirmDialogView extends FrameLayout {
             public Builder subtitle(@Nullable String s)    { this.subtitle       = s;  return this; }
             public Builder confirmText(@NonNull String t)  { this.confirmText    = t;  return this; }
             public Builder cancelText(@NonNull String t)   { this.cancelText     = t;  return this; }
+            public Builder confirmButtonStyle(@NonNull ButtonStyle s) {
+                this.confirmButtonStyle = s;
+                return this;
+            }
+            public Builder cancelButtonStyle(@NonNull ButtonStyle s) {
+                this.cancelButtonStyle = s;
+                return this;
+            }
             public Builder onConfirm(@Nullable Runnable r) { this.onConfirm      = r;  return this; }
             public Builder onCancel(@Nullable Runnable r)  { this.onCancel       = r;  return this; }
             public Builder dismissOnScrim(boolean v)       { this.dismissOnScrim = v;  return this; }
@@ -139,6 +165,8 @@ public class ConfirmDialogView extends FrameLayout {
 
         btnConfirm.setText(cfg.confirmText);
         btnCancel.setText(cfg.cancelText);
+        applyButtonStyle(btnConfirm, cfg.confirmButtonStyle);
+        applyButtonStyle(btnCancel, cfg.cancelButtonStyle);
 
         btnConfirm.setOnClickListener(v -> {
             dismiss();
@@ -155,5 +183,16 @@ public class ConfirmDialogView extends FrameLayout {
             if (cfg.onCancel != null) cfg.onCancel.run();
         } : null);
         scrim.setClickable(cfg.dismissOnScrim);
+    }
+
+    private void applyButtonStyle(TextView button, ButtonStyle style) {
+        Context ctx = button.getContext();
+        if (style == ButtonStyle.FILLED) {
+            button.setBackgroundResource(R.drawable.confirm_dialog_btn_filled);
+            button.setTextColor(Color.WHITE);
+        } else {
+            button.setBackgroundResource(R.drawable.confirm_dialog_btn_outline);
+            button.setTextColor(ContextCompat.getColor(ctx, R.color.level_selected));
+        }
     }
 }

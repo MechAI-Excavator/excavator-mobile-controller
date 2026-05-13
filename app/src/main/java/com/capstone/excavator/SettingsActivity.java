@@ -7,6 +7,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -15,6 +17,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +32,8 @@ import com.google.android.material.slider.Slider;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -44,6 +49,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     private static final float MIN_ARM_SCALE = 0.1f;
     private static final float MAX_ARM_SCALE = 10f;
+
+    private static final int DIM_MODEL_COLUMNS = 3;
+    private static final float DIM_MODEL_ROW_SPACE_DP = 35.5f;
 
     private static final String PREFS_GENERAL_UI = "general_ui_prefs";
     private static final String KEY_BRIGHTNESS_PERCENT = "brightness_percent";
@@ -78,6 +86,26 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     private View btnLangEn;
     private Slider sbBrightness;
     private TextView tvBrightnessPercent;
+
+    /** 模拟「是否有新版本」；改为 {@code true} 可测升级确认弹窗。 */
+    private boolean isNeedUpdate = true;
+
+    private InlineToastView settingsInlineToast;
+    private ConfirmDialogView settingsConfirmDialog;
+
+    private final ArrayList<DimensionModelCardBinding> dimensionModelCardBindings = new ArrayList<>();
+
+    private static final class DimensionModelCardBinding {
+        final String modelId;
+        final View card;
+        final TextView check;
+
+        DimensionModelCardBinding(String modelId, View card, TextView check) {
+            this.modelId = modelId;
+            this.card = card;
+            this.check = check;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -280,10 +308,8 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
         TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
         TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
-        
-        wireModelCard(R.id.cardDimCAT301, R.id.checkDimCAT301, DimensionPreferences.MODEL_CAT_301);
-        wireModelCard(R.id.cardDimCAT320, R.id.checkDimCAT320, DimensionPreferences.MODEL_CAT_320);
-        wireModelCard(R.id.cardDimCAT336, R.id.checkDimCAT336, DimensionPreferences.MODEL_CAT_336);
+
+        populateDimensionModelCards();
 
         View.OnClickListener tabSelectListener = v -> showDimensionsSubTab(
                 tabSelect, tabCustom, underlineSelect, underlineCustom, panelSelect, panelCustom, 0);
@@ -313,16 +339,6 @@ public class SettingsActivity extends ScaledAppCompatActivity {
                 panelSelect, panelCustom, 0);
     }
 
-    private void wireModelCard(int cardId, int checkId, String modelId) {
-        View card = pageDimensions.findViewById(cardId);
-        if (card == null) return;
-        card.setOnClickListener(v -> {
-            DimensionPreferences.applyModelPreset(this, modelId);
-            refreshDimensionModelSelectionUi(modelId);
-            refreshDimensionValueLabels();
-        });
-    }
-
     private void showDimensionsSubTab(
             TextView tabSelect,
             TextView tabCustom,
@@ -349,26 +365,107 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     }
 
     private void refreshDimensionModelSelectionUi(String selectedModel) {
-        int[] cardIds = {
-                R.id.cardDimCAT301, R.id.cardDimCAT320, R.id.cardDimCAT336,
-        };
-        int[] checkIds = {
-                R.id.checkDimCAT301, R.id.checkDimCAT320, R.id.checkDimCAT336
-        };
-        String[] modelIds = {
-                DimensionPreferences.MODEL_CAT_301,
-                DimensionPreferences.MODEL_CAT_320,
-                DimensionPreferences.MODEL_CAT_336
-        };
         float d = getResources().getDisplayMetrics().density;
-        for (int i = 0; i < cardIds.length; i++) {
-            View card = pageDimensions.findViewById(cardIds[i]);
-            TextView check = pageDimensions.findViewById(checkIds[i]);
-            if (card == null || check == null) continue;
-            boolean sel = modelIds[i].equals(selectedModel);
-            card.setBackgroundResource(sel ? R.drawable.model_card_selected_bg : R.drawable.card_light_bg);
-            card.setElevation(sel ? 2f * d : 1f * d);
-            check.setVisibility(sel ? View.VISIBLE : View.GONE);
+        for (DimensionModelCardBinding b : dimensionModelCardBindings) {
+            if (b.card == null || b.check == null) {
+                continue;
+            }
+            boolean sel = b.modelId.equals(selectedModel);
+            b.card.setBackgroundResource(sel ? R.drawable.model_card_selected_bg : R.drawable.card_light_bg);
+            b.card.setElevation(sel ? 2f * d : 1f * d);
+            b.check.setVisibility(sel ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void populateDimensionModelCards() {
+        dimensionModelCardBindings.clear();
+        if (pageDimensions == null) {
+            return;
+        }
+        LinearLayout container = pageDimensions.findViewById(R.id.dimModelCardsContainer);
+        if (container == null) {
+            return;
+        }
+        container.removeAllViews();
+
+        List<DimensionModelCatalog.Entry> entries = DimensionModelCatalog.ENTRIES;
+        if (entries.isEmpty()) {
+            return;
+        }
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        int spacePx = (int) (DIM_MODEL_ROW_SPACE_DP * getResources().getDisplayMetrics().density + 0.5f);
+
+        for (int rowStart = 0; rowStart < entries.size(); rowStart += DIM_MODEL_COLUMNS) {
+            LinearLayout row = new LinearLayout(this);
+            row.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            row.setOrientation(LinearLayout.HORIZONTAL);
+
+            row.addView(createDimModelRowSpace(spacePx));
+
+            for (int c = 0; c < DIM_MODEL_COLUMNS; c++) {
+                int idx = rowStart + c;
+                if (idx < entries.size()) {
+                    DimensionModelCatalog.Entry e = entries.get(idx);
+                    View cardRoot = inflater.inflate(R.layout.item_dimension_model_card, row, false);
+                    bindDimensionModelCard(cardRoot, e);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                    cardRoot.setLayoutParams(lp);
+
+                    TextView check = cardRoot.findViewById(R.id.dimModelCheck);
+                    dimensionModelCardBindings.add(new DimensionModelCardBinding(e.modelId, cardRoot, check));
+
+                    cardRoot.setOnClickListener(v -> {
+                        DimensionPreferences.applyModelPreset(this, e.modelId);
+                        refreshDimensionModelSelectionUi(e.modelId);
+                        refreshDimensionValueLabels();
+                    });
+                    row.addView(cardRoot);
+                } else {
+                    View stub = new View(this);
+                    stub.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                    row.addView(stub);
+                }
+                if (c < DIM_MODEL_COLUMNS - 1) {
+                    row.addView(createDimModelRowSpace(spacePx));
+                }
+            }
+
+            row.addView(createDimModelRowSpace(spacePx));
+            container.addView(row);
+        }
+    }
+
+    private View createDimModelRowSpace(int widthPx) {
+        Space s = new Space(this);
+        s.setLayoutParams(new LinearLayout.LayoutParams(widthPx, LinearLayout.LayoutParams.WRAP_CONTENT));
+        return s;
+    }
+
+    private void bindDimensionModelCard(View root, DimensionModelCatalog.Entry e) {
+        ImageView iv = root.findViewById(R.id.dimModelImage);
+        TextView title = root.findViewById(R.id.dimModelTitle);
+        TextView ton = root.findViewById(R.id.dimModelTonnage);
+        TextView boom = root.findViewById(R.id.dimModelBoom);
+        TextView stick = root.findViewById(R.id.dimModelStick);
+        if (iv != null) {
+            iv.setImageResource(e.imageResId);
+        }
+        if (title != null) {
+            title.setText(e.displayName);
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, e.titleTextSp);
+        }
+        if (ton != null) {
+            ton.setText(e.tonnageLabel);
+        }
+        if (boom != null) {
+            boom.setText(e.boomCardText);
+        }
+        if (stick != null) {
+            stick.setText(e.stickCardText);
         }
     }
 
@@ -577,6 +674,34 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         float stick = ArmLengthPreferences.getStickScale(this);
         if (etArmBoomScale  != null) etArmBoomScale.setText(formatScaleForEdit(boom));
         if (etArmStickScale != null) etArmStickScale.setText(formatScaleForEdit(stick));
+
+        settingsInlineToast = findViewById(R.id.settingsInlineToast);
+        settingsConfirmDialog = findViewById(R.id.settingsConfirmDialog);
+
+        View btnCheckUpdate = pageGeneral.findViewById(R.id.btnCheckUpdate);
+        if (btnCheckUpdate != null) {
+            btnCheckUpdate.setOnClickListener(v -> onCheckUpdateClicked());
+        }
+    }
+
+    private void onCheckUpdateClicked() {
+        if (isNeedUpdate) {
+            if (settingsConfirmDialog == null) return;
+            settingsConfirmDialog.show(new ConfirmDialogView.Config.Builder("发现新版本")
+                    .subtitle("优化产品体验，修复若干问题")
+                    .confirmText("立即升级")
+                    .cancelText("稍后再说")
+                    .confirmButtonStyle(ConfirmDialogView.ButtonStyle.FILLED)
+                    .cancelButtonStyle(ConfirmDialogView.ButtonStyle.OUTLINE)
+                    .onConfirm(() -> {
+                        // 立即升级：后续由业务接入（下载 / 安装等）
+                    })
+                    .build());
+        } else {
+            if (settingsInlineToast != null) {
+                settingsInlineToast.showMessage("已是最新版本");
+            }
+        }
     }
 
     private void applyBrightnessPercent(int percent) {
