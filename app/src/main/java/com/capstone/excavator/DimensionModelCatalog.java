@@ -9,6 +9,9 @@ import java.util.List;
 /**
  * 尺寸设置「选择机型」Tab：机型卡片展示数据与预设大臂/小臂长度（米）。
  * <p>新增机型时只改 {@link #ENTRIES} 一处，并在 {@link DimensionPreferences} 中增加对应 {@code MODEL_*} 常量（若需要）。</p>
+ * <p>列表 UI：{@link R.layout#settings_page_dimensions} 内 {@code dimPanelSelect}（RecyclerView）+
+ * {@link R.integer#dim_model_grid_span_count} / {@link R.dimen#dim_model_grid_gap}；
+ * 单项布局 {@link R.layout#item_dimension_model_card}；绑定逻辑见 {@link DimensionModelCardAdapter}。</p>
  */
 public final class DimensionModelCatalog {
 

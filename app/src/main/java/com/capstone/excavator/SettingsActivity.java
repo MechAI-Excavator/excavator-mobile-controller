@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +23,10 @@ import android.widget.LinearLayout;
 import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
@@ -58,9 +61,6 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     private static final float MIN_ARM_SCALE = 0.1f;
     private static final float MAX_ARM_SCALE = 10f;
-
-    private static final int DIM_MODEL_COLUMNS = 3;
-    private static final float DIM_MODEL_ROW_SPACE_DP = 35.5f;
 
     /** 摇杆映射：下拉中的「清除」项；选中后输入框置空以恢复为未配置。 */
     private static final String JOYSTICK_OPT_EMPTY = "空";
@@ -109,19 +109,8 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean updateCheckInFlight;
 
-    private final ArrayList<DimensionModelCardBinding> dimensionModelCardBindings = new ArrayList<>();
-
-    private static final class DimensionModelCardBinding {
-        final String modelId;
-        final View card;
-        final TextView check;
-
-        DimensionModelCardBinding(String modelId, View card, TextView check) {
-            this.modelId = modelId;
-            this.card = card;
-            this.check = check;
-        }
-    }
+    @Nullable
+    private DimensionModelCardAdapter dimensionModelCardAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -475,7 +464,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
         TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
 
-        populateDimensionModelCards();
+        bindDimensionModelCardsRecycler();
 
         View.OnClickListener tabSelectListener = v -> showDimensionsSubTab(
                 tabSelect, tabCustom, underlineSelect, underlineCustom, panelSelect, panelCustom, 0);
@@ -531,108 +520,37 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     }
 
     private void refreshDimensionModelSelectionUi(String selectedModel) {
-        float d = getResources().getDisplayMetrics().density;
-        for (DimensionModelCardBinding b : dimensionModelCardBindings) {
-            if (b.card == null || b.check == null) {
-                continue;
-            }
-            boolean sel = b.modelId.equals(selectedModel);
-            b.card.setBackgroundResource(sel ? R.drawable.model_card_selected_bg : R.drawable.card_light_bg);
-            b.card.setElevation(sel ? 2f * d : 1f * d);
-            b.check.setVisibility(sel ? View.VISIBLE : View.GONE);
+        if (dimensionModelCardAdapter != null) {
+            dimensionModelCardAdapter.setSelectedModelId(selectedModel);
         }
     }
 
-    private void populateDimensionModelCards() {
-        dimensionModelCardBindings.clear();
+    /** 机型卡片：列数 / 间距见 {@code res/values/integers.xml}、{@code res/values/dimens.xml}；列表项见 {@code item_dimension_model_card}。 */
+    private void bindDimensionModelCardsRecycler() {
         if (pageDimensions == null) {
+            dimensionModelCardAdapter = null;
             return;
         }
-        LinearLayout container = pageDimensions.findViewById(R.id.dimModelCardsContainer);
-        if (container == null) {
+        RecyclerView rv = pageDimensions.findViewById(R.id.dimPanelSelect);
+        if (rv == null) {
+            dimensionModelCardAdapter = null;
             return;
         }
-        container.removeAllViews();
-
-        List<DimensionModelCatalog.Entry> entries = DimensionModelCatalog.ENTRIES;
-        if (entries.isEmpty()) {
-            return;
+        int span = getResources().getInteger(R.integer.dim_model_grid_span_count);
+        int gapPx = getResources().getDimensionPixelSize(R.dimen.dim_model_grid_gap);
+        rv.setLayoutManager(new GridLayoutManager(this, span));
+        while (rv.getItemDecorationCount() > 0) {
+            rv.removeItemDecorationAt(0);
         }
+        rv.addItemDecoration(new DimensionModelCardAdapter.GridSpacingItemDecoration(span, gapPx, true));
+        rv.setNestedScrollingEnabled(false);
 
-        LayoutInflater inflater = LayoutInflater.from(this);
-        int spacePx = (int) (DIM_MODEL_ROW_SPACE_DP * getResources().getDisplayMetrics().density + 0.5f);
-
-        for (int rowStart = 0; rowStart < entries.size(); rowStart += DIM_MODEL_COLUMNS) {
-            LinearLayout row = new LinearLayout(this);
-            row.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            row.setOrientation(LinearLayout.HORIZONTAL);
-
-            row.addView(createDimModelRowSpace(spacePx));
-
-            for (int c = 0; c < DIM_MODEL_COLUMNS; c++) {
-                int idx = rowStart + c;
-                if (idx < entries.size()) {
-                    DimensionModelCatalog.Entry e = entries.get(idx);
-                    View cardRoot = inflater.inflate(R.layout.item_dimension_model_card, row, false);
-                    bindDimensionModelCard(cardRoot, e);
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-                    cardRoot.setLayoutParams(lp);
-
-                    TextView check = cardRoot.findViewById(R.id.dimModelCheck);
-                    dimensionModelCardBindings.add(new DimensionModelCardBinding(e.modelId, cardRoot, check));
-
-                    cardRoot.setOnClickListener(v -> {
-                        DimensionPreferences.applyModelPreset(this, e.modelId);
-                        refreshDimensionModelSelectionUi(e.modelId);
-                        refreshDimensionValueLabels();
-                    });
-                    row.addView(cardRoot);
-                } else {
-                    View stub = new View(this);
-                    stub.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-                    row.addView(stub);
-                }
-                if (c < DIM_MODEL_COLUMNS - 1) {
-                    row.addView(createDimModelRowSpace(spacePx));
-                }
-            }
-
-            row.addView(createDimModelRowSpace(spacePx));
-            container.addView(row);
-        }
-    }
-
-    private View createDimModelRowSpace(int widthPx) {
-        Space s = new Space(this);
-        s.setLayoutParams(new LinearLayout.LayoutParams(widthPx, LinearLayout.LayoutParams.WRAP_CONTENT));
-        return s;
-    }
-
-    private void bindDimensionModelCard(View root, DimensionModelCatalog.Entry e) {
-        ImageView iv = root.findViewById(R.id.dimModelImage);
-        TextView title = root.findViewById(R.id.dimModelTitle);
-        TextView ton = root.findViewById(R.id.dimModelTonnage);
-        TextView boom = root.findViewById(R.id.dimModelBoom);
-        TextView stick = root.findViewById(R.id.dimModelStick);
-        if (iv != null) {
-            iv.setImageResource(e.imageResId);
-        }
-        if (title != null) {
-            title.setText(e.displayName);
-            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, e.titleTextSp);
-        }
-        if (ton != null) {
-            ton.setText(e.tonnageLabel);
-        }
-        if (boom != null) {
-            boom.setText(e.boomCardText);
-        }
-        if (stick != null) {
-            stick.setText(e.stickCardText);
-        }
+        dimensionModelCardAdapter = new DimensionModelCardAdapter(entry -> {
+            DimensionPreferences.applyModelPreset(this, entry.modelId);
+            dimensionModelCardAdapter.setSelectedModelId(entry.modelId);
+            refreshDimensionValueLabels();
+        });
+        rv.setAdapter(dimensionModelCardAdapter);
     }
 
     private void refreshDimensionValueLabels() {

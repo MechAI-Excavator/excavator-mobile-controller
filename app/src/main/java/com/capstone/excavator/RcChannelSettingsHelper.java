@@ -10,8 +10,6 @@ import com.skydroid.rcsdk.common.callback.CompletionCallbackWith;
 import com.skydroid.rcsdk.common.error.SkyException;
 import com.skydroid.rcsdk.common.remotecontroller.ChannelItem;
 import com.skydroid.rcsdk.common.remotecontroller.ChannelSettings;
-import com.skydroid.rcsdk.common.remotecontroller.H12ChannelItem;
-import com.skydroid.rcsdk.common.remotecontroller.H12ChannelSettings;
 import com.skydroid.rcsdk.key.RemoteControllerKey;
 import com.skydroid.rcsdk.utils.RCSDKUtils;
 
@@ -56,60 +54,32 @@ public final class RcChannelSettingsHelper {
     }
 
     public static void logChannelSettings(Context context) {
-        DeviceType dt = RCSDKUtils.getDeviceType();
-        if (dt != null && dt.isH12()) {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                    new CompletionCallbackWith<H12ChannelSettings>() {
-                        @Override
-                        public void onSuccess(H12ChannelSettings settings) {
-                            if (settings == null) {
-                                Log.i(TAG, "H12 KeyH12ChannelSettings: null");
-                                return;
-                            }
-                            H12ChannelItem[] ch = settings.getChannels();
-                            Log.i(TAG, "H12 KeyH12ChannelSettings channels=" + (ch == null ? "null" : ch.length));
-                            if (ch != null) {
-                                for (int i = 0; i < ch.length; i++) {
-                                    H12ChannelItem it = ch[i];
-                                    if (it != null) {
-                                        Log.i(TAG, "  [" + i + "] " + it.toString());
-                                    }
-                                }
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+            new CompletionCallbackWith<ChannelSettings>() {
+                @Override
+                public void onSuccess(ChannelSettings settings) {
+                    if (settings == null) {
+                        Log.i(TAG, "KeyChannelSettings: null");
+                        return;
+                    }
+                    ChannelItem[] ch = settings.getChannels();
+                    Log.i(TAG, "KeyChannelSettings channels=" + (ch == null ? "null" : ch.length));
+                    if (ch != null) {
+                        for (int i = 0; i < ch.length; i++) {
+                            ChannelItem it = ch[i];
+                            if (it != null) {
+                                Log.i(TAG, "  [" + i + "] " + it.toString());
                             }
                         }
+                    }
+                }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            Log.e(TAG, "GET KeyH12ChannelSettings failed: " + (e != null ? e.getMessage() : "?"));
-                        }
-                    });
-        } else {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                    new CompletionCallbackWith<ChannelSettings>() {
-                        @Override
-                        public void onSuccess(ChannelSettings settings) {
-                            if (settings == null) {
-                                Log.i(TAG, "KeyChannelSettings: null");
-                                return;
-                            }
-                            ChannelItem[] ch = settings.getChannels();
-                            Log.i(TAG, "KeyChannelSettings channels=" + (ch == null ? "null" : ch.length));
-                            if (ch != null) {
-                                for (int i = 0; i < ch.length; i++) {
-                                    ChannelItem it = ch[i];
-                                    if (it != null) {
-                                        Log.i(TAG, "  [" + i + "] " + it.toString());
-                                    }
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(SkyException e) {
-                            Log.e(TAG, "GET KeyChannelSettings failed: " + (e != null ? e.getMessage() : "?"));
-                        }
-                    });
-        }
+                @Override
+                public void onFailure(SkyException e) {
+                    Log.e(TAG, "GET KeyChannelSettings failed: " + (e != null ? e.getMessage() : "?"));
+                }
+            });
+        
     }
 
     public static void setReverseForKeyChannelIndices0To3(
@@ -120,54 +90,27 @@ public final class RcChannelSettingsHelper {
             boolean reverseCh3,
             CompletionCallback done) {
         boolean[] rev = new boolean[] { reverseCh0, reverseCh1, reverseCh2, reverseCh3 };
-        DeviceType dt = RCSDKUtils.getDeviceType();
-        if (dt != null && dt.isH12()) {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                    new CompletionCallbackWith<H12ChannelSettings>() {
-                        @Override
-                        public void onSuccess(H12ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                if (done != null) done.onResult(new SkyException(-1, "null H12ChannelSettings"));
-                                return;
-                            }
-                            applyReverseByIndex(settings.getChannels(), rev);
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
-
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        } else {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                    new CompletionCallbackWith<ChannelSettings>() {
-                        @Override
-                        public void onSuccess(ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                if (done != null) done.onResult(new SkyException(-1, "null ChannelSettings"));
-                                return;
-                            }
-                            applyReverseByIndex(settings.getChannels(), rev);
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
-
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        }
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+            new CompletionCallbackWith<ChannelSettings>() {
+                @Override
+                public void onSuccess(ChannelSettings settings) {
+                    if (settings == null || settings.getChannels() == null) {
+                        if (done != null) done.onResult(new SkyException(-1, "null ChannelSettings"));
+                        return;
+                    }
+                    applyReverseByIndex(settings.getChannels(), rev);
+                    KeyManager.INSTANCE.set(
+                            RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+                            settings,
+                            e -> {
+                                if (done != null) done.onResult(e);
+                            });
+                }
+                @Override
+                public void onFailure(SkyException e) {
+                    if (done != null) done.onResult(e);
+                }
+        });
     }
 
     private static void applyReverseByIndex(ChannelItem[] channels, boolean[] reverseForIndex0To3) {
@@ -190,51 +133,28 @@ public final class RcChannelSettingsHelper {
             boolean reverse,
             CompletionCallback done) {
         DeviceType dt = RCSDKUtils.getDeviceType();
-        if (dt != null && dt.isH12()) {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                    new CompletionCallbackWith<H12ChannelSettings>() {
-                        @Override
-                        public void onSuccess(H12ChannelSettings settings) {
-                            if (!patchItem(settings.getChannels(), channelIndex, mapping, min, middle, max, reverse)) {
-                                if (done != null) done.onResult(new SkyException(-1, "index not found"));
-                                return;
-                            }
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        } else {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                    new CompletionCallbackWith<ChannelSettings>() {
-                        @Override
-                        public void onSuccess(ChannelSettings settings) {
-                            if (!patchItem(settings.getChannels(), channelIndex, mapping, min, middle, max, reverse)) {
-                                if (done != null) done.onResult(new SkyException(-1, "index not found"));
-                                return;
-                            }
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+            new CompletionCallbackWith<ChannelSettings>() {
+                @Override
+                public void onSuccess(ChannelSettings settings) {
+                    if (!patchItem(settings.getChannels(), channelIndex, mapping, min, middle, max, reverse)) {
+                        if (done != null) done.onResult(new SkyException(-1, "index not found"));
+                        return;
+                    }
+                    KeyManager.INSTANCE.set(
+                            RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+                            settings,
+                            e -> {
+                                if (done != null) done.onResult(e);
+                            });
+                }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        }
+                @Override
+                public void onFailure(SkyException e) {
+                    if (done != null) done.onResult(e);
+                }
+            });
     }
 
     private static boolean patchItem(ChannelItem[] channels, int channelIndex,
@@ -267,51 +187,31 @@ public final class RcChannelSettingsHelper {
 
     /**
      * 读取 channel index 0..3 当前的 mapping 整型，便于业务层（如基准快照）使用。
-     * 自动区分 H12 与非 H12 设备。
      */
     public static void readJoystickMappingByIndex(Context context, MappingReadCallback cb) {
         if (cb == null) return;
-        DeviceType dt = RCSDKUtils.getDeviceType();
-        if (dt != null && dt.isH12()) {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                    new CompletionCallbackWith<H12ChannelSettings>() {
-                        @Override
-                        public void onSuccess(H12ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                cb.onFailure(new SkyException(-1, "null H12ChannelSettings"));
-                                return;
-                            }
-                            cb.onSuccess(collectMappingByIndex(settings.getChannels()));
-                        }
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+            new CompletionCallbackWith<ChannelSettings>() {
+                @Override
+                public void onSuccess(ChannelSettings settings) {
+                    if (settings == null || settings.getChannels() == null) {
+                        cb.onFailure(new SkyException(-1, "null ChannelSettings"));
+                        return;
+                    }
+                    cb.onSuccess(collectMappingByIndex(settings.getChannels()));
+                }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            cb.onFailure(e);
-                        }
-                    });
-        } else {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                    new CompletionCallbackWith<ChannelSettings>() {
-                        @Override
-                        public void onSuccess(ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                cb.onFailure(new SkyException(-1, "null ChannelSettings"));
-                                return;
-                            }
-                            cb.onSuccess(collectMappingByIndex(settings.getChannels()));
-                        }
-
-                        @Override
-                        public void onFailure(SkyException e) {
-                            cb.onFailure(e);
-                        }
-                    });
+                @Override
+                public void onFailure(SkyException e) {
+                    cb.onFailure(e);
+                }
+            });
         }
-    }
+    
 
     /**
      * 仅更新 channel index 0..3 的 {@code mapping} 字段（其余 min/middle/max/reverse 保留原值），
-     * 并把修改后的 {@link ChannelSettings} / {@link H12ChannelSettings} 整体回写。
+     * 并把修改后的 {@link ChannelSettings} 整体回写。
      *
      * @param mappingByIndex 长度 4 数组；元素 &lt; 0 表示该槽不变。
      */
@@ -345,54 +245,29 @@ public final class RcChannelSettingsHelper {
                 reverseByIndex != null && reverseByIndex.length > 2 ? reverseByIndex[2] : null,
                 reverseByIndex != null && reverseByIndex.length > 3 ? reverseByIndex[3] : null
         };
-        DeviceType dt = RCSDKUtils.getDeviceType();
-        if (dt != null && dt.isH12()) {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                    new CompletionCallbackWith<H12ChannelSettings>() {
-                        @Override
-                        public void onSuccess(H12ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                if (done != null) done.onResult(new SkyException(-1, "null H12ChannelSettings"));
-                                return;
-                            }
-                            applyMappingAndReverseByIndex(settings.getChannels(), mapTarget, revTarget);
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyH12ChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        } else {
-            KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                    new CompletionCallbackWith<ChannelSettings>() {
-                        @Override
-                        public void onSuccess(ChannelSettings settings) {
-                            if (settings == null || settings.getChannels() == null) {
-                                if (done != null) done.onResult(new SkyException(-1, "null ChannelSettings"));
-                                return;
-                            }
-                            applyMappingAndReverseByIndex(settings.getChannels(), mapTarget, revTarget);
-                            KeyManager.INSTANCE.set(
-                                    RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
-                                    settings,
-                                    e -> {
-                                        if (done != null) done.onResult(e);
-                                    });
-                        }
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+            new CompletionCallbackWith<ChannelSettings>() {
+                @Override
+                public void onSuccess(ChannelSettings settings) {
+                    if (settings == null || settings.getChannels() == null) {
+                        if (done != null) done.onResult(new SkyException(-1, "null ChannelSettings"));
+                        return;
+                    }
+                    applyMappingAndReverseByIndex(settings.getChannels(), mapTarget, revTarget);
+                    KeyManager.INSTANCE.set(
+                            RemoteControllerKey.INSTANCE.getKeyChannelSettings(),
+                            settings,
+                            e -> {
+                                if (done != null) done.onResult(e);
+                            });
+                }
 
-                        @Override
-                        public void onFailure(SkyException e) {
-                            if (done != null) done.onResult(e);
-                        }
-                    });
-        }
+                @Override
+                public void onFailure(SkyException e) {
+                    if (done != null) done.onResult(e);
+                }
+            });
     }
 
     private static int[] collectMappingByIndex(ChannelItem[] channels) {

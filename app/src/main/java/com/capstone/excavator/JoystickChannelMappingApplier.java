@@ -46,23 +46,12 @@ public final class JoystickChannelMappingApplier {
                 new RcChannelSettingsHelper.MappingReadCallback() {
                     @Override
                     public void onSuccess(int[] mappingByIndex) {
-                        if (mappingByIndex == null || mappingByIndex.length < 4) {
-                            Log.w(TAG, "baseline capture skipped: mappingByIndex too short");
+                        JoystickMappingChannelCodes.Baseline base =
+                                buildBaselineFromDefaultLayout(mappingByIndex);
+                        if (base == null) {
+                            Log.w(TAG, "baseline capture skipped: invalid channel mappings");
                             return;
                         }
-                        for (int i = 0; i < 4; i++) {
-                            if (mappingByIndex[i] < 0) {
-                                Log.w(TAG, "baseline capture skipped: missing channel index " + i);
-                                return;
-                            }
-                        }
-                        JoystickMappingChannelCodes.Baseline base =
-                                new JoystickMappingChannelCodes.Baseline(
-                                        mappingByIndex[CH_IDX_GH], // 铲斗
-                                        mappingByIndex[CH_IDX_EF], // 大臂
-                                        mappingByIndex[CH_IDX_AB], // 小臂
-                                        mappingByIndex[CH_IDX_CD]  // 回旋
-                                );
                         JoystickMappingChannelCodes.saveBaseline(context, base);
                         Log.i(TAG, String.format(Locale.US,
                                 "baseline captured: bucket=%d boom=%d stick=%d swing=%d",
@@ -79,8 +68,8 @@ public final class JoystickChannelMappingApplier {
     /**
      * 把 {@code local} 中持久化的 AB/CD/EF/GH→动作映射下发到遥控器。
      *
-     * <p>当基准码尚未捕获时（首次未连接遥控器 / 读取失败），跳过下发并记录 warn 日志；
-     * 应由调用方在适当时机再次触发或提示用户重连。
+     * <p>当基准码尚未捕获时，会立即读一次当前 {@code ChannelSettings}，并按默认关系建立基准：
+     * ch1/GH=铲斗、ch2/EF=大臂、ch3/AB=小臂、ch4/CD=回旋；建立成功后继续下发本次设置。
      */
     public static void applyUserMapping(Context context,
                                         ControllerLocalSettings.Snapshot local,
@@ -90,12 +79,66 @@ public final class JoystickChannelMappingApplier {
             return;
         }
         if (!JoystickMappingChannelCodes.hasBaseline(context)) {
-            Log.w(TAG, "skip apply: baseline not captured yet (RC not connected?)");
-            if (done != null) done.onResult(new SkyException(-1, "baseline missing"));
+            Log.i(TAG, "baseline missing; capturing from current ChannelSettings before apply");
+            RcChannelSettingsHelper.readJoystickMappingByIndex(context,
+                    new RcChannelSettingsHelper.MappingReadCallback() {
+                        @Override
+                        public void onSuccess(int[] mappingByIndex) {
+                            JoystickMappingChannelCodes.Baseline base =
+                                    buildBaselineFromDefaultLayout(mappingByIndex);
+                            if (base == null) {
+                                if (done != null) {
+                                    done.onResult(new SkyException(-1, "baseline capture failed"));
+                                }
+                                return;
+                            }
+                            JoystickMappingChannelCodes.saveBaseline(context, base);
+                            Log.i(TAG, String.format(Locale.US,
+                                    "baseline captured before apply: bucket=%d boom=%d stick=%d swing=%d",
+                                    base.bucketCode, base.boomCode, base.stickCode, base.swingCode));
+                            applyUserMappingWithBaseline(context, local, base, done);
+                        }
+
+                        @Override
+                        public void onFailure(SkyException e) {
+                            Log.w(TAG, "baseline capture before apply failed: "
+                                    + (e != null ? e.getMessage() : "?"));
+                            if (done != null) done.onResult(e != null ? e
+                                    : new SkyException(-1, "baseline capture failed"));
+                        }
+                    });
             return;
         }
         JoystickMappingChannelCodes.Baseline base = JoystickMappingChannelCodes.load(context);
+        applyUserMappingWithBaseline(context, local, base, done);
+    }
 
+    /**
+     * 按默认物理布局从 {@code channels[0..3].mapping} 推导动作基准码：
+     * GH/ch1=铲斗、EF/ch2=大臂、AB/ch3=小臂、CD/ch4=回旋。
+     */
+    private static JoystickMappingChannelCodes.Baseline buildBaselineFromDefaultLayout(int[] mappingByIndex) {
+        if (mappingByIndex == null || mappingByIndex.length < 4) {
+            return null;
+        }
+        for (int i = 0; i < 4; i++) {
+            if (mappingByIndex[i] < 0) {
+                return null;
+            }
+        }
+        return new JoystickMappingChannelCodes.Baseline(
+                mappingByIndex[CH_IDX_GH], // 铲斗
+                mappingByIndex[CH_IDX_EF], // 大臂
+                mappingByIndex[CH_IDX_AB], // 小臂
+                mappingByIndex[CH_IDX_CD]  // 回旋
+        );
+    }
+
+    private static void applyUserMappingWithBaseline(
+            Context context,
+            ControllerLocalSettings.Snapshot local,
+            JoystickMappingChannelCodes.Baseline base,
+            CompletionCallback done) {
         int[] target = new int[4];
         Arrays.fill(target, -1);
         target[CH_IDX_AB] = base.codeFor(ControllerLocalSettings.motionLabelToKey(local.joystickLeftAb));
