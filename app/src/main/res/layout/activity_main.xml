@@ -13,37 +13,17 @@
         android:layout_height="match_parent"
         android:background="#FFFFFF0A">
 
-        <!-- 视频层：铺满 blurTarget（比例由 FPVWidget 内部/码流决定，不在此强制 16:9 以免留黑边） -->
+        <!-- 视频层：内容由 ViewStub 在代码里用「恢复物理 density」的 Context inflate，见 MainActivity#inflateFpvVideoLayerUnscaled -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.skydroid.fpvplayer.FPVWidget
-                android:id="@+id/fpvWidget"
+            <ViewStub
+                android:id="@+id/fpvLayerStub"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:background="#FF000000"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="ContentDescription">
-
-                <FrameLayout
-                    android:id="@+id/videoPlaceholder"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:visibility="visible" />
-            </com.skydroid.fpvplayer.FPVWidget>
-
-            <!-- 必须在 FPVWidget 之后：盖在图传 Surface 上方；有信号时在代码里设为 GONE -->
-            <ImageView
-                android:id="@+id/noLiveVideoOverlay"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:contentDescription="@null"
-                android:scaleType="centerCrop"
-                android:src="@drawable/with_no_live_video"
+                android:inflatedId="@+id/fpvLayerRoot"
+                android:layout="@layout/include_fpv_video_layer"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -313,12 +293,12 @@
                         android:layout_marginBottom="8dp" /> -->
 
                     <!-- 天地图 WebView 暂时关闭，避免与 FPV 争用 CPU/GPU；恢复时去掉下方 View、取消注释 ExcavatorMapWeb -->
-                    <!--
+                    
                     <com.capstone.excavator.ExcavatorMapWeb
                         android:id="@+id/mapView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
-                    -->
+                   
                     <View
                         android:id="@+id/mapView"
                         android:layout_width="match_parent"

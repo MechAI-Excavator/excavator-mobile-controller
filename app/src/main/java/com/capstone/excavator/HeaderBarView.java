@@ -1,7 +1,12 @@
 package com.capstone.excavator;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.GradientDrawable;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -16,8 +21,8 @@ import java.util.Locale;
 /**
  * Header bar component.
  *
- * Props in  : setMode(String), setConnected(boolean)
- * Self-driven: clock (starts on attach, stops on detach)
+ * Props in  : setMode(String), setConnected(boolean), setLinkLatencyMs(int)
+ * Self-driven: clock; system battery level via {@link Intent#ACTION_BATTERY_CHANGED}
  *
  * Usage in XML:
  *   <com.capstone.excavator.HeaderBarView
@@ -32,6 +37,8 @@ public class HeaderBarView extends LinearLayout {
     private TextView tvModeStatus;
     private TextView tvHeaderConnection;
     private TextView tvCurrentTime;
+    private TextView tvBatteryPercent;
+    private TextView tvLinkLatency;
     private TextView tvRtkStatus;
     private TextView tvImuStatus;
     private View connectionDot;
@@ -42,6 +49,16 @@ public class HeaderBarView extends LinearLayout {
 
     private static final int ONLINE_COLOR = 0xAD059669;
     private static final int OFFLINE_COLOR = 0xFFFF6B6B;
+
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null || !Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) {
+                return;
+            }
+            applyBatteryIntent(intent);
+        }
+    };
 
     private final Handler clockHandler = new Handler(Looper.getMainLooper());
     private final Runnable clockRunnable = new Runnable() {
@@ -70,6 +87,8 @@ public class HeaderBarView extends LinearLayout {
         setBackgroundColor(0x4D000000);
         inflate(context, R.layout.view_header_bar, this);
         tvCurrentTime      = findViewById(R.id.tvCurrentTime);
+        tvBatteryPercent   = findViewById(R.id.tvBatteryPercent);
+        tvLinkLatency      = findViewById(R.id.tvLinkLatency);
         tvRtkStatus        = findViewById(R.id.tvRtkStatus);
         tvImuStatus        = findViewById(R.id.tvImuStatus);
         rtkStatusDot       = findViewById(R.id.rtkStatusDot);
@@ -82,6 +101,7 @@ public class HeaderBarView extends LinearLayout {
         // }
         setRtkOnline(false);
         setImuStatus(0, 4);
+        setLinkLatencyMs(-1);
     }
 
     /** 外部注册急停按钮点击回调。 */
@@ -120,6 +140,22 @@ public class HeaderBarView extends LinearLayout {
         setDotColor(rtkStatusDot, color);
     }
 
+    /**
+     * 链路延迟（毫秒），通常由 {@link MainActivity} 的 UDP 心跳 RTT 更新。
+     *
+     * @param ms 往返时延（毫秒）；&lt; 0 表示未知或未连接
+     */
+    public void setLinkLatencyMs(int ms) {
+        if (tvLinkLatency == null) {
+            return;
+        }
+        if (ms < 0) {
+            tvLinkLatency.setText("—");
+        } else {
+            tvLinkLatency.setText(ms + " ms");
+        }
+    }
+
     public void setImuStatus(int onlineCount, int totalCount) {
         int safeTotal = Math.max(0, totalCount);
         int safeOnline = Math.max(0, Math.min(onlineCount, safeTotal));
@@ -129,6 +165,18 @@ public class HeaderBarView extends LinearLayout {
             tvImuStatus.setTextColor(color);
         }
         setDotColor(imuStatusDot, color);
+    }
+
+    private void applyBatteryIntent(Intent intent) {
+        if (tvBatteryPercent == null || intent == null) {
+            return;
+        }
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level >= 0 && scale > 0) {
+            int pct = Math.round(100f * level / (float) scale);
+            tvBatteryPercent.setText(pct + "%");
+        }
     }
 
     private static void setDotColor(View dotView, int color) {
@@ -147,11 +195,41 @@ public class HeaderBarView extends LinearLayout {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         clockHandler.post(clockRunnable);
+        IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Context ctx = getContext();
+        if (ctx != null) {
+            Intent sticky;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                sticky = ctx.registerReceiver(null, batteryFilter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                sticky = ctx.registerReceiver(null, batteryFilter);
+            }
+            if (sticky != null) {
+                applyBatteryIntent(sticky);
+            }
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ctx.registerReceiver(batteryReceiver, batteryFilter, Context.RECEIVER_NOT_EXPORTED);
+                } else {
+                    ctx.registerReceiver(batteryReceiver, batteryFilter);
+                }
+            } catch (Throwable ignored) {
+                // 极端环境下注册失败时仍保留占位 UI
+            }
+        }
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         clockHandler.removeCallbacks(clockRunnable);
+        Context ctx = getContext();
+        if (ctx != null) {
+            try {
+                ctx.unregisterReceiver(batteryReceiver);
+            } catch (Throwable ignored) {
+                // 未注册或已注销
+            }
+        }
     }
 }

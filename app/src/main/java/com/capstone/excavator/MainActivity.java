@@ -9,8 +9,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -227,6 +229,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         // 设置全屏模式
         setFullScreenMode();
         setContentView(R.layout.activity_main);
+        inflateFpvVideoLayerUnscaled();
         initViews();
         initMap();
         initImuAngleConfig();
@@ -311,7 +314,26 @@ public class MainActivity extends ScaledAppCompatActivity {
             setFullScreenMode();
         }
     }
-    
+
+    /**
+     * 图传 subtree 使用「恢复物理 density」的 Context inflate，与全局 {@link UiScaleConfig#wrap} 解耦，
+     * 减轻硬解 Surface 与 0.8× dpi 叠带来的测量/合成压力（其余 UI 仍走缩放 Activity）。
+     */
+    private void inflateFpvVideoLayerUnscaled() {
+        ViewStub stub = findViewById(R.id.fpvLayerStub);
+        if (stub == null) {
+            Log.w("MainActivity", "fpvLayerStub missing; FPV layer not inflated");
+            return;
+        }
+        Context inflaterCtx = UiScaleConfig.unscaledContext(this);
+        stub.setLayoutInflater(LayoutInflater.from(inflaterCtx));
+        try {
+            stub.inflate();
+        } catch (IllegalStateException e) {
+            Log.w("MainActivity", "FPV layer already inflated: " + e.getMessage());
+        }
+    }
+
     private void initViews() {
         postureCardView = findViewById(R.id.postureCardView);
         postureCardBlur = findViewById(R.id.postureCardBlur);
@@ -1060,8 +1082,14 @@ public class MainActivity extends ScaledAppCompatActivity {
     
     private void updateConnectionInfo() {
         if (!useRealData) {
-            if (bottomBar != null) bottomBar.setDelay(-1);
+            notifyLinkLatencyMs(-1);
         }
+    }
+
+    /** UDP 心跳测得的链路 RTT（毫秒），同步到底栏占位接口与顶栏显示。 */
+    private void notifyLinkLatencyMs(int ms) {
+        if (bottomBar != null) bottomBar.setDelay(ms);
+        if (headerBar != null) headerBar.setLinkLatencyMs(ms);
     }
     
     /**
@@ -1302,6 +1330,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         public void run() {
                             useRealData = false; // 连接失败，使用模拟数据
                             setSensorStatusesOffline();
+                            notifyLinkLatencyMs(-1);
                             Toast.makeText(MainActivity.this, "UDP连接失败，使用模拟数据", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -1316,6 +1345,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         public void run() {
                             useRealData = false; // 切换回模拟数据
                             setSensorStatusesOffline();
+                            notifyLinkLatencyMs(-1);
                             Toast.makeText(MainActivity.this, "UDP断开连接", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -1340,9 +1370,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                             if (sendTs > 0) {
                                 int rtt = (int) (System.currentTimeMillis() - sendTs);
                                 Log.d("RTT", "收到心跳回包，RTT=" + rtt + "ms");
-                                runOnUiThread(() -> {
-                                    if (bottomBar != null) bottomBar.setDelay(rtt);
-                                });
+                                runOnUiThread(() -> notifyLinkLatencyMs(rtt));
                             }
                             return; // 心跳回包不进入业务数据解析
                         }
@@ -1394,6 +1422,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                                     runOnUiThread(() -> {
                                         useRealData = false;
                                         setSensorStatusesOffline();
+                                        notifyLinkLatencyMs(-1);
                                     });
                                 }
                             });
@@ -1409,6 +1438,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         } else {
             Log.e("UDP", "创建UDP管道失败");
             useRealData = false; // 创建失败，使用模拟数据
+            notifyLinkLatencyMs(-1);
             Toast.makeText(this, "创建UDP管道失败，使用模拟数据", Toast.LENGTH_SHORT).show();
         }
     }
@@ -1497,6 +1527,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         @Override
                         public void run() {
                             setSensorStatusesOffline();
+                            notifyLinkLatencyMs(-1);
                             Toast.makeText(MainActivity.this, "UDP数据超时，使用模拟数据", Toast.LENGTH_SHORT).show();
                         }
                     });
