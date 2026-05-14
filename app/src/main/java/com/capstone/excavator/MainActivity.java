@@ -317,7 +317,8 @@ public class MainActivity extends ScaledAppCompatActivity {
         postureCardBlur = findViewById(R.id.postureCardBlur);
         riseSpeedBlur = findViewById(R.id.riseSpeedBlur);
         fpvWidget            = findViewById(R.id.fpvWidget);
-        mapView              = findViewById(R.id.mapView);
+        View mapSlot = findViewById(R.id.mapView);
+        mapView = (mapSlot instanceof ExcavatorMapWeb) ? (ExcavatorMapWeb) mapSlot : null;
         mapCardContainer     = findViewById(R.id.mapCardContainer);
         rightPanelBlur       = findViewById(R.id.rightPanelBlur);
         rightPanelHeader     = findViewById(R.id.rightPanelHeader);
@@ -1084,15 +1085,22 @@ public class MainActivity extends ScaledAppCompatActivity {
             rawBucket = realBucketAngle;
             rawCabinPitch = realCabinPitchAngle;
             rawCabinRoll = realCabinRollAngle;
+        } else {
+            // 无 UDP 业务数据：保持 0（原错误写法在参数里 rawX=0 会覆盖上面赋值，导致真实数据也从未参与解算）
+            rawBoom = 0f;
+            rawStick = 0f;
+            rawBucket = 0f;
+            rawCabinPitch = 0f;
+            rawCabinRoll = 0f;
         }
 
         // 解算相对角度（统一入口，模拟/真实都使用）
         ImuAngleConverter.RelativeAngles relative = ImuAngleConverter.toRelativeAngles(
-                rawBoom = 0,
-                rawStick = 0,
-                rawBucket = 0,
-                rawCabinPitch = 0,
-                rawCabinRoll = 0,
+                rawBoom,
+                rawStick,
+                rawBucket,
+                rawCabinPitch,
+                rawCabinRoll,
                 imuAngleConfig
         );
         relativeBoomAngle = relative.boomDeg;
@@ -1260,6 +1268,11 @@ public class MainActivity extends ScaledAppCompatActivity {
      * 创建UDP管道
      */
     private void createUDPPipeline() {
+        // 避免 SDK 多次 onRcConnected 时叠多套管道与重复失败回调
+        if (udpPipeline != null) {
+            PipelineManager.INSTANCE.disconnectPipeline(udpPipeline);
+            udpPipeline = null;
+        }
         // 创建UDP管道：本地端口14551，发送到127.0.0.1:14552
         udpPipeline = PipelineManager.INSTANCE.createUDPPipeline(14551, "127.0.0.1", 14552);
         

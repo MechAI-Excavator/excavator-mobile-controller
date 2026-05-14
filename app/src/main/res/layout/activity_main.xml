@@ -312,10 +312,18 @@
                         android:layout_marginEnd="10dp"
                         android:layout_marginBottom="8dp" /> -->
 
+                    <!-- 天地图 WebView 暂时关闭，避免与 FPV 争用 CPU/GPU；恢复时去掉下方 View、取消注释 ExcavatorMapWeb -->
+                    <!--
                     <com.capstone.excavator.ExcavatorMapWeb
                         android:id="@+id/mapView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
+                    -->
+                    <View
+                        android:id="@+id/mapView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent" />
                 </FrameLayout>
 
             </LinearLayout>
