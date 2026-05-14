@@ -272,10 +272,11 @@ public final class RcChannelSettingsHelper {
 
     private static int[] collectMappingByIndex(ChannelItem[] channels) {
         int[] out = new int[] { -1, -1, -1, -1 };
+        boolean oneBased = usesOneBasedChannelIndex(channels);
         for (int pos = 0; pos < channels.length; pos++) {
             ChannelItem it = channels[pos];
             if (it == null) continue;
-            int idx = logicalJoystickIndex(it, pos);
+            int idx = logicalJoystickIndex(it, pos, oneBased);
             if (idx >= 0 && idx < out.length) {
                 out[idx] = it.getMapping();
             }
@@ -286,10 +287,11 @@ public final class RcChannelSettingsHelper {
     private static void applyMappingAndReverseByIndex(ChannelItem[] channels,
                                                       int[] mapTarget,
                                                       Boolean[] revTarget) {
+        boolean oneBased = usesOneBasedChannelIndex(channels);
         for (int pos = 0; pos < channels.length; pos++) {
             ChannelItem it = channels[pos];
             if (it == null) continue;
-            int idx = logicalJoystickIndex(it, pos);
+            int idx = logicalJoystickIndex(it, pos, oneBased);
             if (idx < 0 || idx >= mapTarget.length) continue;
             if (mapTarget[idx] >= 0) {
                 it.setMapping(mapTarget[idx]);
@@ -302,18 +304,34 @@ public final class RcChannelSettingsHelper {
 
     /**
      * 不同遥控器 / SDK 版本里 {@link ChannelItem#getIndex()} 可能是 0-based（0..3），
-     * 也可能是 1-based（1..4）。若 index 字段不可用，则退回到数组前四项的位置。
+     * 也可能是 1-based（1..4）。要先对整批 channels 判断编号体系，不能逐项判断：
+     * 否则 1-based 的 1/2/3 会被误认成 0-based，造成 index 0 缺失。
      */
-    private static int logicalJoystickIndex(ChannelItem item, int arrayPosition) {
+    private static boolean usesOneBasedChannelIndex(ChannelItem[] channels) {
+        boolean hasZero = false;
+        boolean hasFour = false;
+        if (channels == null) {
+            return false;
+        }
+        for (ChannelItem it : channels) {
+            if (it == null) continue;
+            int raw = it.getIndex();
+            if (raw == 0) hasZero = true;
+            if (raw == 4) hasFour = true;
+        }
+        return hasFour && !hasZero;
+    }
+
+    private static int logicalJoystickIndex(ChannelItem item, int arrayPosition, boolean oneBased) {
         if (item == null) {
             return -1;
         }
         int raw = item.getIndex();
-        if (raw >= 0 && raw <= 3) {
-            return raw;
-        }
-        if (raw >= 1 && raw <= 4) {
+        if (oneBased && raw >= 1 && raw <= 4) {
             return raw - 1;
+        }
+        if (!oneBased && raw >= 0 && raw <= 3) {
+            return raw;
         }
         if (arrayPosition >= 0 && arrayPosition <= 3) {
             return arrayPosition;
