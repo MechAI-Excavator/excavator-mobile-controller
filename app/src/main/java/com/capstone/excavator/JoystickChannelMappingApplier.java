@@ -88,7 +88,9 @@ public final class JoystickChannelMappingApplier {
                                     buildBaselineFromDefaultLayout(mappingByIndex);
                             if (base == null) {
                                 if (done != null) {
-                                    done.onResult(new SkyException(-1, "baseline capture failed"));
+                                    done.onResult(new SkyException(-1,
+                                            "baseline capture failed: "
+                                                    + Arrays.toString(mappingByIndex)));
                                 }
                                 return;
                             }

@@ -272,9 +272,10 @@ public final class RcChannelSettingsHelper {
 
     private static int[] collectMappingByIndex(ChannelItem[] channels) {
         int[] out = new int[] { -1, -1, -1, -1 };
-        for (ChannelItem it : channels) {
+        for (int pos = 0; pos < channels.length; pos++) {
+            ChannelItem it = channels[pos];
             if (it == null) continue;
-            int idx = it.getIndex();
+            int idx = logicalJoystickIndex(it, pos);
             if (idx >= 0 && idx < out.length) {
                 out[idx] = it.getMapping();
             }
@@ -285,9 +286,10 @@ public final class RcChannelSettingsHelper {
     private static void applyMappingAndReverseByIndex(ChannelItem[] channels,
                                                       int[] mapTarget,
                                                       Boolean[] revTarget) {
-        for (ChannelItem it : channels) {
+        for (int pos = 0; pos < channels.length; pos++) {
+            ChannelItem it = channels[pos];
             if (it == null) continue;
-            int idx = it.getIndex();
+            int idx = logicalJoystickIndex(it, pos);
             if (idx < 0 || idx >= mapTarget.length) continue;
             if (mapTarget[idx] >= 0) {
                 it.setMapping(mapTarget[idx]);
@@ -296,5 +298,26 @@ public final class RcChannelSettingsHelper {
                 it.setReverse(revTarget[idx]);
             }
         }
+    }
+
+    /**
+     * 不同遥控器 / SDK 版本里 {@link ChannelItem#getIndex()} 可能是 0-based（0..3），
+     * 也可能是 1-based（1..4）。若 index 字段不可用，则退回到数组前四项的位置。
+     */
+    private static int logicalJoystickIndex(ChannelItem item, int arrayPosition) {
+        if (item == null) {
+            return -1;
+        }
+        int raw = item.getIndex();
+        if (raw >= 0 && raw <= 3) {
+            return raw;
+        }
+        if (raw >= 1 && raw <= 4) {
+            return raw - 1;
+        }
+        if (arrayPosition >= 0 && arrayPosition <= 3) {
+            return arrayPosition;
+        }
+        return -1;
     }
 }
