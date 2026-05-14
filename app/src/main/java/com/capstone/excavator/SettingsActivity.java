@@ -9,9 +9,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
@@ -49,6 +51,8 @@ import java.util.concurrent.Executors;
  */
 public class SettingsActivity extends ScaledAppCompatActivity {
 
+    private static final String TAG = "SettingsActivity";
+
     public static final String EXTRA_INITIAL_PAGE = "initial_page";
     public static final int PAGE_GENERAL = 3;
 
@@ -57,6 +61,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     private static final int DIM_MODEL_COLUMNS = 3;
     private static final float DIM_MODEL_ROW_SPACE_DP = 35.5f;
+
+    /** 摇杆映射：下拉中的「清除」项；选中后输入框置空以恢复为未配置。 */
+    private static final String JOYSTICK_OPT_EMPTY = "空";
 
     private static final String PREFS_GENERAL_UI = "general_ui_prefs";
     private static final String KEY_BRIGHTNESS_PERCENT = "brightness_percent";
@@ -73,6 +80,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     private View pageDimensions;
     private View pageJoystick;
     private View pageGeneral;
+
+    /** 摇杆映射页四个轴下拉，用于互斥选项刷新；{@code null} 表示未绑定。 */
+    private AppCompatAutoCompleteTextView[] joystickAxisViews;
 
     private int currentPage = 0; // 0=IMU, 1=尺寸, 2=摇杆, 3=通用
 
@@ -222,14 +232,164 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
         ArmLengthPreferences.save(this, boomScale, stickScale);
 
+        ControllerLocalSettings.Snapshot local = ControllerLocalSettings.load(this);
+        local.videoStreamUrl = newUrl;
+
+        String abIn = local.joystickLeftAb;
+        String cdIn = local.joystickLeftCd;
+        String efIn = local.joystickRightEf;
+        String ghIn = local.joystickRightGh;
+        boolean abRev = local.joystickLeftAbReverse;
+        boolean cdRev = local.joystickLeftCdReverse;
+        boolean efRev = local.joystickRightEfReverse;
+        boolean ghRev = local.joystickRightGhReverse;
+        if (joystickAxisViews != null) {
+            abIn = joyAxisPersistedText(joystickAxisViews, 0);
+            cdIn = joyAxisPersistedText(joystickAxisViews, 1);
+            efIn = joyAxisPersistedText(joystickAxisViews, 2);
+            ghIn = joyAxisPersistedText(joystickAxisViews, 3);
+            abRev = joyAxisPersistedReverse(joystickAxisViews, 0);
+            cdRev = joyAxisPersistedReverse(joystickAxisViews, 1);
+            efRev = joyAxisPersistedReverse(joystickAxisViews, 2);
+            ghRev = joyAxisPersistedReverse(joystickAxisViews, 3);
+        }
+        String[] joyComplete = ControllerLocalSettings.ensureFullJoystickMappings(abIn, cdIn, efIn, ghIn);
+        // motion 互斥重排序后，对应槽位的 reverse 可能因为「被补齐」而变成默认 false；
+        // 这里按「补齐前哪一轴选的就是这个 motion」追踪原始 reverse，确保保存值与显示一致。
+        boolean[] inRev = new boolean[] { abRev, cdRev, efRev, ghRev };
+        String[] inLabel = new String[] { abIn, cdIn, efIn, ghIn };
+        boolean[] outRev = new boolean[4];
+        for (int i = 0; i < 4; i++) {
+            outRev[i] = false;
+            if (joyComplete[i] == null || joyComplete[i].isEmpty()) continue;
+            if (joyComplete[i].equals(inLabel[i])) {
+                outRev[i] = inRev[i];
+            } else {
+                for (int j = 0; j < 4; j++) {
+                    if (joyComplete[i].equals(inLabel[j])) {
+                        outRev[i] = inRev[j];
+                        break;
+                    }
+                }
+            }
+        }
+        local.joystickLeftAb = joyComplete[0];
+        local.joystickLeftCd = joyComplete[1];
+        local.joystickRightEf = joyComplete[2];
+        local.joystickRightGh = joyComplete[3];
+        local.joystickLeftAbReverse  = outRev[0];
+        local.joystickLeftCdReverse  = outRev[1];
+        local.joystickRightEfReverse = outRev[2];
+        local.joystickRightGhReverse = outRev[3];
+        if (joystickAxisViews != null) {
+            for (int i = 0; i < joystickAxisViews.length; i++) {
+                if (joystickAxisViews[i] != null) {
+                    joystickAxisViews[i].setText(
+                            ControllerLocalSettings.formatJoystickDisplay(joyComplete[i], outRev[i]));
+                }
+            }
+            refreshJoystickAxisAdapters(joystickAxisViews);
+        }
+
+        ControllerLocalSettings.save(this, local);
+        onJoystickMappingSaved(local);
+
         Intent resultIntent = new Intent();
         if (!newUrl.isEmpty()) resultIntent.putExtra("video_url", newUrl);
         resultIntent.putExtra("arm_boom_scale", boomScale);
         resultIntent.putExtra("arm_stick_scale", stickScale);
         setResult(RESULT_OK, resultIntent);
 
-        Toast.makeText(this, newUrl.isEmpty() ? "臂长比例已保存" : "已保存并应用", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "配置已保存到本地", Toast.LENGTH_SHORT).show();
         finish();
+    }
+
+    /**
+     * 摇杆四轴映射已成功写入 {@link ControllerLocalSettings} 后调用：
+     * 1. 打印映射便于调试；
+     * 2. 通过 {@link JoystickChannelMappingApplier} 把新映射下发到遥控器的 {@code ChannelSettings}。
+     */
+    private void onJoystickMappingSaved(ControllerLocalSettings.Snapshot local) {
+        if (local == null) return;
+        String line = String.format(Locale.US,
+                "joystick saved: AB=%s%s(%s) CD=%s%s(%s) EF=%s%s(%s) GH=%s%s(%s)",
+                local.joystickLeftAb,
+                local.joystickLeftAbReverse ? "(R)" : "(F)",
+                ControllerLocalSettings.motionLabelToKey(local.joystickLeftAb),
+                local.joystickLeftCd,
+                local.joystickLeftCdReverse ? "(R)" : "(F)",
+                ControllerLocalSettings.motionLabelToKey(local.joystickLeftCd),
+                local.joystickRightEf,
+                local.joystickRightEfReverse ? "(R)" : "(F)",
+                ControllerLocalSettings.motionLabelToKey(local.joystickRightEf),
+                local.joystickRightGh,
+                local.joystickRightGhReverse ? "(R)" : "(F)",
+                ControllerLocalSettings.motionLabelToKey(local.joystickRightGh));
+
+        Log.i(TAG, line);
+
+        // 异步下发到遥控器；使用 applicationContext 让 Toast 在 finish() 之后仍可展示。
+        final android.content.Context appCtx = getApplicationContext();
+        JoystickChannelMappingApplier.applyUserMapping(appCtx, local, e -> {
+            mainHandler.post(() -> {
+                if (e == null) {
+                    Toast.makeText(appCtx,
+                            "摇杆通道映射已下发到遥控器", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(appCtx,
+                            "摇杆通道下发失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+    }
+
+    /**
+     * 从摇杆页四个 {@link AppCompatAutoCompleteTextView} 读取当前选中的动作中文标签
+     * （与 {@link ControllerLocalSettings.Snapshot} 中存的一致）。需 {@link #joystickAxisViews} 已绑定。
+     */
+    private static String[] readJoystickMappingLabels(AppCompatAutoCompleteTextView[] axes) {
+        if (axes == null) {
+            return new String[] { "", "", "", "" };
+        }
+        return new String[] {
+                joyAxisPersistedText(axes, 0),
+                joyAxisPersistedText(axes, 1),
+                joyAxisPersistedText(axes, 2),
+                joyAxisPersistedText(axes, 3)
+        };
+    }
+
+    /**
+     * 读取四轴映射对应的稳定英文 key（{@link ControllerLocalSettings#JOYSTICK_KEY_BOOM} 等），
+     * 便于日志、Intent、后期与底层协议对齐。
+     */
+    private static String[] readJoystickMappingKeys(AppCompatAutoCompleteTextView[] axes) {
+        String[] labels = readJoystickMappingLabels(axes);
+        return new String[] {
+                ControllerLocalSettings.motionLabelToKey(labels[0]),
+                ControllerLocalSettings.motionLabelToKey(labels[1]),
+                ControllerLocalSettings.motionLabelToKey(labels[2]),
+                ControllerLocalSettings.motionLabelToKey(labels[3])
+        };
+    }
+
+    private static String joyAxisPersistedText(AppCompatAutoCompleteTextView[] axes, int index) {
+        if (axes == null || index < 0 || index >= axes.length || axes[index] == null) {
+            return "";
+        }
+        return normalizeJoystickAxisValue(axes[index].getText());
+    }
+
+    /** 从摇杆轴控件展示文本中提取「反向」标记；motion 为空时一律 false。 */
+    private static boolean joyAxisPersistedReverse(AppCompatAutoCompleteTextView[] axes, int index) {
+        if (axes == null || index < 0 || index >= axes.length || axes[index] == null) {
+            return false;
+        }
+        CharSequence cs = axes[index].getText();
+        if (cs == null) return false;
+        String s = cs.toString().trim();
+        if (s.isEmpty() || JOYSTICK_OPT_EMPTY.equals(s)) return false;
+        return ControllerLocalSettings.parseJoystickReverse(s);
     }
 
     // ── IMU page ─────────────────────────────────────────────────────────────
@@ -556,31 +716,106 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     // ── Joystick page ───────────────────────────────────────────────────────
 
     private void bindJoystickPage() {
-        if (pageJoystick == null) return;
+        if (pageJoystick == null) {
+            joystickAxisViews = null;
+            return;
+        }
 
         AppCompatAutoCompleteTextView leftAB = pageJoystick.findViewById(R.id.spJoyLeftAB);
         AppCompatAutoCompleteTextView leftCD = pageJoystick.findViewById(R.id.spJoyLeftCD);
         AppCompatAutoCompleteTextView rightEF = pageJoystick.findViewById(R.id.spJoyRightEF);
         AppCompatAutoCompleteTextView rightGH = pageJoystick.findViewById(R.id.spJoyRightGH);
 
-        String[] options = new String[] { "大臂", "小臂", "铲斗", "回旋" };
-        bindJoystickDropdown(leftAB, options);
-        bindJoystickDropdown(leftCD, options);
-        bindJoystickDropdown(rightEF, options);
-        bindJoystickDropdown(rightGH, options);
+        joystickAxisViews = new AppCompatAutoCompleteTextView[] {
+                leftAB, leftCD, rightEF, rightGH
+        };
+
+        for (AppCompatAutoCompleteTextView tv : joystickAxisViews) {
+            applyJoystickDropdownChrome(tv);
+        }
+
+        ControllerLocalSettings.Snapshot local = ControllerLocalSettings.load(this);
+        String[] fixed = ControllerLocalSettings.sanitizeJoystickMappings(
+                local.joystickLeftAb, local.joystickLeftCd,
+                local.joystickRightEf, local.joystickRightGh);
+        boolean[] fixedRev = new boolean[] {
+                local.joystickLeftAbReverse,
+                local.joystickLeftCdReverse,
+                local.joystickRightEfReverse,
+                local.joystickRightGhReverse
+        };
+        for (int i = 0; i < joystickAxisViews.length; i++) {
+            if (joystickAxisViews[i] == null) continue;
+            joystickAxisViews[i].setText(
+                    ControllerLocalSettings.formatJoystickDisplay(fixed[i], fixedRev[i]));
+        }
+
+        for (int i = 0; i < joystickAxisViews.length; i++) {
+            AppCompatAutoCompleteTextView tv = joystickAxisViews[i];
+            if (tv == null) continue;
+            final AppCompatAutoCompleteTextView boundTv = tv;
+            tv.setOnItemClickListener((parent, view, position, id) -> {
+                String picked = (String) parent.getItemAtPosition(position);
+                if (JOYSTICK_OPT_EMPTY.equals(picked)) {
+                    boundTv.setText("");
+                } else {
+                    boundTv.setText(picked);
+                }
+                refreshJoystickAxisAdapters(joystickAxisViews);
+            });
+        }
+
+        refreshJoystickAxisAdapters(joystickAxisViews);
     }
 
-    private void bindJoystickDropdown(AppCompatAutoCompleteTextView tv, String[] options) {
-        if (tv == null) return;
+    /**
+     * 把控件里展示的「大臂（正向）」/ 「大臂」/「空」/空串统一成「持久化用的 motion 标签」（不带方向）。
+     * 空串与 {@link #JOYSTICK_OPT_EMPTY} 都视为未选。
+     */
+    private static String normalizeJoystickAxisValue(CharSequence cs) {
+        if (cs == null) return "";
+        String s = cs.toString().trim();
+        if (s.isEmpty() || JOYSTICK_OPT_EMPTY.equals(s)) return "";
+        return ControllerLocalSettings.parseJoystickMotionLabel(s);
+    }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+    /**
+     * 摇杆轴下拉选项：{@code 空 + (motion × 2 方向)}。互斥按 motion 去重——同一个动作的正向 / 反向
+     * 视为一组，被其它轴占用后两个方向都从本轴下拉中隐藏；本轴自身已选的那一组保留 2 个方向项供切换。
+     */
+    private List<String> buildJoystickAxisDropdownItems(AppCompatAutoCompleteTextView[] axes,
+                                                        int selfIndex) {
+        List<String> items = new ArrayList<>();
+        items.add(JOYSTICK_OPT_EMPTY);
+        if (axes[selfIndex] == null) return items;
+
+        String selfMotion = normalizeJoystickAxisValue(axes[selfIndex].getText());
+        for (String motion : ControllerLocalSettings.JOYSTICK_MOTION_LABELS) {
+            boolean takenElsewhere = false;
+            for (int j = 0; j < axes.length; j++) {
+                if (j == selfIndex || axes[j] == null) continue;
+                if (motion.equals(normalizeJoystickAxisValue(axes[j].getText()))) {
+                    takenElsewhere = true;
+                    break;
+                }
+            }
+            if (!takenElsewhere || motion.equals(selfMotion)) {
+                items.add(ControllerLocalSettings.formatJoystickDisplay(motion, false));
+                items.add(ControllerLocalSettings.formatJoystickDisplay(motion, true));
+            }
+        }
+        return items;
+    }
+
+    private ArrayAdapter<String> newJoystickDropdownAdapter(List<String> items) {
+        return new ArrayAdapter<String>(
                 this,
                 R.layout.dropdown_item_with_divider,
                 R.id.tvDropdownText,
-                options
+                items
         ) {
             @Override
-            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+            public View getView(int position, View convertView, ViewGroup parent) {
                 View row = super.getView(position, convertView, parent);
                 View divider = row.findViewById(R.id.vDivider);
                 if (divider != null) {
@@ -589,7 +824,19 @@ public class SettingsActivity extends ScaledAppCompatActivity {
                 return row;
             }
         };
-        tv.setAdapter(adapter);
+    }
+
+    private void refreshJoystickAxisAdapters(AppCompatAutoCompleteTextView[] axes) {
+        if (axes == null) return;
+        for (int i = 0; i < axes.length; i++) {
+            if (axes[i] == null) continue;
+            List<String> items = buildJoystickAxisDropdownItems(axes, i);
+            axes[i].setAdapter(newJoystickDropdownAdapter(items));
+        }
+    }
+
+    private void applyJoystickDropdownChrome(AppCompatAutoCompleteTextView tv) {
+        if (tv == null) return;
 
         // 下拉弹窗背景（更像卡片）
         tv.setDropDownBackgroundResource(R.drawable.card_light_bg);
@@ -608,9 +855,15 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         // 更像「选择器」：不可编辑，点击即弹出
         tv.setKeyListener(null);
         tv.setCursorVisible(false);
-        tv.setOnClickListener(v -> tv.showDropDown());
+        tv.setOnClickListener(v -> {
+            refreshJoystickAxisAdapters(joystickAxisViews);
+            tv.showDropDown();
+        });
         tv.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) tv.showDropDown();
+            if (hasFocus) {
+                refreshJoystickAxisAdapters(joystickAxisViews);
+                tv.showDropDown();
+            }
         });
     }
 
@@ -671,9 +924,16 @@ public class SettingsActivity extends ScaledAppCompatActivity {
             });
         }
 
-        String currentUrl = getIntent().getStringExtra("current_url");
-        if (currentUrl != null && !currentUrl.isEmpty() && etSettingsVideoUrl != null) {
-            etSettingsVideoUrl.setText(currentUrl);
+        if (etSettingsVideoUrl != null) {
+            ControllerLocalSettings.Snapshot local = ControllerLocalSettings.load(this);
+            if (!local.videoStreamUrl.isEmpty()) {
+                etSettingsVideoUrl.setText(local.videoStreamUrl);
+            } else {
+                String currentUrl = getIntent().getStringExtra("current_url");
+                if (currentUrl != null && !currentUrl.isEmpty()) {
+                    etSettingsVideoUrl.setText(currentUrl);
+                }
+            }
         }
 
         float boom  = ArmLengthPreferences.getBoomScale(this);

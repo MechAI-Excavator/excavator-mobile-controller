@@ -1,0 +1,135 @@
+package com.capstone.excavator;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.skydroid.rcsdk.common.callback.CompletionCallback;
+import com.skydroid.rcsdk.common.error.SkyException;
+
+import java.util.Arrays;
+import java.util.Locale;
+
+/**
+ * 把 {@link ControllerLocalSettings} 中保存的「摇杆轴(AB/CD/EF/GH) → 挖机动作(大臂/小臂/铲斗/回旋)」
+ * 映射，通过 {@link RcChannelSettingsHelper} 下发到云卓控制器的 {@code ChannelSettings.mapping}。
+ *
+ * <p>整体思路：「按动作交换 mapping 整型」。我们不预先知道控制器各动作具体对应的 mapping 整数，
+ * 而是首次读 {@code ChannelSettings} 时按用户陈述的默认布局（ch1=铲斗, ch2=大臂, ch3=小臂, ch4=回旋）
+ * 把当时 channels[0..3] 的 mapping 整数快照为各动作的基准码（参见 {@link JoystickMappingChannelCodes}）。
+ * 之后任何一次设置页保存，都按用户选择把对应基准码写到对应 channel index 即可。
+ *
+ * <p>基准前提：首次成功捕获时，控制器仍为默认布局；这与 {@code SettingsActivity} 默认下拉一致。
+ * 后续如需「重新校准」，可清除 {@link JoystickMappingChannelCodes} 后重连。
+ */
+public final class JoystickChannelMappingApplier {
+
+    private static final String TAG = "JoyMappingApplier";
+
+    /** 在 {@code KeyChannels} 数组中的物理槽位下标，与 {@link RcChannelSettingsHelper} 常量保持一致。 */
+    private static final int CH_IDX_GH = RcChannelSettingsHelper.KEY_CH_RIGHT_LR; // 0
+    private static final int CH_IDX_EF = RcChannelSettingsHelper.KEY_CH_RIGHT_UD; // 1
+    private static final int CH_IDX_AB = RcChannelSettingsHelper.KEY_CH_LEFT_UD;  // 2
+    private static final int CH_IDX_CD = RcChannelSettingsHelper.KEY_CH_LEFT_LR;  // 3
+
+    private JoystickChannelMappingApplier() {}
+
+    /**
+     * 首次连接遥控器后调用：若本地尚无基准码，则读一次 {@code ChannelSettings} 并按
+     * 默认布局快照。已快照过则什么都不做。
+     */
+    public static void captureBaselineIfNeeded(Context context) {
+        if (context == null) return;
+        if (JoystickMappingChannelCodes.hasBaseline(context)) {
+            return;
+        }
+        RcChannelSettingsHelper.readJoystickMappingByIndex(context,
+                new RcChannelSettingsHelper.MappingReadCallback() {
+                    @Override
+                    public void onSuccess(int[] mappingByIndex) {
+                        if (mappingByIndex == null || mappingByIndex.length < 4) {
+                            Log.w(TAG, "baseline capture skipped: mappingByIndex too short");
+                            return;
+                        }
+                        for (int i = 0; i < 4; i++) {
+                            if (mappingByIndex[i] < 0) {
+                                Log.w(TAG, "baseline capture skipped: missing channel index " + i);
+                                return;
+                            }
+                        }
+                        JoystickMappingChannelCodes.Baseline base =
+                                new JoystickMappingChannelCodes.Baseline(
+                                        mappingByIndex[CH_IDX_GH], // 铲斗
+                                        mappingByIndex[CH_IDX_EF], // 大臂
+                                        mappingByIndex[CH_IDX_AB], // 小臂
+                                        mappingByIndex[CH_IDX_CD]  // 回旋
+                                );
+                        JoystickMappingChannelCodes.saveBaseline(context, base);
+                        Log.i(TAG, String.format(Locale.US,
+                                "baseline captured: bucket=%d boom=%d stick=%d swing=%d",
+                                base.bucketCode, base.boomCode, base.stickCode, base.swingCode));
+                    }
+
+                    @Override
+                    public void onFailure(SkyException e) {
+                        Log.w(TAG, "baseline capture failed: " + (e != null ? e.getMessage() : "?"));
+                    }
+                });
+    }
+
+    /**
+     * 把 {@code local} 中持久化的 AB/CD/EF/GH→动作映射下发到遥控器。
+     *
+     * <p>当基准码尚未捕获时（首次未连接遥控器 / 读取失败），跳过下发并记录 warn 日志；
+     * 应由调用方在适当时机再次触发或提示用户重连。
+     */
+    public static void applyUserMapping(Context context,
+                                        ControllerLocalSettings.Snapshot local,
+                                        CompletionCallback done) {
+        if (context == null || local == null) {
+            if (done != null) done.onResult(new SkyException(-1, "null context / snapshot"));
+            return;
+        }
+        if (!JoystickMappingChannelCodes.hasBaseline(context)) {
+            Log.w(TAG, "skip apply: baseline not captured yet (RC not connected?)");
+            if (done != null) done.onResult(new SkyException(-1, "baseline missing"));
+            return;
+        }
+        JoystickMappingChannelCodes.Baseline base = JoystickMappingChannelCodes.load(context);
+
+        int[] target = new int[4];
+        Arrays.fill(target, -1);
+        target[CH_IDX_AB] = base.codeFor(ControllerLocalSettings.motionLabelToKey(local.joystickLeftAb));
+        target[CH_IDX_CD] = base.codeFor(ControllerLocalSettings.motionLabelToKey(local.joystickLeftCd));
+        target[CH_IDX_EF] = base.codeFor(ControllerLocalSettings.motionLabelToKey(local.joystickRightEf));
+        target[CH_IDX_GH] = base.codeFor(ControllerLocalSettings.motionLabelToKey(local.joystickRightGh));
+
+        for (int i = 0; i < 4; i++) {
+            if (target[i] < 0) {
+                Log.w(TAG, "skip apply: unresolved code at channel index " + i
+                        + " (AB=" + local.joystickLeftAb + " CD=" + local.joystickLeftCd
+                        + " EF=" + local.joystickRightEf + " GH=" + local.joystickRightGh + ")");
+                if (done != null) done.onResult(new SkyException(-1, "unresolved mapping code"));
+                return;
+            }
+        }
+
+        Boolean[] reverse = new Boolean[4];
+        reverse[CH_IDX_AB] = local.joystickLeftAbReverse;
+        reverse[CH_IDX_CD] = local.joystickLeftCdReverse;
+        reverse[CH_IDX_EF] = local.joystickRightEfReverse;
+        reverse[CH_IDX_GH] = local.joystickRightGhReverse;
+
+        Log.i(TAG, String.format(Locale.US,
+                "applying mappingByIndex=[GH=%d, EF=%d, AB=%d, CD=%d] reverseByIndex=[GH=%b, EF=%b, AB=%b, CD=%b]",
+                target[CH_IDX_GH], target[CH_IDX_EF], target[CH_IDX_AB], target[CH_IDX_CD],
+                reverse[CH_IDX_GH], reverse[CH_IDX_EF], reverse[CH_IDX_AB], reverse[CH_IDX_CD]));
+        RcChannelSettingsHelper.setJoystickMappingAndReverseByIndex(context, target, reverse, e -> {
+            if (e == null) {
+                Log.i(TAG, "apply success");
+            } else {
+                Log.e(TAG, "apply failed: " + e.getMessage());
+            }
+            if (done != null) done.onResult(e);
+        });
+    }
+}

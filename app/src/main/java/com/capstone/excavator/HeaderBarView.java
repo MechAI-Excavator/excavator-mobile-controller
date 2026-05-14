@@ -37,7 +37,7 @@ public class HeaderBarView extends LinearLayout {
     private View connectionDot;
     private View rtkStatusDot;
     private View imuStatusDot;
-    private TextView btnEmergencyStop;
+    // private TextView btnEmergencyStop;
     private Runnable onEmergencyStopListener;
 
     private static final int ONLINE_COLOR = 0xAD059669;
@@ -74,12 +74,12 @@ public class HeaderBarView extends LinearLayout {
         tvImuStatus        = findViewById(R.id.tvImuStatus);
         rtkStatusDot       = findViewById(R.id.rtkStatusDot);
         imuStatusDot       = findViewById(R.id.imuStatusDot);
-        btnEmergencyStop   = findViewById(R.id.btnEmergencyStop);
-        if (btnEmergencyStop != null) {
-            btnEmergencyStop.setOnClickListener(v -> {
-                if (onEmergencyStopListener != null) onEmergencyStopListener.run();
-            });
-        }
+        // btnEmergencyStop   = findViewById(R.id.btnEmergencyStop);
+        // if (btnEmergencyStop != null) {
+        //     btnEmergencyStop.setOnClickListener(v -> {
+        //         if (onEmergencyStopListener != null) onEmergencyStopListener.run();
+        //     });
+        // }
         setRtkOnline(false);
         setImuStatus(0, 4);
     }

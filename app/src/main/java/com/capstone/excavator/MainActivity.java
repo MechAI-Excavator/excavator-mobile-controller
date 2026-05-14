@@ -201,8 +201,9 @@ public class MainActivity extends ScaledAppCompatActivity {
     private KeyListener<Integer> keySignalQualityListener;
     private int currentSignalStrength = 0; // 当前信号强度（0-100）
     
-    // 视频流地址
-    private String currentVideoUrl = "rtsp://192.168.144.25:8554/main.264";
+    // 视频流地址（默认；持久化见 {@link ControllerLocalSettings}）
+    private static final String DEFAULT_VIDEO_URL = "rtsp://192.168.144.25:8554/main.264";
+    private String currentVideoUrl = DEFAULT_VIDEO_URL;
     private static final int REQUEST_SETTINGS = 1001;
     
     // 角度数据类
@@ -865,6 +866,11 @@ public class MainActivity extends ScaledAppCompatActivity {
     private void initVideoPlayer() {
         if (fpvWidget == null) return;
 
+        ControllerLocalSettings.Snapshot snap = ControllerLocalSettings.load(this);
+        if (snap.videoStreamUrl != null && !snap.videoStreamUrl.isEmpty()) {
+            currentVideoUrl = snap.videoStreamUrl;
+        }
+
         fpvWidget.setUsingMediaCodec(true);
         fpvWidget.setUrl(currentVideoUrl);
         fpvWidget.setPlayerType(PlayerType.ONLY_SKY);
@@ -954,7 +960,8 @@ public class MainActivity extends ScaledAppCompatActivity {
                 // 记录并设置新地址
                 currentVideoUrl = url;
                 fpvWidget.setUrl(url);
-                
+                ControllerLocalSettings.saveVideoStreamUrl(MainActivity.this, url);
+
                 // 重新开始播放
                 fpvWidget.start();
                 
@@ -1199,6 +1206,13 @@ public class MainActivity extends ScaledAppCompatActivity {
                 });
                 // 遥控器连接成功后，创建UDP管道
                 createUDPPipeline();
+                // 调试：拉取并打印 KeyChannelSettings / g20 通道表（mapping、行程、反向等），便于对照实机整理 mapping 整型
+                RcChannelSettingsHelper.logChannelSettingsAfterDelay(MainActivity.this, 1500);
+                // 首次连接控制器时按默认布局（ch1=铲斗, ch2=大臂, ch3=小臂, ch4=回旋）快照 mapping
+                // 基准码；之后摇杆映射设置改动即可通过 JoystickChannelMappingApplier 下发。
+                new Handler(Looper.getMainLooper()).postDelayed(
+                        () -> JoystickChannelMappingApplier.captureBaselineIfNeeded(MainActivity.this),
+                        1800);
             }
             
             @Override
@@ -1486,11 +1500,12 @@ public class MainActivity extends ScaledAppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK && data != null) {
-            String newUrl = data.getStringExtra("video_url");
-            if (newUrl != null && !newUrl.isEmpty()) {
-                updateVideoUrl(newUrl);
-            }
+        if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
+            ControllerLocalSettings.Snapshot snap = ControllerLocalSettings.load(this);
+            String resolved = (snap.videoStreamUrl != null && !snap.videoStreamUrl.isEmpty())
+                    ? snap.videoStreamUrl
+                    : DEFAULT_VIDEO_URL;
+            updateVideoUrl(resolved);
             applyStoredArmLengthScalesToWebView();
             // Re-load IMU config from SharedPreferences whenever settings are saved
             initImuAngleConfig();
