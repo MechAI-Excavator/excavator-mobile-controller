@@ -112,6 +112,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     @Nullable
     private DimensionModelCardAdapter dimensionModelCardAdapter;
 
+    /** 尺寸页「自定义」子 Tab：0 机械臂长度 / 1 连杆参数 / 2 铲斗参数 / 3 驾驶舱相对比例 */
+    private int dimensionCustomSubTabIndex;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -463,6 +466,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
         TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
         TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
+        TextView tvDimBucketLength = pageDimensions.findViewById(R.id.tvDimBucketLength);
 
         bindDimensionModelCardsRecycler();
 
@@ -486,6 +490,25 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         bindDimensionNumpad(tvDimChassisH, "chassisM");
         bindDimensionNumpad(tvDimTrackW, "trackM");
         bindDimensionNumpad(tvDimCabinH, "cabinM");
+        bindBucketLengthMetersFromImuMmNumpad(tvDimBucketLength);
+
+        View tabDimCustomArm = pageDimensions.findViewById(R.id.tabDimCustomArm);
+        View tabDimCustomLink = pageDimensions.findViewById(R.id.tabDimCustomLink);
+        View tabDimCustomBucket = pageDimensions.findViewById(R.id.tabDimCustomBucket);
+        View tabDimCustomCabin = pageDimensions.findViewById(R.id.tabDimCustomCabin);
+        if (tabDimCustomArm != null) {
+            tabDimCustomArm.setOnClickListener(v -> applyDimensionCustomSubTab(0));
+        }
+        if (tabDimCustomLink != null) {
+            tabDimCustomLink.setOnClickListener(v -> applyDimensionCustomSubTab(1));
+        }
+        if (tabDimCustomBucket != null) {
+            tabDimCustomBucket.setOnClickListener(v -> applyDimensionCustomSubTab(2));
+        }
+        if (tabDimCustomCabin != null) {
+            tabDimCustomCabin.setOnClickListener(v -> applyDimensionCustomSubTab(3));
+        }
+        dimensionCustomSubTabIndex = 0;
 
         DimensionPreferences.Params p = DimensionPreferences.load(this);
         refreshDimensionModelSelectionUi(p.selectedModel);
@@ -517,6 +540,66 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         tabCustom.setTextColor(selectModel ? inactiveText : active);
         tabCustom.setTypeface(null, selectModel ? android.graphics.Typeface.NORMAL : android.graphics.Typeface.BOLD);
         underlineCustom.setBackgroundColor(selectModel ? inactiveLine : active);
+
+        if (!selectModel && pageDimensions != null) {
+            applyDimensionCustomSubTab(dimensionCustomSubTabIndex);
+        }
+    }
+
+    /**
+     * 「自定义尺寸」内胶囊 Tab：切换左侧卡片页 + 右侧示意图；与 {@link #dimensionCustomSubTabIndex} 同步。
+     */
+    private void applyDimensionCustomSubTab(int index) {
+        if (pageDimensions == null) {
+            return;
+        }
+        if (index < 0 || index > 3) {
+            index = 0;
+        }
+        dimensionCustomSubTabIndex = index;
+
+        int[] pageIds = {
+                R.id.dimCustomPageArm,
+                R.id.dimCustomPageLink,
+                R.id.dimCustomPageBucket,
+                R.id.dimCustomPageCabin
+        };
+        int[] previewIds = {
+                R.id.ivDimPreviewArm,
+                R.id.ivDimPreviewLink,
+                R.id.ivDimPreviewBucket,
+                R.id.ivDimPreviewCabin
+        };
+        for (int i = 0; i < 4; i++) {
+            View page = pageDimensions.findViewById(pageIds[i]);
+            if (page != null) {
+                page.setVisibility(i == index ? View.VISIBLE : View.GONE);
+            }
+            View img = pageDimensions.findViewById(previewIds[i]);
+            if (img != null) {
+                img.setVisibility(i == index ? View.VISIBLE : View.GONE);
+            }
+        }
+
+        TextView tabArm = pageDimensions.findViewById(R.id.tabDimCustomArm);
+        TextView tabLink = pageDimensions.findViewById(R.id.tabDimCustomLink);
+        TextView tabBucket = pageDimensions.findViewById(R.id.tabDimCustomBucket);
+        TextView tabCabin = pageDimensions.findViewById(R.id.tabDimCustomCabin);
+        TextView[] tabs = { tabArm, tabLink, tabBucket, tabCabin };
+        final int activeColor = 0xFF2563EB;
+        final int inactiveColor = 0xFF6B7280;
+        for (int i = 0; i < tabs.length; i++) {
+            TextView t = tabs[i];
+            if (t == null) {
+                continue;
+            }
+            boolean sel = (i == index);
+            t.setBackgroundResource(sel
+                    ? R.drawable.bg_dim_pill_tab_selected
+                    : R.drawable.bg_dim_pill_tab_unselected);
+            t.setTextColor(sel ? activeColor : inactiveColor);
+            t.setTypeface(null, sel ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
     }
 
     private void refreshDimensionModelSelectionUi(String selectedModel) {
@@ -554,6 +637,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     }
 
     private void refreshDimensionValueLabels() {
+        if (pageDimensions == null) {
+            return;
+        }
         DimensionPreferences.Params p = DimensionPreferences.load(this);
         TextView tvDimLb = pageDimensions.findViewById(R.id.tvDimLb);
         TextView tvDimLs = pageDimensions.findViewById(R.id.tvDimLs);
@@ -565,6 +651,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
         TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
         TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
+        TextView tvDimBucketLength = pageDimensions.findViewById(R.id.tvDimBucketLength);
 
         if (tvDimLb != null) tvDimLb.setText(String.format(Locale.US, "%.2f", p.boomM));
         if (tvDimLs != null) tvDimLs.setText(String.format(Locale.US, "%.2f", p.stickM));
@@ -576,6 +663,37 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         if (tvDimChassisH != null) tvDimChassisH.setText(String.format(Locale.US, "%.2f", p.chassisHeightM));
         if (tvDimTrackW != null) tvDimTrackW.setText(String.format(Locale.US, "%.2f", p.trackWidthM));
         if (tvDimCabinH != null) tvDimCabinH.setText(String.format(Locale.US, "%.2f", p.cabinHeightM));
+
+        if (tvDimBucketLength != null) {
+            ImuPreferences.Params imu = ImuPreferences.load(this);
+            tvDimBucketLength.setText(String.format(Locale.US, "%.2f", imu.bucketLength / 1000.0));
+        }
+    }
+
+    /**
+     * 铲斗长度存于 {@link ImuPreferences}（毫米）；尺寸页以米展示与编辑，与 IMU 高级对话框一致。
+     */
+    private void bindBucketLengthMetersFromImuMmNumpad(TextView tv) {
+        if (tv == null) {
+            return;
+        }
+        tv.setClickable(true);
+        tv.setFocusable(true);
+        tv.setOnClickListener(v -> {
+            ImuPreferences.Params current = ImuPreferences.load(this);
+            double initialM = current.bucketLength / 1000.0;
+            NumpadView numpad = new NumpadView(this);
+            numpad.setValue(String.format(Locale.US, "%.2f", initialM));
+            numpad.setOnConfirmListener(value -> {
+                double parsedM = ImuPreferences.parseOrDefault(value, initialM);
+                ImuPreferences.Params p = ImuPreferences.load(this);
+                p.bucketLength = parsedM * 1000.0;
+                ImuPreferences.save(this, p);
+                refreshDimensionValueLabels();
+            });
+            numpad.showForAtScreen(tv, tv,
+                    NumpadPositionConfig.SCREEN_X, NumpadPositionConfig.SCREEN_Y);
+        });
     }
 
     /**

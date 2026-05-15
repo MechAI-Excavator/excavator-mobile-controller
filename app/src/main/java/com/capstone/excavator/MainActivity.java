@@ -179,9 +179,9 @@ public class MainActivity extends ScaledAppCompatActivity {
     private Runnable udpTimeoutRunnable;
     private static final long UDP_TIMEOUT_MS = 5000; // 5秒没收到数据就切换回模拟数据
 
-    private static final int IMU_TOTAL_COUNT = 4;
-
     private long lastDataReceiveTime = 0;
+    /** 最近一次成功解析的 {@code 0xFA} IMU 帧，供 {@code 0x51}/{@code 0x50} 到达后重算顶栏 IMU 颜色 */
+    private IMUDataParser.ParsedData lastUdpImuParsedSnapshot;
     // 心跳 RTT 测量相关
     private Handler heartbeatHandler;
     private Runnable heartbeatRunnable;
@@ -1045,9 +1045,10 @@ public class MainActivity extends ScaledAppCompatActivity {
     private void setSensorStatusesOffline() {
         RtkState.clear();
         ImuStatusState.clear();
+        lastUdpImuParsedSnapshot = null;
         if (headerBar != null) {
             headerBar.setRtkOnline(false);
-            headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT);
+            headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT, false);
         }
     }
 
@@ -1055,12 +1056,53 @@ public class MainActivity extends ScaledAppCompatActivity {
         if (parsed == null) {
             return;
         }
+        lastUdpImuParsedSnapshot = parsed;
         ImuStatusState.setOnlineCount(countOnlineImus(parsed));
         if (headerBar == null) {
             return;
         }
-        headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT);
+        boolean imuHealthyGreen = imuHeaderShowsHealthyGreen(parsed);
+        headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT, imuHealthyGreen);
         headerBar.setRtkOnline(isValidRtk(parsed.rtkLat, parsed.rtkLon));
+    }
+
+    /**
+     * 顶栏 IMU 绿色：需角度通道满；且若 TCU {@code 0x50}/{@code 0x51} 位图 IMU(bit6)=0 则绝不绿；
+     * 位图未知时，若五路角全为 0 视为「无 IMU 占位」不绿（与现场约定一致）。
+     */
+    private boolean imuHeaderShowsHealthyGreen(IMUDataParser.ParsedData p) {
+        int oc = countOnlineImus(p);
+        if (oc != ImuStatusState.TOTAL_COUNT) {
+            return false;
+        }
+        if (ImuStatusState.tcuDeniesImuHealthyGreen()) {
+            return false;
+        }
+        if (ImuStatusState.tcuAssertsImuHealthyGreen()) {
+            return true;
+        }
+        return !isAllImuAnglesEffectivelyZero(p);
+    }
+
+    private static boolean isAllImuAnglesEffectivelyZero(IMUDataParser.ParsedData p) {
+        final float eps = 1e-4f;
+        return Math.abs(p.boomAngle) < eps
+                && Math.abs(p.stickAngle) < eps
+                && Math.abs(p.bucketAngle) < eps
+                && Math.abs(p.cabinPitchAngle) < eps
+                && Math.abs(p.cabinRollAngle) < eps;
+    }
+
+    private void refreshHeaderImuFromTcuLinkState() {
+        if (headerBar == null) {
+            return;
+        }
+        IMUDataParser.ParsedData p = lastUdpImuParsedSnapshot;
+        boolean imuHealthyGreen = p != null && imuHeaderShowsHealthyGreen(p);
+        headerBar.setImuStatus(ImuStatusState.getOnlineCount(), ImuStatusState.TOTAL_COUNT, imuHealthyGreen);
+        if (p != null) {
+            headerBar.setRtkOnline(isValidRtk(p.rtkLat, p.rtkLon));
+        }
     }
 
     private int countOnlineImus(IMUDataParser.ParsedData parsed) {
@@ -1409,9 +1451,14 @@ public class MainActivity extends ScaledAppCompatActivity {
                 
                 @Override
                 public void onReadData(byte[] data) {
-                    // 接收到的UDP数据（33字节）
                     if (data != null) {
                         Log.d("UDP", "收到数据，长度: " + data.length);
+
+                        // TCU 业务帧 0x55 0xAA（如 0x51 心跳 LinkBitmap、0x50 InitBitmap）——与 33 字节实时流分离
+                        if (TcuBusinessFrameParser.tryConsumeAndUpdateImuLink(data)) {
+                            runOnUiThread(MainActivity.this::refreshHeaderImuFromTcuLinkState);
+                            return;
+                        }
 
                         // 优先判断是否为心跳回包（header = 0xFB 0xFB）
                         if (data.length == 33
@@ -1483,7 +1530,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                                 }
                             });
                         } else {
-                            Log.w("UDP", "数据长度不正确，期望33字节，实际: " + data.length);
+                            Log.w("UDP", "非业务帧且长度不是 33 字节: " + data.length);
                         }
                     }
                 }

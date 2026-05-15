@@ -100,7 +100,7 @@ public class HeaderBarView extends LinearLayout {
         //     });
         // }
         setRtkOnline(false);
-        setImuStatus(0, 4);
+        setImuStatus(0, 4, false);
         setLinkLatencyMs(-1);
     }
 
@@ -156,15 +156,24 @@ public class HeaderBarView extends LinearLayout {
         }
     }
 
-    public void setImuStatus(int onlineCount, int totalCount) {
+    /**
+     * @param healthyGreen 是否按「TCU 位图 + 角度通道全好」显示绿色；为 {@code false} 时用离线色（灰/红）。
+     */
+    public void setImuStatus(int onlineCount, int totalCount, boolean healthyGreen) {
         int safeTotal = Math.max(0, totalCount);
         int safeOnline = Math.max(0, Math.min(onlineCount, safeTotal));
-        int color = safeOnline == safeTotal && safeTotal > 0 ? ONLINE_COLOR : OFFLINE_COLOR;
+        boolean showGreen = healthyGreen && safeOnline == safeTotal && safeTotal > 0;
+        int color = showGreen ? ONLINE_COLOR : OFFLINE_COLOR;
         if (tvImuStatus != null) {
             tvImuStatus.setText("IMU " + safeOnline + "/" + safeTotal);
             tvImuStatus.setTextColor(color);
         }
         setDotColor(imuStatusDot, color);
+    }
+
+    /** 兼容旧调用：默认仍允许在「全通道在线」时画绿色（未传 TCU 位图时使用）。 */
+    public void setImuStatus(int onlineCount, int totalCount) {
+        setImuStatus(onlineCount, totalCount, true);
     }
 
     private void applyBatteryIntent(Intent intent) {

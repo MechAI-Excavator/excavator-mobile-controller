@@ -146,18 +146,18 @@ public class LevelPrecheckActivity extends ScaledAppCompatActivity {
 
     private void applyImuStatus() {
         int onlineCount = ImuStatusState.getOnlineCount();
-        boolean allOnline = ImuStatusState.isAllOnline();
-        int color = allOnline ? Color.parseColor("#FF22C55E") : Color.parseColor("#FFFF6B6B");
+        boolean dataOk = ImuStatusState.isImuDataGoodForPrecheckUi();
+        int color = dataOk ? Color.parseColor("#FF22C55E") : Color.parseColor("#FFFF6B6B");
         if (iconPrecheckImu != null) {
-            iconPrecheckImu.setBackgroundResource(allOnline ? R.drawable.check_green_bg : R.drawable.check_red_bg);
-            iconPrecheckImu.setText(allOnline ? "✓" : "!");
+            iconPrecheckImu.setBackgroundResource(dataOk ? R.drawable.check_green_bg : R.drawable.check_red_bg);
+            iconPrecheckImu.setText(dataOk ? "✓" : "!");
         }
         if (tvPrecheckImuStatus != null) {
-            tvPrecheckImuStatus.setText(allOnline ? "数据正常" : "IMU " + onlineCount + "/" + ImuStatusState.TOTAL_COUNT);
+            tvPrecheckImuStatus.setText(dataOk ? "数据正常" : "IMU " + onlineCount + "/" + ImuStatusState.TOTAL_COUNT);
             tvPrecheckImuStatus.setTextColor(color);
         }
         if (tvPrecheckImuDesc != null) {
-            tvPrecheckImuDesc.setText(allOnline
+            tvPrecheckImuDesc.setText(dataOk
                     ? "IMU 数据已识别，数据正常"
                     : "IMU 数据不完整，请检查传感器状态");
         }
