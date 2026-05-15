@@ -12,7 +12,6 @@
             timer = setTimeout(() => {
                 const findCopyright = document.body.querySelector('.tdt-bottom');
                 if (findCopyright) {
-                   console.log('findCopyright', findCopyright);
                    findCopyright.style.opacity = '0';
                    clearTimeout(timer);
                 }
@@ -27,7 +26,7 @@
             clearTimeout(timer);
         });
     </script>
-    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=5374efdf7216f82394d5c814436b1fa0"></script>
+    <script type="text/javascript" src="https://api.tianditu.gov.cn/api?v=4.0&tk=5374efdf7216f82394d5c814436b1fa0" onerror="console.error('Tianditu api script failed to load')"></script>
     <style type="text/css">body,html{width:100%;height:100%;margin:0;font-family:"Microsoft YaHei";background:transparent}#mapDiv{width:100%;height:100%;min-height:120px;border-radius:10px;overflow:hidden}input,b,p{margin-left:5px;font-size:14px}</style>
     <script>
         var map;
@@ -100,7 +99,20 @@
                 return true;
             }
         }
+        var MAP_INIT_ATTEMPTS = 0;
+        var MAP_INIT_MAX = 120; // ~6s @ 50ms，等外链天地图脚本注入全局 T
         function onLoad() {
+            if (typeof T === 'undefined') {
+                if (MAP_INIT_ATTEMPTS++ < MAP_INIT_MAX) {
+                    setTimeout(onLoad, 50);
+                } else {
+                    console.error('Tianditu API (T) not available: script blocked, offline, or load order issue');
+                }
+                return;
+            }
+            if (map) {
+                return;
+            }
             map = new T.Map('mapDiv', {
                 projection: 'EPSG:4326'
             });
@@ -162,6 +174,67 @@
     </script>
 </head>
 <body onLoad="onLoad()">
+<style>
+    /*
+     * 让整个 WebView 真正「贴在」外层 Android BlurView (rightPanelBlur,
+     * 0x4D808080 frost) 上：
+     *
+     * 1) html / body / mapDiv / 天地图运行时插入的所有 pane 容器全部 background: transparent，
+     *    任何 opaque 容器都会把 BlurView 挡死。
+     * 2) 瓦片本质是不透明 JPEG，CSS 没法把「黑像素」单独转成 alpha=0；
+     *    只能用 invert(1) 把 setStyle('black') 的深底翻成浅底，再用统一 opacity
+     *    让外层毛玻璃灰 frost 透上来约 45%，视觉上接近「半透明地图贴在毛玻璃上」。
+     * 3) marker / 控件不在 tile-pane 里，单独把它们的 opacity / filter 复位，
+     *    避免航向箭头被反色和半透明化。
+     */
+    html, body {
+        margin: 0;
+        background: transparent !important;
+    }
+
+    #mapDiv,
+    #mapDiv .tdt-container,
+    #mapDiv .tdt-map-pane,
+    #mapDiv .tdt-tile-pane,
+    #mapDiv .tdt-layer,
+    #mapDiv .tdt-overlay-pane,
+    #mapDiv .tdt-shadow-pane,
+    #mapDiv .tdt-popup-pane,
+    #mapDiv .tdt-objects-pane {
+        background: transparent !important;
+    }
+
+    /* 整张 tile-pane 一起降不透明度，让外层 BlurView 灰 frost 透出 ~45% */
+    #mapDiv .tdt-tile-pane {
+        opacity: 0.55;
+    }
+
+    /* tile 反色 + 略低饱和：黑底蓝线 → 浅底冷暖中间色，配毛玻璃灰更协调 */
+    #mapDiv .tdt-tile-pane img,
+    #mapDiv .tdt-layer img {
+        filter: invert(1) brightness(1.1) saturate(0.55) contrast(0.95);
+        -webkit-filter: invert(1) brightness(1.1) saturate(0.55) contrast(0.95);
+    }
+
+    /*
+     * marker / 矢量 overlay / 控件层：复位 opacity 和 filter，
+     * 否则 location_current.png 箭头会被上面的 invert + 0.55 opacity 一起作用，
+     * 看不清且颜色不对。
+     */
+    #mapDiv .tdt-marker-pane,
+    #mapDiv .tdt-marker-pane *,
+    #mapDiv .tdt-overlay-pane,
+    #mapDiv .tdt-overlay-pane *,
+    #mapDiv .tdt-objects-pane,
+    #mapDiv .tdt-objects-pane *,
+    #mapDiv .tdt-control-container,
+    #mapDiv .tdt-control-container * {
+        opacity: 1 !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        mix-blend-mode: normal !important;
+    }
+</style>
 <div id="mapDiv"></div>
 </body>
 </html>
