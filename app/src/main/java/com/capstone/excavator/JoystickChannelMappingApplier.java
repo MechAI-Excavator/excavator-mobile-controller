@@ -135,9 +135,17 @@ public final class JoystickChannelMappingApplier {
     /**
      * 下发系统默认通道布局，用于底盘模式：
      * AB/ch3=小臂、CD/ch4=回旋、EF/ch2=大臂、GH/ch1=铲斗。
+     *
+     * 现场反馈：底盘模式下 ch3(AB) 与 ch2(EF) 杆量方向相反，因此对这两个轴
+     * 强制反向；CD/GH 保持正向。其他模式（铲斗）走 {@link #applySavedBucketModeMapping}
+     * 不受影响。
      */
     public static void applyDefaultMapping(Context context, CompletionCallback done) {
-        applyUserMapping(context, ControllerLocalSettings.createDefaultJoystickMappingSnapshot(), done);
+        ControllerLocalSettings.Snapshot snapshot =
+                ControllerLocalSettings.createDefaultJoystickMappingSnapshot();
+        snapshot.joystickLeftAbReverse = true;   // ch3 小臂
+        snapshot.joystickRightEfReverse = true;  // ch2 大臂
+        applyUserMapping(context, snapshot, done);
     }
 
     /**
