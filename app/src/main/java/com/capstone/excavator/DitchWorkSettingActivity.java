@@ -1,11 +1,9 @@
 package com.capstone.excavator;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -44,12 +42,7 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
         restoreInputsFromState();
         applyDitchTypeImage();
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                DitchTaskState.reset();
-                navigateToMain();
-            });
-        }
+        DitchStepNavigation.bindBackToMain(btnBack, this);
 
         helpTooltip = new HelpTooltip(this, "这里是帮助提示内容，你可以在此解释纵波参数的含义。");
         helpTooltip.attach(btnHelp);
@@ -60,17 +53,18 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentInputs();
-                startActivity(new Intent(this, DitchSettingActivity.class));
-                finish();
+                DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_WORK);
             });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentInputs();
-                startActivity(new Intent(this, DitchSideWorkSettingActivity.class));
+                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_WORK);
             });
         }
+
+        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_WORK);
     }
 
     private void restoreInputsFromState() {
@@ -106,7 +100,6 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
     }
 
     private void setupOneInput(TextView tv) {
-        
         if (tv == null) return;
         tv.setOnClickListener(v -> {
             if (numpad != null && numpad.isShowing()) {
@@ -155,4 +148,3 @@ public class DitchWorkSettingActivity extends ScaledAppCompatActivity {
         }
     }
 }
-

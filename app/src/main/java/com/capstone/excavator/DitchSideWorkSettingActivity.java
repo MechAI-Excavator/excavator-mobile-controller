@@ -1,11 +1,9 @@
 package com.capstone.excavator;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -49,12 +47,7 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         applyDitchSectionTypeImage();
         applyDitchTypeFields();
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                DitchTaskState.reset();
-                navigateToMain();
-            });
-        }
+        DitchStepNavigation.bindBackToMain(btnBack, this);
 
         helpTooltip = new HelpTooltip(this, "这里是帮助提示内容，你可以在此解释横波/侧向参数的含义。");
         helpTooltip.attach(btnHelp);
@@ -65,17 +58,18 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentInputs();
-                startActivity(new Intent(this, DitchWorkSettingActivity.class));
-                finish();
+                DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_SIDE);
             });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentInputs();
-                startActivity(new Intent(this, DitchPrecheckActivity.class));
+                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_SIDE);
             });
         }
+
+        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_SIDE);
     }
 
     private void restoreInputsFromState() {
@@ -165,4 +159,3 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         }
     }
 }
-
