@@ -233,14 +233,7 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="机械臂长度"
-                            android:textColor="#FF111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                        <!-- 大臂长度tab -->
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -350,14 +343,7 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="连杆参数"
-                            android:textColor="#FF111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                       <!-- 连杆参数tab -->
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -595,14 +581,7 @@
                             android:orientation="vertical"
                             android:padding="16dp">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="12dp"
-                                android:text="铲斗参数"
-                                android:textColor="#FF111827"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
+                        <!-- 铲斗长度tab -->
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -655,14 +634,7 @@
                         android:orientation="vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="驾驶舱相对比例"
-                            android:textColor="#FF111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                        <!-- 驾驶舱相对比例tab -->
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -806,7 +778,9 @@
             <FrameLayout
                 android:id="@+id/dimCustomSidePanel"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_marginTop="40dp"
+                android:layout_height="270dp"
+                android:layout_marginStart="5dp"
                 android:layout_weight="40.5"
                 android:background="@drawable/side_panel_white_bg"
                 android:elevation="1dp"
@@ -818,7 +792,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/excavator_example01"
+                    android:src="@drawable/setting_size_set_p1"
                     android:visibility="visible" />
 
                 <ImageView
@@ -827,7 +801,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/excavator_example02"
+                    android:src="@drawable/setting_size_set_p2"
                     android:visibility="gone" />
 
                 <ImageView
@@ -836,7 +810,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/excavator_example"
+                    android:src="@drawable/setting_size_set_p3"
                     android:visibility="gone" />
 
                 <ImageView
@@ -845,7 +819,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/excavator_example01"
+                    android:src="@drawable/setting_size_set_p4"
                     android:visibility="gone" />
             </FrameLayout>
         </LinearLayout>

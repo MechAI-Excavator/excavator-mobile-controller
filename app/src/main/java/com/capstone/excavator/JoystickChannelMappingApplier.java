@@ -116,6 +116,31 @@ public final class JoystickChannelMappingApplier {
     }
 
     /**
+     * 下发设置页保存的铲斗模式通道配置。该配置已由 {@link ControllerLocalSettings#save}
+     * 持久化到本地，运动模式切回铲斗时从这里读取并恢复。
+     */
+    public static void applySavedBucketModeMapping(Context context, CompletionCallback done) {
+        if (context == null) {
+            if (done != null) done.onResult(new SkyException(-1, "null context"));
+            return;
+        }
+        ControllerLocalSettings.Snapshot local = ControllerLocalSettings.load(context);
+        if (local.joystickLeftAb.isEmpty() && local.joystickLeftCd.isEmpty()
+                && local.joystickRightEf.isEmpty() && local.joystickRightGh.isEmpty()) {
+            local = ControllerLocalSettings.createDefaultJoystickMappingSnapshot();
+        }
+        applyUserMapping(context, local, done);
+    }
+
+    /**
+     * 下发系统默认通道布局，用于底盘模式：
+     * AB/ch3=小臂、CD/ch4=回旋、EF/ch2=大臂、GH/ch1=铲斗。
+     */
+    public static void applyDefaultMapping(Context context, CompletionCallback done) {
+        applyUserMapping(context, ControllerLocalSettings.createDefaultJoystickMappingSnapshot(), done);
+    }
+
+    /**
      * 按默认物理布局从 {@code channels[0..3].mapping} 推导动作基准码：
      * GH/ch1=铲斗、EF/ch2=大臂、AB/ch3=小臂、CD/ch4=回旋。
      */

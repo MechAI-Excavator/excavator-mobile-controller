@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * 控制器侧本地持久化（SharedPreferences）。集中管理键名，便于后续扩展更多字段。
  * <p>
- * 当前包含：直播流地址、摇杆通道→动作映射（AB/CD/EF/GH）。新增配置时请在本类增加常量与
+ * 当前包含：直播流地址、铲斗模式摇杆通道→动作映射（AB/CD/EF/GH）。新增配置时请在本类增加常量与
  * {@link Snapshot} 字段，并更新 {@link #load} / {@link #save}。
  */
 public final class ControllerLocalSettings {
@@ -140,6 +140,22 @@ public final class ControllerLocalSettings {
         s.joystickLeftCdReverse  = sp.getBoolean(KEY_JOY_LEFT_CD_REVERSE, false);
         s.joystickRightEfReverse = sp.getBoolean(KEY_JOY_RIGHT_EF_REVERSE, false);
         s.joystickRightGhReverse = sp.getBoolean(KEY_JOY_RIGHT_GH_REVERSE, false);
+        return s;
+    }
+
+    /**
+     * 系统默认通道布局：ch1/GH=铲斗、ch2/EF=大臂、ch3/AB=小臂、ch4/CD=回旋。
+     */
+    public static Snapshot createDefaultJoystickMappingSnapshot() {
+        Snapshot s = new Snapshot();
+        s.joystickLeftAb = "小臂";
+        s.joystickLeftCd = "回旋";
+        s.joystickRightEf = "大臂";
+        s.joystickRightGh = "铲斗";
+        s.joystickLeftAbReverse = false;
+        s.joystickLeftCdReverse = false;
+        s.joystickRightEfReverse = false;
+        s.joystickRightGhReverse = false;
         return s;
     }
 

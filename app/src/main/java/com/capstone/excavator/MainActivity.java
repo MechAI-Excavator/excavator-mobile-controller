@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends ScaledAppCompatActivity {
     
@@ -85,6 +86,8 @@ public class MainActivity extends ScaledAppCompatActivity {
     private View leftSpeedIndicator;
     private View rightSpeedIndicator;
     private MotionModeSegmentView motionModeSegment;
+    private volatile int desiredMotionModeChannelIndex = MotionModeSegmentView.INDEX_STOP;
+    private final AtomicInteger motionModeChannelApplyGeneration = new AtomicInteger();
     private ObjectAnimator liveDotBreathAnimator;
     private EmergencyStopOverlayView emergencyStopOverlay;
     private ConfirmDialogView confirmDialog;
@@ -406,6 +409,9 @@ public class MainActivity extends ScaledAppCompatActivity {
         leftSpeedIndicator = findViewById(R.id.leftSpeedIndicator);
         rightSpeedIndicator = findViewById(R.id.rightSpeedIndicator);
         motionModeSegment = findViewById(R.id.motionModeSegment);
+        if (motionModeSegment != null) {
+            motionModeSegment.setOnIndexChangeListener(this::onMotionModeChanged);
+        }
 
         // Sync right map card height to posture card height after layout.
         if (postureCardView != null && mapCardContainer != null) {
@@ -1324,6 +1330,26 @@ public class MainActivity extends ScaledAppCompatActivity {
             selectedIndex = MotionModeSegmentView.INDEX_CHASSIS;
         }
         motionModeSegment.setSelectedIndex(selectedIndex);
+    }
+
+    private void onMotionModeChanged(int selectedIndex) {
+        desiredMotionModeChannelIndex = selectedIndex;
+        applyMotionModeChannelMapping(selectedIndex);
+    }
+
+    private void applyMotionModeChannelMapping(int selectedIndex) {
+        final int generation = motionModeChannelApplyGeneration.incrementAndGet();
+        MotionModeChannelMappingManager.applyForMode(this, selectedIndex, e -> {
+            if (generation != motionModeChannelApplyGeneration.get()) {
+                applyMotionModeChannelMapping(desiredMotionModeChannelIndex);
+                return;
+            }
+            if (e == null) {
+                Log.i("MainActivity", "运动模式通道配置已切换: " + selectedIndex);
+            } else {
+                Log.e("MainActivity", "运动模式通道配置切换失败: " + e.getMessage());
+            }
+        });
     }
     
     /**

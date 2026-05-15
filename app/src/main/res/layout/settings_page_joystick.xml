@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:text="配置遥控器各通道与挖掘机控制方向的对应关系。"
+            android:text="自定义配置左右摇杆各轴对应的挖掘机动作通道（仅在铲斗模式下生效）"
             android:textColor="#FF6B7280"
             android:textSize="12sp" />
 

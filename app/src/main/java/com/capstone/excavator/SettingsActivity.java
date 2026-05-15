@@ -298,7 +298,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
 
     /**
      * 摇杆四轴映射已成功写入 {@link ControllerLocalSettings} 后调用：
-     * 1. 打印映射便于调试；
+     * 1. 打印铲斗模式映射便于调试；
      * 2. 通过 {@link JoystickChannelMappingApplier} 把新映射下发到遥控器的 {@code ChannelSettings}。
      */
     private void onJoystickMappingSaved(ControllerLocalSettings.Snapshot local) {
@@ -326,7 +326,7 @@ public class SettingsActivity extends ScaledAppCompatActivity {
             mainHandler.post(() -> {
                 if (e == null) {
                     Toast.makeText(appCtx,
-                            "摇杆通道映射已下发到遥控器", Toast.LENGTH_SHORT).show();
+                            "铲斗模式摇杆通道映射已下发到遥控器", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(appCtx,
                             "摇杆通道下发失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
