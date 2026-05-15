@@ -255,6 +255,51 @@ public class MainActivity extends ScaledAppCompatActivity {
         super.onStop();
     }
 
+    /**
+     * 首次 onResume 紧跟 {@link #onCreate} 的 {@link #initVideoPlayer()}（已经 start 过 fpv），
+     * 跳过一次 start 避免双启动。后续 onResume 会重新 start。
+     */
+    private boolean fpvFirstResumeSkipped = false;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null) mapView.resume();
+        if (postureCardView != null) postureCardView.onActivityResume();
+        if (!fpvFirstResumeSkipped) {
+            fpvFirstResumeSkipped = true;
+            // initVideoPlayer 在 onCreate 中已经 start 过，不再重复 start。
+        } else if (fpvWidget != null) {
+            try {
+                fpvWidget.start();
+            } catch (Throwable t) {
+                Log.w("MainActivity", "fpvWidget.start onResume failed: " + t.getMessage());
+            }
+        }
+        // UDP 已连且 onPause 时停过心跳：重新拉起。startHeartbeat 内部会幂等清理旧 runnable。
+        if (udpPipeline != null && udpPipeline.isConnected()) {
+            startHeartbeat();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        // 1) FPV：解码器在 Activity 不可见时仍持有 GPU 表面会浪费功耗，且回到前台时常见黑屏 / 抖动。
+        if (fpvWidget != null) {
+            try {
+                fpvWidget.stop();
+            } catch (Throwable t) {
+                Log.w("MainActivity", "fpvWidget.stop onPause failed: " + t.getMessage());
+            }
+        }
+        // 2) WebView：天地图 / 姿态 WebView 的 requestAnimationFrame、JS 计时器在背景仍会跑。
+        if (mapView != null) mapView.pause();
+        if (postureCardView != null) postureCardView.onActivityPause();
+        // 3) 心跳定时器
+        stopHeartbeat();
+        super.onPause();
+    }
+
     /** 首次启动引导：先选语言，再提示是否配置机器参数。 */
     private void showInitialPrompts() {
         if (!LanguageManager.isLanguageChosen(this)) {
@@ -1178,38 +1223,49 @@ public class MainActivity extends ScaledAppCompatActivity {
     }
     
     /**
+     * 单例 callback：updateJoystickValues 每 50ms 调用一次（20Hz）。如果每次都 new 一个匿名内部类
+     * + 一个 runOnUiThread lambda，一小时就是 7w+ 个短命对象，明显加剧 ART young-gen 的 GC 频率，
+     * 表现为 RTSP 直播每隔几秒一次的 micro-stutter。这里把 callback 与 UI 投递的 Runnable 都提成
+     * 字段单例，状态保存在 ch1~ch5Value，runOnUiThread 期间读字段即可。
+     */
+    private final Runnable joystickUiUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if (bottomBar != null) {
+                // JoystickIndicatorView 约定：y 上为正；遥控器通道通常 y 下为正，因此统一取反
+                bottomBar.setJoystickLeft(ch4Value, ch3Value);
+                bottomBar.setJoystickRight(ch1Value, -ch2Value);
+            }
+            updateMotionModeFromChannel(ch5Value);
+        }
+    };
+
+    private final CompletionCallbackWith<int[]> joystickValueCallback = new CompletionCallbackWith<int[]>() {
+        @Override
+        public void onSuccess(int[] value) {
+            // 区间【-450，450】
+            if (value != null && value.length >= 5) {
+                ch1Value = value[0] - 1500; // 右摇杆左右
+                ch2Value = value[1] - 1500; // 右摇杆上下
+                ch3Value = value[2] - 1500; // 左摇杆上下
+                ch4Value = value[3] - 1500; // 左摇杆左右
+                ch5Value = value[4] - 1500; // 模式切换
+                runOnUiThread(joystickUiUpdater);
+            }
+        }
+
+        @Override
+        public void onFailure(SkyException e) {
+            Log.e("MainActivity", "摇杆值获取失败: " + (e != null ? e.getMessage() : "未知错误"));
+        }
+    };
+
+    /**
      * 更新摇杆值
      */
     private void updateJoystickValues() {
-        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannels(), 
-            new CompletionCallbackWith<int[]>() {
-                @Override
-                public void onSuccess(int[] value) {
-                    // 区间【-450，450】
-                    // value 是摇杆值数组
-                    if (value != null && value.length >= 5) {
-                        // 减去1500作为初始值
-                        ch1Value = value[0] - 1500; // 右摇杆左右
-                        ch2Value = value[1] - 1500; // 右摇杆上下
-                        ch3Value = value[2] - 1500; // 左摇杆上下
-                        ch4Value = value[3] - 1500; // 左摇杆左右
-                        ch5Value = value[4] - 1500; // 模式切换
-                        runOnUiThread(() -> {
-                            if (bottomBar != null) {
-                                // JoystickIndicatorView 约定：y 上为正；遥控器通道通常 y 下为正，因此统一取反
-                                bottomBar.setJoystickLeft(ch4Value, ch3Value);
-                                bottomBar.setJoystickRight(ch1Value, -ch2Value);
-                            }
-                            updateMotionModeFromChannel(ch5Value);
-                        });
-                    }
-                }
-
-                @Override
-                public void onFailure(SkyException e) {
-                    Log.e("MainActivity", "摇杆值获取失败: " + (e != null ? e.getMessage() : "未知错误"));
-                }
-            });
+        KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannels(),
+                joystickValueCallback);
     }
 
     private void updateMotionModeFromChannel(int channelValue) {

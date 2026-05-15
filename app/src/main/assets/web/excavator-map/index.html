@@ -36,6 +36,10 @@
         var DEFAULT_LNG = 113.0938459;
         var DEFAULT_HEADING = 0;
         var NATIVE_POSE_PENDING = null;
+        var LAST_POSE = { lat: NaN, lng: NaN, heading: NaN };
+        // ~1e-6 度 ≈ 0.1m。仅当真实位移超过该阈值才更新 marker；否则不动 DOM、不重排，
+        // 避免与 FPV TextureView 抢同一份 GPU/合成预算导致规律性掉帧。
+        var POSE_EPS = 1e-6;
         window.TiandituBridge = {
             setVehiclePose: function (lat, lng, headingDeg) {
                 var la = parseFloat(lat);
@@ -48,16 +52,54 @@
                     NATIVE_POSE_PENDING = { lat: la, lng: ln, heading: he };
                     return;
                 }
+                // 与上次姿态完全一致 → 跳过整个 DOM 更新（Android 模拟模式会每秒原样回灌）。
+                var sameLatLng =
+                    isFinite(LAST_POSE.lat) && isFinite(LAST_POSE.lng)
+                    && Math.abs(la - LAST_POSE.lat) < POSE_EPS
+                    && Math.abs(ln - LAST_POSE.lng) < POSE_EPS;
+                var sameHeading =
+                    isFinite(LAST_POSE.heading)
+                    && Math.abs(he - LAST_POSE.heading) < 0.05;
+                if (sameLatLng && sameHeading) {
+                    return;
+                }
+                LAST_POSE.lat = la;
+                LAST_POSE.lng = ln;
+                LAST_POSE.heading = he;
+
                 var ll = new T.LngLat(ln, la);
                 window.mapMarker.setLngLat(ll);
-                window.setMarkerHeading(he);
-                // Android 端会周期性注入 RTK；若只挪标注不平移地图，标注会很快跑出视口（浏览器单测 HTML 时无此注入，故现象不同）。
+                if (!sameHeading) window.setMarkerHeading(he);
+                // 只有当车辆 marker 真正漂到可见区边缘附近时才 centerAndZoom；否则 setLngLat 已足够，
+                // 避免每帧 centerAndZoom 触发瓦片可见性扫描 + 内部 layout，挤占 FPV 解码/合成。
                 try {
-                    var z = typeof map.getZoom === 'function' ? map.getZoom() : zoom;
-                    map.centerAndZoom(ll, z);
+                    if (!sameLatLng && map.getBounds && shouldRecenter(ll)) {
+                        var z = typeof map.getZoom === 'function' ? map.getZoom() : zoom;
+                        map.centerAndZoom(ll, z);
+                    }
                 } catch (ignore) {}
             }
         };
+        function shouldRecenter(ll) {
+            try {
+                var b = map.getBounds();
+                if (!b) return true;
+                var sw = b.getSouthWest();
+                var ne = b.getNorthEast();
+                if (!sw || !ne) return true;
+                // 当 marker 越界，或距任一边小于可视框 15% 时再 recenter
+                var width = Math.abs(ne.getLng() - sw.getLng());
+                var height = Math.abs(ne.getLat() - sw.getLat());
+                var marginX = width * 0.15;
+                var marginY = height * 0.15;
+                return ll.getLng() < sw.getLng() + marginX
+                    || ll.getLng() > ne.getLng() - marginX
+                    || ll.getLat() < sw.getLat() + marginY
+                    || ll.getLat() > ne.getLat() - marginY;
+            } catch (e) {
+                return true;
+            }
+        }
         function onLoad() {
             map = new T.Map('mapDiv', {
                 projection: 'EPSG:4326'

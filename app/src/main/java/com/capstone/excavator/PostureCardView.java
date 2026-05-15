@@ -90,7 +90,8 @@ public class PostureCardView extends LinearLayout {
             excavatorPostureView.setDisplayMode(true);
         }
 
-        // 初始状态：2D 可见，3D 隐藏
+        // 初始状态：2D 可见，3D 隐藏；同步把 3D WebView 真正挂起，避免 three.js
+        // requestAnimationFrame 在 GONE 状态下仍以 60Hz 抢 GPU，与 FPV TextureView 抢 vsync。
         applyModeVisibility();
         setupToggle();
     }
@@ -99,15 +100,19 @@ public class PostureCardView extends LinearLayout {
 
     /**
      * 更新全部角度（5 参数版，与 ExcavatorPostureView.setAngles 对齐）。
-     * 同时更新 WebView 动画和三行角度文字。
+     * 仅向当前可见的 WebView 下发 payload；隐藏的那一个已经被 {@link #applyModeVisibility} 调用 pause()，
+     * 这里再额外跳过一次 evaluateJavascript，避免 1Hz 节拍的无效唤醒。
      */
     public void setAngles(float cabinPitch, float cabinRoll,
                           float boom, float stick, float bucket) {
-        if (excavatorPostureView != null) {
-            excavatorPostureView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
-        }
-        if (excavatorPosture2DView != null) {
-            excavatorPosture2DView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
+        if (is3D) {
+            if (excavatorPostureView != null) {
+                excavatorPostureView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
+            }
+        } else {
+            if (excavatorPosture2DView != null) {
+                excavatorPosture2DView.setAngles(cabinPitch, cabinRoll, boom, stick, bucket);
+            }
         }
         updateAngleText(boom, stick, bucket);
     }
@@ -172,13 +177,43 @@ public class PostureCardView extends LinearLayout {
         applyToggleStyle();
     }
 
-    /** 切换 2D FrameLayout 和 3D WebView 的可见性 */
+    /**
+     * 切换 2D FrameLayout 和 3D WebView 的可见性。
+     *
+     * <p>同时把另一侧 WebView 真正 {@link ExcavatorPostureView#pause()}：
+     * Android 的 {@code View.GONE} 不会暂停 WebView 内的 JS / requestAnimationFrame，
+     * 否则 3D（three.js animate loop）会在用户根本看不到的情况下持续以 60fps 渲染并合成，
+     * 与 FPV 的 TextureView 抢同一份 GPU/合成预算 → 表现为 RTSP 直播规律性掉帧。
+     */
     private void applyModeVisibility() {
         if (view2D != null) {
             view2D.setVisibility(is3D ? View.GONE : View.VISIBLE);
         }
         if (view3D != null) {
             view3D.setVisibility(is3D ? View.VISIBLE : View.GONE);
+        }
+        if (is3D) {
+            if (excavatorPostureView != null) excavatorPostureView.resume();
+            if (excavatorPosture2DView != null) excavatorPosture2DView.pause();
+        } else {
+            if (excavatorPosture2DView != null) excavatorPosture2DView.resume();
+            if (excavatorPostureView != null) excavatorPostureView.pause();
+        }
+    }
+
+    /** 由 Activity#onPause 触发：把卡片内全部 WebView 都挂起。 */
+    public void onActivityPause() {
+        if (excavatorPosture2DView != null) excavatorPosture2DView.onActivityPause();
+        if (excavatorPostureView != null) excavatorPostureView.onActivityPause();
+    }
+
+    /** 由 Activity#onResume 触发：恢复当前可见模式对应的 WebView。 */
+    public void onActivityResume() {
+        // 仅恢复当前可见模式对应的 WebView；另一侧 onActivityPause 后保持 paused。
+        if (is3D) {
+            if (excavatorPostureView != null) excavatorPostureView.onActivityResume();
+        } else {
+            if (excavatorPosture2DView != null) excavatorPosture2DView.onActivityResume();
         }
     }
 

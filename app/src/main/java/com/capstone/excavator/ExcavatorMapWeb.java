@@ -11,6 +11,16 @@ public class ExcavatorMapWeb extends ExcavatorPostureView {
     private static final String WEB_ENTRY_URL_2D =
             "https://appassets.androidplatform.net/assets/web/excavator-map/index.html";
 
+    /**
+     * 与上次下发坐标的最小差值（度）。模拟 RTK 每秒原样回灌，去掉重复下发以避免 1Hz
+     * {@code evaluateJavascript} → 天地图 SDK 内部 layout/瓦片可见性扫描，挤占 FPV 的 GPU/合成预算。
+     * 1e-7 度 ≈ 1cm，远小于车辆有效位移。
+     */
+    private static final double MIN_DELTA_DEG = 1e-7;
+
+    private double lastLat = Double.NaN;
+    private double lastLon = Double.NaN;
+
     public ExcavatorMapWeb(Context context) {
         this(context, null);
     }
@@ -39,11 +49,21 @@ public class ExcavatorMapWeb extends ExcavatorPostureView {
 
     /**
      * 与 {@link MapView#setFixedLocation} 对应：通知 assets 内天地图页更新标记位置。
+     *
+     * <p>同坐标重复调用会被丢弃；坐标真正变化（&gt; {@link #MIN_DELTA_DEG}）才下发，避免每秒固定下发触发
+     * 天地图 {@code centerAndZoom} 内部的 layout/瓦片刷新。
      */
     public void setFixedLocation(double lat, double lon) {
         if (!Double.isFinite(lat) || !Double.isFinite(lon)) {
             return;
         }
+        if (!Double.isNaN(lastLat) && !Double.isNaN(lastLon)
+                && Math.abs(lat - lastLat) < MIN_DELTA_DEG
+                && Math.abs(lon - lastLon) < MIN_DELTA_DEG) {
+            return;
+        }
+        lastLat = lat;
+        lastLon = lon;
         String js = String.format(Locale.US,
                 "(function(){if(window.TiandituBridge&&window.TiandituBridge.setVehiclePose){"
                         + "window.TiandituBridge.setVehiclePose(%f,%f,0);}})();",

@@ -633,12 +633,52 @@ window.addEventListener("message", (event) => {
   applyExternalPayload(data);
 });
 
-function animate() {
-  requestAnimationFrame(animate);
+// 可暂停的 animate loop。
+// 原来无条件 requestAnimationFrame 会在 WebView visibility=GONE / Activity 不前台时仍以 60Hz 跑，
+// 与 FPV 直播 TextureView 抢 GPU/合成预算，导致 RTSP 播放规律性掉帧（每隔几秒一次）。
+// 这里支持：
+//   1) Android 端调 window.__pauseAnim() / window.__resumeAnim() 显式控制
+//   2) document.visibilitychange 自动联动（Android WebView.onPause 也会触发）
+let __animRunning = false;
+let __animPausedExternally = false;
+let __lastRenderedAt = 0;
+function __tick(ts) {
+  if (!__animRunning) return;
+  // 限频到 30fps：3D 姿态本身角度更新不超过 1Hz/UDP 频率，60fps 渲染只是空转浪费 GPU。
+  if (ts - __lastRenderedAt < 33) {
+    requestAnimationFrame(__tick);
+    return;
+  }
+  __lastRenderedAt = ts;
   if (controls) controls.update();
   renderer.render(scene, camera);
+  requestAnimationFrame(__tick);
 }
-animate();
+function __startAnim() {
+  if (__animRunning) return;
+  __animRunning = true;
+  __lastRenderedAt = 0;
+  requestAnimationFrame(__tick);
+}
+function __stopAnim() {
+  __animRunning = false;
+}
+window.__pauseAnim = function () {
+  __animPausedExternally = true;
+  __stopAnim();
+};
+window.__resumeAnim = function () {
+  __animPausedExternally = false;
+  if (!document.hidden) __startAnim();
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    __stopAnim();
+  } else if (!__animPausedExternally) {
+    __startAnim();
+  }
+});
+if (!document.hidden) __startAnim();
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;

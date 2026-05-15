@@ -20,8 +20,7 @@ import android.widget.FrameLayout;
 import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Locale;
 
 public class ExcavatorPostureView extends FrameLayout {
     protected static final String WEB_ENTRY_URL =
@@ -44,6 +43,17 @@ public class ExcavatorPostureView extends FrameLayout {
     private float bucketAngleOffsetDeg = 0f;
     private boolean displayMode3D = true;
     private boolean pageReady = false;
+    /**
+     * 由 {@link #pause()} / {@link #resume()} 控制，用于在外部容器（如卡片切到 2D 时）暂停 3D
+     * WebView 的 {@code requestAnimationFrame}+{@code evaluateJavascript}，避免后台空转抢占 FPV 的 GPU/CPU 预算。
+     */
+    private boolean paused = false;
+
+    /**
+     * 复用的 payload 拼装缓冲，避免每帧 {@code postCurrentPayload} 触发 5 个 JSONObject + 多次字符串拷贝的 GC。
+     * 只在主线程访问。
+     */
+    private final StringBuilder payloadBuilder = new StringBuilder(256);
 
     public ExcavatorPostureView(Context context) {
         this(context, null);
@@ -187,40 +197,43 @@ public class ExcavatorPostureView extends FrameLayout {
     }
 
     private void postCurrentPayload() {
-        if (!pageReady) {
+        if (!pageReady || paused) {
             return;
         }
         if (!webView.isAttachedToWindow()) {
             return;
         }
 
-        JSONObject payload = new JSONObject();
-        try {
-            JSONObject main = new JSONObject();
-            main.put("pitch", cabinPitchAngle);
-            main.put("roll", cabinRollAngle);
-            payload.put("main", main);
+        // 把 payload 直接拼成 JS 对象字面量，避免 JSONObject + replace + String#concat 的逐帧 GC。
+        // 角度都是 float 标量，没有任何字符串字段，因此不存在引号/反斜杠转义风险。
+        StringBuilder sb = payloadBuilder;
+        sb.setLength(0);
+        sb.append("window.applyExcavatorPayload&&window.applyExcavatorPayload({main:{pitch:");
+        appendFloat(sb, cabinPitchAngle);
+        sb.append(",roll:");
+        appendFloat(sb, cabinRollAngle);
+        sb.append("},lengths:{boom:");
+        appendFloat(sb, boomLengthScale);
+        sb.append(",stick:");
+        appendFloat(sb, stickLengthScale);
+        sb.append("},joints:{boom:{z:");
+        appendFloat(sb, boomAngle);
+        sb.append("},stick:{z:");
+        appendFloat(sb, stickAngle);
+        sb.append("},bucket:{z:");
+        appendFloat(sb, bucketAngle + bucketAngleOffsetDeg);
+        sb.append("}}});");
+        final String js = sb.toString();
+        webView.post(() -> webView.evaluateJavascript(js, null));
+    }
 
-            JSONObject lengths = new JSONObject();
-            lengths.put("boom", boomLengthScale);
-            lengths.put("stick", stickLengthScale);
-            payload.put("lengths", lengths);
-
-            JSONObject joints = new JSONObject();
-            joints.put("boom", new JSONObject().put("z", boomAngle));
-            joints.put("stick", new JSONObject().put("z", stickAngle));
-            joints.put("bucket", new JSONObject().put("z", bucketAngle + bucketAngleOffsetDeg));
-            payload.put("joints", joints);
-        } catch (JSONException ignored) {
+    /** NaN/Infinity 兜底成 0，避免 JS 端 {@code applyExcavatorPayload} 收到 {@code NaN} 字面量解析失败。 */
+    private static void appendFloat(StringBuilder sb, float v) {
+        if (Float.isNaN(v) || Float.isInfinite(v)) {
+            sb.append('0');
             return;
         }
-
-        String payloadStr = payload.toString()
-                .replace("\\", "\\\\")
-                .replace("'", "\\'");
-        String js = "window.applyExcavatorPayload && window.applyExcavatorPayload(JSON.parse('"
-                + payloadStr + "'));";
-        webView.post(() -> webView.evaluateJavascript(js, null));
+        sb.append(String.format(Locale.US, "%.4f", v));
     }
 
     /**
@@ -253,11 +266,54 @@ public class ExcavatorPostureView extends FrameLayout {
      * 子类（如天地图页）在页面未实现 {@code applyExcavatorPayload} 时也可安全注入脚本。
      */
     protected void postJavascriptToWebView(String script) {
+        if (paused) return;
         webView.post(() -> {
             if (webView.isAttachedToWindow()) {
                 webView.evaluateJavascript(script, null);
             }
         });
+    }
+
+    /**
+     * 把 WebView 挂起：停止 {@code requestAnimationFrame}/JS 计时器，并停止 {@link #postCurrentPayload}
+     * 的下发。用于父容器（如 PostureCardView 切到 2D 时）让 3D WebView 不再空转抢 GPU。
+     *
+     * <p>幂等。
+     */
+    public void pause() {
+        if (paused) return;
+        paused = true;
+        // 通知页面侧暂停（main.js 会监听 __pauseAnim/visibilitychange）
+        if (pageReady && webView.isAttachedToWindow()) {
+            webView.evaluateJavascript(
+                    "window.__pauseAnim && window.__pauseAnim();", null);
+        }
+        webView.onPause();
+    }
+
+    /** 与 {@link #pause()} 配对；resume 后会立刻补一次最新 payload。 */
+    public void resume() {
+        if (!paused) return;
+        paused = false;
+        webView.onResume();
+        if (pageReady && webView.isAttachedToWindow()) {
+            webView.evaluateJavascript(
+                    "window.__resumeAnim && window.__resumeAnim();", null);
+        }
+        postCurrentPayload();
+        postDisplayMode();
+    }
+
+    /**
+     * Activity onPause 时调用：暂停 JS 定时器（进程级，慎用）。当前实现复用 {@link #pause()} 即可。
+     */
+    public void onActivityPause() {
+        pause();
+    }
+
+    /** Activity onResume 时调用。 */
+    public void onActivityResume() {
+        resume();
     }
 
     @Override
