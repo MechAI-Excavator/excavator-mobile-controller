@@ -3,19 +3,22 @@
     由 MainActivity 用 UiScaleConfig.unscaledContext 的 LayoutInflater 展开，避免 FPV 走全局 0.8 dpi。
 
     布局规则：
-    1. FPVWidget 自身使用 16:9 比例约束 (constraintDimensionRatio="16:9")，按短边居中铺到容器内：
-       这样底层 SkyFPVView2 的 TextureView 不需要为「全屏拉伸」做额外缩放/合成，
+    1. FPVWidget 自身用 16:9 比例约束 (constraintDimensionRatio="16:9")，按短边居中铺到容器内：
+       底层 SkyFPVView2 的 TextureView 不需要为「全屏拉伸」做额外缩放/合成，
        与 baseline (d5d039a) 行为一致；之前改成 0dp×0dp 撑满会触发 onSurfaceTextureSizeChanged
        并让 decoder 输出表面在 vsync 边界做非 16:9 上采样，会放大与 BlurView/WebView 的合成抖动。
-    2. videoPlaceholder / noLiveVideoOverlay 都是 FPVWidget 的*兄弟*节点而不是子节点，避免它们
-       成为 FPVWidget 的 child 后改变其 measure/draw 顺序（FPVWidget 是 FrameLayout，子 View
-       会和内部 TextureView 一起参与 dispatchDraw）。
+    2. videoPlaceholder / noLiveVideoOverlay 都*铺满父容器*而不是绑到 fpvWidget：
+       屏幕宽高比若不是严格 16:9（常见 1920×1200 设备），fpvWidget 按 16:9 居中后会留 10~20dp
+       上下黑边，FPVWidget 的黑底 + SkyDroid 内部的「无信号黄」状态条会从 letterbox 漏出来。
+       铺满父容器 + JPG centerCrop 保证未连接时整个区域都是占位图；视频连上后两层都 GONE，
+       不影响 FPVWidget 16:9 真实画面。
 -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FF000000">
 
     <com.skydroid.fpvplayer.FPVWidget
         android:id="@+id/fpvWidget"
@@ -34,10 +37,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/fpvWidget"
-        app:layout_constraintEnd_toEndOf="@+id/fpvWidget"
-        app:layout_constraintStart_toStartOf="@+id/fpvWidget"
-        app:layout_constraintTop_toTopOf="@+id/fpvWidget" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/noLiveVideoOverlay"
@@ -46,9 +49,9 @@
         android:contentDescription="@null"
         android:scaleType="centerCrop"
         android:src="@drawable/with_no_live_video"
-        app:layout_constraintBottom_toBottomOf="@+id/fpvWidget"
-        app:layout_constraintEnd_toEndOf="@+id/fpvWidget"
-        app:layout_constraintStart_toStartOf="@+id/fpvWidget"
-        app:layout_constraintTop_toTopOf="@+id/fpvWidget" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
