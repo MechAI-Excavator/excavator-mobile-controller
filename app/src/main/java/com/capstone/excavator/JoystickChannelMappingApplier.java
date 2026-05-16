@@ -143,8 +143,6 @@ public final class JoystickChannelMappingApplier {
     public static void applyDefaultMapping(Context context, CompletionCallback done) {
         ControllerLocalSettings.Snapshot snapshot =
                 ControllerLocalSettings.createDefaultJoystickMappingSnapshot();
-        snapshot.joystickLeftAbReverse = true;   // ch3 小臂
-        snapshot.joystickRightEfReverse = true;  // ch2 大臂
         applyUserMapping(context, snapshot, done);
     }
 

@@ -152,9 +152,9 @@ public final class ControllerLocalSettings {
         s.joystickLeftCd = "回旋";
         s.joystickRightEf = "大臂";
         s.joystickRightGh = "铲斗";
-        s.joystickLeftAbReverse = false;
+        s.joystickLeftAbReverse = true;
         s.joystickLeftCdReverse = false;
-        s.joystickRightEfReverse = false;
+        s.joystickRightEfReverse = true;
         s.joystickRightGhReverse = false;
         return s;
     }
