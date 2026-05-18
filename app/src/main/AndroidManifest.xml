@@ -63,10 +63,6 @@
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity
-            android:name="com.capstone.excavator.DitchWorkSettingActivity"
-            android:exported="false"
-            android:screenOrientation="landscape" />
-        <activity
             android:name="com.capstone.excavator.DitchSideWorkSettingActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
@@ -80,6 +76,10 @@
             android:screenOrientation="landscape" />
         <activity
             android:name="com.capstone.excavator.SlopeRepairSecondSettingActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name="com.capstone.excavator.SlopeRepairSecondSettingActivityPointB"
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity

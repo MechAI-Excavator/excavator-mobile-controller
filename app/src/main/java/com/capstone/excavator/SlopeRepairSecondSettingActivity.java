@@ -1,6 +1,5 @@
 package com.capstone.excavator;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -25,10 +24,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     private TextView tvRefLeftA, tvRefMiddleA, tvRefRightA;
     private int selectedRefA = 1;
 
-    private LinearLayout cardRefLeftB, cardRefMiddleB, cardRefRightB;
-    private TextView tvRefLeftB, tvRefMiddleB, tvRefRightB;
-    private int selectedRefB = 1;
-
     private TextView tvAbDistance;
     private TextView tvAbLift;
     private TextView tvAbHeightDiff;
@@ -37,7 +32,7 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setFullScreenMode();
-        setContentView(R.layout.activity_slope_repair_second_setting);
+        setContentView(R.layout.activity_slope_repair_second_setting_pointa);
 
         bindViews();
         restoreFromState();
@@ -45,6 +40,7 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         setupRefCards();
         setupInputs();
         setupActions();
+        SlopeRepairStepNavigation.bindStepBar(this);
     }
 
     private void bindViews() {
@@ -60,13 +56,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         tvRefMiddleA = findViewById(R.id.tvRefMiddleA);
         tvRefRightA = findViewById(R.id.tvRefRightA);
 
-        cardRefLeftB = findViewById(R.id.cardRefLeftB);
-        cardRefMiddleB = findViewById(R.id.cardRefMiddleB);
-        cardRefRightB = findViewById(R.id.cardRefRightB);
-        tvRefLeftB = findViewById(R.id.tvRefLeftB);
-        tvRefMiddleB = findViewById(R.id.tvRefMiddleB);
-        tvRefRightB = findViewById(R.id.tvRefRightB);
-
         tvAbDistance = findViewById(R.id.tvAbDistance);
         tvAbLift = findViewById(R.id.tvAbLift);
         tvAbHeightDiff = findViewById(R.id.tvAbHeightDiff);
@@ -76,7 +65,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
 
     private void restoreFromState() {
         selectedRefA = SlopeRepairTaskState.getRefA();
-        selectedRefB = SlopeRepairTaskState.getRefB();
         setTextIfPresent(tvAbDistance, SlopeRepairTaskState.getAbDistance());
         setTextIfPresent(tvAbLift, SlopeRepairTaskState.getAbLift());
         setTextIfPresent(tvAbHeightDiff, SlopeRepairTaskState.getAbHeightDiff());
@@ -93,10 +81,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
         if (cardRefRightA != null) cardRefRightA.setOnClickListener(v -> setRefA(2));
         applyRefSelectionA();
 
-        if (cardRefLeftB != null) cardRefLeftB.setOnClickListener(v -> setRefB(0));
-        if (cardRefMiddleB != null) cardRefMiddleB.setOnClickListener(v -> setRefB(1));
-        if (cardRefRightB != null) cardRefRightB.setOnClickListener(v -> setRefB(2));
-        applyRefSelectionB();
     }
 
     private void setRefA(int index) {
@@ -107,16 +91,6 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     private void applyRefSelectionA() {
         applyOneRefGroup(selectedRefA, cardRefLeftA, cardRefMiddleA, cardRefRightA,
                 tvRefLeftA, tvRefMiddleA, tvRefRightA);
-    }
-
-    private void setRefB(int index) {
-        selectedRefB = index;
-        applyRefSelectionB();
-    }
-
-    private void applyRefSelectionB() {
-        applyOneRefGroup(selectedRefB, cardRefLeftB, cardRefMiddleB, cardRefRightB,
-                tvRefLeftB, tvRefMiddleB, tvRefRightB);
     }
 
     private void applyOneRefGroup(
@@ -157,24 +131,19 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     }
 
     private void setupActions() {
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                SlopeRepairTaskState.reset();
-                navigateToMain();
-            });
-        }
+        SlopeRepairStepNavigation.bindBackToMain(btnBack, this);
 
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentState();
-                finish();
+                SlopeRepairStepNavigation.goToPrevious(this);
             });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentState();
-                startActivity(new Intent(this, SlopeRepairThirdSettingActivity.class));
+                SlopeRepairStepNavigation.goToNext(this);
             });
         }
     }
@@ -182,7 +151,7 @@ public class SlopeRepairSecondSettingActivity extends ScaledAppCompatActivity {
     private void saveCurrentState() {
         SlopeRepairTaskState.updateSecondStep(
                 selectedRefA,
-                selectedRefB,
+                SlopeRepairTaskState.getRefB(),
                 textOf(tvAbDistance),
                 textOf(tvAbLift),
                 textOf(tvAbHeightDiff)

@@ -269,7 +269,7 @@
                                         <TextView
                                             android:id="@+id/tvDimLb"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="2.90"
+                                            tools:text="2.90"
                                             android:textColor="#FF111827"
                                             android:textSize="14sp" />
 
@@ -313,7 +313,7 @@
                                         <TextView
                                             android:id="@+id/tvDimLs"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="1.50"
+                                            tools:text="1.50"
                                             android:textColor="#FF111827"
                                             android:textSize="14sp" />
 
@@ -360,50 +360,6 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginBottom="6dp"
-                                    android:text="连杆 L1"
-                                    android:textColor="#FF6B7280"
-                                    android:textSize="12sp" />
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <LinearLayout
-                                        style="@style/InputWithSuffixContainer.Light"
-                                        android:layout_width="0dp"
-                                        android:layout_height="40dp"
-                                        android:layout_weight="1">
-
-                                        <TextView
-                                            android:id="@+id/tvDimLinkL1"
-                                            style="@style/InputWithSuffixValue"
-                                            android:text="0.45"
-                                            android:textColor="#FF111827"
-                                            android:textSize="14sp" />
-
-                                        <TextView
-                                            style="@style/InputSuffixUnit.Light"
-                                            android:text="m" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <Space
-                                android:layout_width="10dp"
-                                android:layout_height="wrap_content" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="6dp"
                                     android:text="连杆 L2"
                                     android:textColor="#FF6B7280"
                                     android:textSize="12sp" />
@@ -423,7 +379,7 @@
                                         <TextView
                                             android:id="@+id/tvDimLinkL2"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="0.38"
+                                            tools:text="0.45"
                                             android:textColor="#FF111827"
                                             android:textSize="14sp" />
 
@@ -433,13 +389,10 @@
                                     </LinearLayout>
                                 </LinearLayout>
                             </LinearLayout>
-                        </LinearLayout>
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal">
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="wrap_content" />
 
                             <LinearLayout
                                 android:layout_width="0dp"
@@ -470,7 +423,7 @@
                                         <TextView
                                             android:id="@+id/tvDimLinkL3"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="0.52"
+                                            tools:text="0.38"
                                             android:textColor="#FF111827"
                                             android:textSize="14sp" />
 
@@ -480,10 +433,13 @@
                                     </LinearLayout>
                                 </LinearLayout>
                             </LinearLayout>
+                        </LinearLayout>
 
-                            <Space
-                                android:layout_width="10dp"
-                                android:layout_height="wrap_content" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
 
                             <LinearLayout
                                 android:layout_width="0dp"
@@ -514,7 +470,51 @@
                                         <TextView
                                             android:id="@+id/tvDimLinkL4"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="0.41"
+                                            tools:text="0.52"
+                                            android:textColor="#FF111827"
+                                            android:textSize="14sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.Light"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="wrap_content" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="连杆 L5"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="12sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.Light"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimLinkL5"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="0.41"
                                             android:textColor="#FF111827"
                                             android:textSize="14sp" />
 
@@ -526,43 +526,192 @@
                             </LinearLayout>
                         </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:layout_marginBottom="6dp"
-                            android:text="L4 相对铲斗末端角度 α"
-                            android:textColor="#FF6B7280"
-                            android:textSize="12sp" />
+
+
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
+                            android:layout_marginTop="10dp"
                             android:orientation="horizontal">
 
-                            <TextView
-                                android:id="@+id/tvDimLinkAngle"
+                            <LinearLayout
                                 android:layout_width="0dp"
-                                android:layout_height="40dp"
-                                android:layout_weight="1"
-                                android:background="@drawable/edittext_light_bg"
-                                android:gravity="center_vertical|end"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:text="24.5"
-                                android:textColor="#FF111827"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="°"
-                                android:textColor="#FF93C5FD"
-                                android:textSize="12sp" />
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="连杆 L6"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="12sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.Light"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimLinkL6"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="0.52"
+                                            android:textColor="#FF111827"
+                                            android:textSize="14sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.Light"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="wrap_content" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="连杆 L7"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="12sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.Light"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimLinkL7"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="0.41"
+                                            android:textColor="#FF111827"
+                                            android:textSize="14sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.Light"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
                         </LinearLayout>
-                    </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="连杆 L9"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="12sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.Light"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimLinkL9"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="0.52"
+                                            android:textColor="#FF111827"
+                                            android:textSize="14sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.Light"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="wrap_content" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="连杆 L10"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="12sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.Light"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimLinkL10"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="0.41"
+                                            android:textColor="#FF111827"
+                                            android:textSize="14sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.Light"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+                       </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
@@ -582,40 +731,189 @@
                             android:padding="16dp">
 
                         <!-- 铲斗长度tab -->
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="10dp"
-                                android:text="铲斗长度用于姿态与铲尖高度计算（与 IMU 页一致）。"
-                                android:textColor="#FF6B7280"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="6dp"
-                                android:text="铲斗长度"
-                                android:textColor="#FF6B7280"
-                                android:textSize="12sp" />
-
                             <LinearLayout
-                                style="@style/InputWithSuffixContainer.Light"
                                 android:layout_width="match_parent"
-                                android:layout_height="40dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
                                 android:orientation="horizontal">
 
-                                <TextView
-                                    android:id="@+id/tvDimBucketLength"
-                                    style="@style/InputWithSuffixValue"
-                                    android:text="1.20"
-                                    android:textColor="#FF111827"
-                                    android:textSize="14sp" />
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
 
-                                <TextView
-                                    style="@style/InputSuffixUnit.Light"
-                                    android:text="m" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="6dp"
+                                        android:text="连杆 L11"
+                                        android:textColor="#FF6B7280"
+                                        android:textSize="12sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <LinearLayout
+                                            style="@style/InputWithSuffixContainer.Light"
+                                            android:layout_width="0dp"
+                                            android:layout_height="40dp"
+                                            android:layout_weight="1">
+
+                                            <TextView
+                                                android:id="@+id/tvDimLinkL11"
+                                                style="@style/InputWithSuffixValue"
+                                                tools:text="0.52"
+                                                android:textColor="#FF111827"
+                                                android:textSize="14sp" />
+
+                                            <TextView
+                                                style="@style/InputSuffixUnit.Light"
+                                                android:text="m" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="wrap_content" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="6dp"
+                                        android:text="连杆 L12"
+                                        android:textColor="#FF6B7280"
+                                        android:textSize="12sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <LinearLayout
+                                            style="@style/InputWithSuffixContainer.Light"
+                                            android:layout_width="0dp"
+                                            android:layout_height="40dp"
+                                            android:layout_weight="1">
+
+                                            <TextView
+                                                android:id="@+id/tvDimLinkL12"
+                                                style="@style/InputWithSuffixValue"
+                                                tools:text="0.41"
+                                                android:textColor="#FF111827"
+                                                android:textSize="14sp" />
+
+                                            <TextView
+                                                style="@style/InputSuffixUnit.Light"
+                                                android:text="m" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
                             </LinearLayout>
+
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="6dp"
+                                        android:text="连杆 L13"
+                                        android:textColor="#FF6B7280"
+                                        android:textSize="12sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <LinearLayout
+                                            style="@style/InputWithSuffixContainer.Light"
+                                            android:layout_width="0dp"
+                                            android:layout_height="40dp"
+                                            android:layout_weight="1">
+
+                                            <TextView
+                                                android:id="@+id/tvDimLinkL13"
+                                                style="@style/InputWithSuffixValue"
+                                                tools:text="0.52"
+                                                android:textColor="#FF111827"
+                                                android:textSize="14sp" />
+
+                                            <TextView
+                                                style="@style/InputSuffixUnit.Light"
+                                                android:text="m" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="wrap_content" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="6dp"
+                                        android:text="连杆 L14"
+                                        android:textColor="#FF6B7280"
+                                        android:textSize="12sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <LinearLayout
+                                            style="@style/InputWithSuffixContainer.Light"
+                                            android:layout_width="0dp"
+                                            android:layout_height="40dp"
+                                            android:layout_weight="1">
+
+                                            <TextView
+                                                android:id="@+id/tvDimLinkL14"
+                                                style="@style/InputWithSuffixValue"
+                                                tools:text="0.41"
+                                                android:textColor="#FF111827"
+                                                android:textSize="14sp" />
+
+                                            <TextView
+                                                style="@style/InputSuffixUnit.Light"
+                                                android:text="m" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
                         </LinearLayout>
                     </LinearLayout>
 
@@ -651,95 +949,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginBottom="6dp"
-                                    android:text="底盘高度"
-                                    android:textColor="#FF6B7280"
-                                    android:textSize="11sp" />
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <LinearLayout
-                                        style="@style/InputWithSuffixContainer.LightCompact"
-                                        android:layout_width="0dp"
-                                        android:layout_height="40dp"
-                                        android:layout_weight="1">
-
-                                        <TextView
-                                            android:id="@+id/tvDimChassisH"
-                                            style="@style/InputWithSuffixValue"
-                                            android:text="0.95"
-                                            android:textColor="#FF111827"
-                                            android:textSize="13sp" />
-
-                                        <TextView
-                                            style="@style/InputSuffixUnit.LightCompact"
-                                            android:text="m" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <Space
-                                android:layout_width="8dp"
-                                android:layout_height="wrap_content" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="6dp"
-                                    android:text="履带宽度"
-                                    android:textColor="#FF6B7280"
-                                    android:textSize="11sp" />
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <LinearLayout
-                                        style="@style/InputWithSuffixContainer.LightCompact"
-                                        android:layout_width="0dp"
-                                        android:layout_height="40dp"
-                                        android:layout_weight="1">
-
-                                        <TextView
-                                            android:id="@+id/tvDimTrackW"
-                                            style="@style/InputWithSuffixValue"
-                                            android:text="2.40"
-                                            android:textColor="#FF111827"
-                                            android:textSize="13sp" />
-
-                                        <TextView
-                                            style="@style/InputSuffixUnit.LightCompact"
-                                            android:text="m" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <Space
-                                android:layout_width="8dp"
-                                android:layout_height="wrap_content" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="6dp"
-                                    android:text="驾驶舱高度"
+                                    android:text="底盘高度 H1"
                                     android:textColor="#FF6B7280"
                                     android:textSize="11sp" />
 
@@ -758,7 +968,100 @@
                                         <TextView
                                             android:id="@+id/tvDimCabinH"
                                             style="@style/InputWithSuffixValue"
-                                            android:text="2.80"
+                                            tools:text="0.95"
+                                            android:textColor="#FF111827"
+                                            android:textSize="13sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.LightCompact"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <Space
+                                android:layout_width="8dp"
+                                android:layout_height="wrap_content" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="履带宽度 W"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="11sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.LightCompact"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimTrackW"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="2.40"
+                                            android:textColor="#FF111827"
+                                            android:textSize="13sp" />
+
+                                        <TextView
+                                            style="@style/InputSuffixUnit.LightCompact"
+                                            android:text="m" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+
+  
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="6dp"
+                                    android:text="驾驶舱高度 H2"
+                                    android:textColor="#FF6B7280"
+                                    android:textSize="11sp" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <LinearLayout
+                                        style="@style/InputWithSuffixContainer.LightCompact"
+                                        android:layout_width="0dp"
+                                        android:layout_height="40dp"
+                                        android:layout_weight="1">
+
+                                        <TextView
+                                            android:id="@+id/tvDimCabinH2"
+                                            style="@style/InputWithSuffixValue"
+                                            tools:text="2.80"
                                             android:textColor="#FF111827"
                                             android:textSize="13sp" />
 

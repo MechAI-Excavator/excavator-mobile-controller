@@ -115,6 +115,50 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     /** 尺寸页「自定义」子 Tab：0 机械臂长度 / 1 连杆参数 / 2 铲斗参数 / 3 驾驶舱相对比例 */
     private int dimensionCustomSubTabIndex;
 
+    /**
+     * 尺寸页自定义输入：{@code viewId} ↔ {@link DimensionPreferences.Field}，顺序与布局分组一致。
+     */
+    private static final class DimensionInputBinding {
+        final int viewId;
+        final DimensionPreferences.Field field;
+
+        DimensionInputBinding(int viewId, DimensionPreferences.Field field) {
+            this.viewId = viewId;
+            this.field = field;
+        }
+    }
+
+    private static final DimensionInputBinding[] DIMENSION_INPUT_BINDINGS = {
+            // 机械臂长度
+            new DimensionInputBinding(R.id.tvDimLb, DimensionPreferences.Field.BOOM_M),
+            new DimensionInputBinding(R.id.tvDimLs, DimensionPreferences.Field.STICK_M),
+            // 连杆参数
+            new DimensionInputBinding(R.id.tvDimLinkL2, DimensionPreferences.Field.LINK_L2),
+            new DimensionInputBinding(R.id.tvDimLinkL3, DimensionPreferences.Field.LINK_L3),
+            new DimensionInputBinding(R.id.tvDimLinkL4, DimensionPreferences.Field.LINK_L4),
+            new DimensionInputBinding(R.id.tvDimLinkL5, DimensionPreferences.Field.LINK_L5),
+            new DimensionInputBinding(R.id.tvDimLinkL6, DimensionPreferences.Field.LINK_L6),
+            new DimensionInputBinding(R.id.tvDimLinkL7, DimensionPreferences.Field.LINK_L7),
+            new DimensionInputBinding(R.id.tvDimLinkL9, DimensionPreferences.Field.LINK_L9),
+            new DimensionInputBinding(R.id.tvDimLinkL10, DimensionPreferences.Field.LINK_L10),
+            // 铲斗参数
+            new DimensionInputBinding(R.id.tvDimLinkL11, DimensionPreferences.Field.LINK_L11),
+            new DimensionInputBinding(R.id.tvDimLinkL12, DimensionPreferences.Field.LINK_L12),
+            new DimensionInputBinding(R.id.tvDimLinkL13, DimensionPreferences.Field.LINK_L13),
+            new DimensionInputBinding(R.id.tvDimLinkL14, DimensionPreferences.Field.LINK_L14),
+            // 驾驶舱相对比例
+            new DimensionInputBinding(R.id.tvDimCabinH, DimensionPreferences.Field.CHASSIS_H_M),
+            new DimensionInputBinding(R.id.tvDimTrackW, DimensionPreferences.Field.TRACK_W_M),
+            new DimensionInputBinding(R.id.tvDimCabinH2, DimensionPreferences.Field.CABIN_H2_M),
+    };
+
+    private static final int[] DIMENSION_CUSTOM_SUB_TAB_IDS = {
+            R.id.tabDimCustomArm,
+            R.id.tabDimCustomLink,
+            R.id.tabDimCustomBucket,
+            R.id.tabDimCustomCabin
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -163,6 +207,9 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         pageJoystick.setVisibility(index == 2 ? View.VISIBLE : View.GONE);
         pageGeneral.setVisibility(index == 3 ? View.VISIBLE : View.GONE);
 
+        if (index == 1) {
+            refreshDimensionValueLabels();
+        }
         updateNavHighlight(index);
     }
 
@@ -456,18 +503,6 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         View panelSelect = pageDimensions.findViewById(R.id.dimPanelSelect);
         View panelCustom = pageDimensions.findViewById(R.id.dimPanelCustom);
 
-        TextView tvDimLb = pageDimensions.findViewById(R.id.tvDimLb);
-        TextView tvDimLs = pageDimensions.findViewById(R.id.tvDimLs);
-        TextView tvDimLinkL1 = pageDimensions.findViewById(R.id.tvDimLinkL1);
-        TextView tvDimLinkL2 = pageDimensions.findViewById(R.id.tvDimLinkL2);
-        TextView tvDimLinkL3 = pageDimensions.findViewById(R.id.tvDimLinkL3);
-        TextView tvDimLinkL4 = pageDimensions.findViewById(R.id.tvDimLinkL4);
-        TextView tvDimLinkAngle = pageDimensions.findViewById(R.id.tvDimLinkAngle);
-        TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
-        TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
-        TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
-        TextView tvDimBucketLength = pageDimensions.findViewById(R.id.tvDimBucketLength);
-
         bindDimensionModelCardsRecycler();
 
         View.OnClickListener tabSelectListener = v -> showDimensionsSubTab(
@@ -480,41 +515,34 @@ public class SettingsActivity extends ScaledAppCompatActivity {
         pageDimensions.findViewById(R.id.wrapTabDimCustom).setOnClickListener(tabCustomListener);
         tabCustom.setOnClickListener(tabCustomListener);
 
-        bindDimensionNumpad(tvDimLb, "boomM");
-        bindDimensionNumpad(tvDimLs, "stickM");
-        bindDimensionNumpad(tvDimLinkL1, "linkL1");
-        bindDimensionNumpad(tvDimLinkL2, "linkL2");
-        bindDimensionNumpad(tvDimLinkL3, "linkL3");
-        bindDimensionNumpad(tvDimLinkL4, "linkL4");
-        bindDimensionNumpad(tvDimLinkAngle, "linkAngleDeg");
-        bindDimensionNumpad(tvDimChassisH, "chassisM");
-        bindDimensionNumpad(tvDimTrackW, "trackM");
-        bindDimensionNumpad(tvDimCabinH, "cabinM");
-        bindBucketLengthMetersFromImuMmNumpad(tvDimBucketLength);
+        bindDimensionCustomSubTabs();
+        bindDimensionValueInputs();
 
-        View tabDimCustomArm = pageDimensions.findViewById(R.id.tabDimCustomArm);
-        View tabDimCustomLink = pageDimensions.findViewById(R.id.tabDimCustomLink);
-        View tabDimCustomBucket = pageDimensions.findViewById(R.id.tabDimCustomBucket);
-        View tabDimCustomCabin = pageDimensions.findViewById(R.id.tabDimCustomCabin);
-        if (tabDimCustomArm != null) {
-            tabDimCustomArm.setOnClickListener(v -> applyDimensionCustomSubTab(0));
-        }
-        if (tabDimCustomLink != null) {
-            tabDimCustomLink.setOnClickListener(v -> applyDimensionCustomSubTab(1));
-        }
-        if (tabDimCustomBucket != null) {
-            tabDimCustomBucket.setOnClickListener(v -> applyDimensionCustomSubTab(2));
-        }
-        if (tabDimCustomCabin != null) {
-            tabDimCustomCabin.setOnClickListener(v -> applyDimensionCustomSubTab(3));
-        }
         dimensionCustomSubTabIndex = 0;
-
         DimensionPreferences.Params p = DimensionPreferences.load(this);
         refreshDimensionModelSelectionUi(p.selectedModel);
         refreshDimensionValueLabels();
         showDimensionsSubTab(tabSelect, tabCustom, underlineSelect, underlineCustom,
                 panelSelect, panelCustom, 0);
+    }
+
+    private void bindDimensionValueInputs() {
+        if (pageDimensions == null) return;
+        for (DimensionInputBinding binding : DIMENSION_INPUT_BINDINGS) {
+            TextView tv = pageDimensions.findViewById(binding.viewId);
+            bindDimensionNumpad(tv, binding.field);
+        }
+    }
+
+    private void bindDimensionCustomSubTabs() {
+        if (pageDimensions == null) return;
+        for (int i = 0; i < DIMENSION_CUSTOM_SUB_TAB_IDS.length; i++) {
+            final int tabIndex = i;
+            View tab = pageDimensions.findViewById(DIMENSION_CUSTOM_SUB_TAB_IDS[i]);
+            if (tab != null) {
+                tab.setOnClickListener(v -> applyDimensionCustomSubTab(tabIndex));
+            }
+        }
     }
 
     private void showDimensionsSubTab(
@@ -581,11 +609,10 @@ public class SettingsActivity extends ScaledAppCompatActivity {
             }
         }
 
-        TextView tabArm = pageDimensions.findViewById(R.id.tabDimCustomArm);
-        TextView tabLink = pageDimensions.findViewById(R.id.tabDimCustomLink);
-        TextView tabBucket = pageDimensions.findViewById(R.id.tabDimCustomBucket);
-        TextView tabCabin = pageDimensions.findViewById(R.id.tabDimCustomCabin);
-        TextView[] tabs = { tabArm, tabLink, tabBucket, tabCabin };
+        TextView[] tabs = new TextView[DIMENSION_CUSTOM_SUB_TAB_IDS.length];
+        for (int i = 0; i < DIMENSION_CUSTOM_SUB_TAB_IDS.length; i++) {
+            tabs[i] = pageDimensions.findViewById(DIMENSION_CUSTOM_SUB_TAB_IDS[i]);
+        }
         final int activeColor = 0xFF2563EB;
         final int inactiveColor = 0xFF6B7280;
         for (int i = 0; i < tabs.length; i++) {
@@ -641,32 +668,12 @@ public class SettingsActivity extends ScaledAppCompatActivity {
             return;
         }
         DimensionPreferences.Params p = DimensionPreferences.load(this);
-        TextView tvDimLb = pageDimensions.findViewById(R.id.tvDimLb);
-        TextView tvDimLs = pageDimensions.findViewById(R.id.tvDimLs);
-        TextView tvDimLinkL1 = pageDimensions.findViewById(R.id.tvDimLinkL1);
-        TextView tvDimLinkL2 = pageDimensions.findViewById(R.id.tvDimLinkL2);
-        TextView tvDimLinkL3 = pageDimensions.findViewById(R.id.tvDimLinkL3);
-        TextView tvDimLinkL4 = pageDimensions.findViewById(R.id.tvDimLinkL4);
-        TextView tvDimLinkAngle = pageDimensions.findViewById(R.id.tvDimLinkAngle);
-        TextView tvDimChassisH = pageDimensions.findViewById(R.id.tvDimChassisH);
-        TextView tvDimTrackW = pageDimensions.findViewById(R.id.tvDimTrackW);
-        TextView tvDimCabinH = pageDimensions.findViewById(R.id.tvDimCabinH);
-        TextView tvDimBucketLength = pageDimensions.findViewById(R.id.tvDimBucketLength);
-
-        if (tvDimLb != null) tvDimLb.setText(String.format(Locale.US, "%.2f", p.boomM));
-        if (tvDimLs != null) tvDimLs.setText(String.format(Locale.US, "%.2f", p.stickM));
-        if (tvDimLinkL1 != null) tvDimLinkL1.setText(String.format(Locale.US, "%.2f", p.linkL1));
-        if (tvDimLinkL2 != null) tvDimLinkL2.setText(String.format(Locale.US, "%.2f", p.linkL2));
-        if (tvDimLinkL3 != null) tvDimLinkL3.setText(String.format(Locale.US, "%.2f", p.linkL3));
-        if (tvDimLinkL4 != null) tvDimLinkL4.setText(String.format(Locale.US, "%.2f", p.linkL4));
-        if (tvDimLinkAngle != null) tvDimLinkAngle.setText(String.format(Locale.US, "%.1f", p.linkAngleDeg));
-        if (tvDimChassisH != null) tvDimChassisH.setText(String.format(Locale.US, "%.2f", p.chassisHeightM));
-        if (tvDimTrackW != null) tvDimTrackW.setText(String.format(Locale.US, "%.2f", p.trackWidthM));
-        if (tvDimCabinH != null) tvDimCabinH.setText(String.format(Locale.US, "%.2f", p.cabinHeightM));
-
-        if (tvDimBucketLength != null) {
-            ImuPreferences.Params imu = ImuPreferences.load(this);
-            tvDimBucketLength.setText(String.format(Locale.US, "%.2f", imu.bucketLength / 1000.0));
+        for (DimensionInputBinding binding : DIMENSION_INPUT_BINDINGS) {
+            TextView tv = pageDimensions.findViewById(binding.viewId);
+            if (tv != null) {
+                double valueM = DimensionPreferences.getValue(p, binding.field);
+                tv.setText(String.format(Locale.US, "%.2f", valueM));
+            }
         }
     }
 
@@ -699,48 +706,20 @@ public class SettingsActivity extends ScaledAppCompatActivity {
     /**
      * 自定义尺寸数值：点击预览 TextView → 与 IMU 页相同的屏幕坐标弹出数字键盘。
      */
-    private void bindDimensionNumpad(TextView tv, String fieldKey) {
-        if (tv == null) return;
+    private void bindDimensionNumpad(TextView tv, DimensionPreferences.Field field) {
+        if (tv == null || field == null) return;
         tv.setClickable(true);
         tv.setFocusable(true);
         tv.setOnClickListener(v -> {
             DimensionPreferences.Params current = DimensionPreferences.load(this);
-            double initialValue;
-            switch (fieldKey) {
-                case "boomM": initialValue = current.boomM; break;
-                case "stickM": initialValue = current.stickM; break;
-                case "linkL1": initialValue = current.linkL1; break;
-                case "linkL2": initialValue = current.linkL2; break;
-                case "linkL3": initialValue = current.linkL3; break;
-                case "linkL4": initialValue = current.linkL4; break;
-                case "linkAngleDeg": initialValue = current.linkAngleDeg; break;
-                case "chassisM": initialValue = current.chassisHeightM; break;
-                case "trackM": initialValue = current.trackWidthM; break;
-                case "cabinM": initialValue = current.cabinHeightM; break;
-                default: initialValue = 0; break;
-            }
+            double initialValue = DimensionPreferences.getValue(current, field);
 
             NumpadView numpad = new NumpadView(this);
-            if ("linkAngleDeg".equals(fieldKey)) {
-                numpad.setValue(String.format(Locale.US, "%.1f", initialValue));
-            } else {
-                numpad.setValue(String.format(Locale.US, "%.2f", initialValue));
-            }
+            numpad.setValue(String.format(Locale.US, "%.2f", initialValue));
             numpad.setOnConfirmListener(value -> {
                 double parsed = ImuPreferences.parseOrDefault(value, initialValue);
                 DimensionPreferences.Params p = DimensionPreferences.load(this);
-                switch (fieldKey) {
-                    case "boomM": p.boomM = parsed; break;
-                    case "stickM": p.stickM = parsed; break;
-                    case "linkL1": p.linkL1 = parsed; break;
-                    case "linkL2": p.linkL2 = parsed; break;
-                    case "linkL3": p.linkL3 = parsed; break;
-                    case "linkL4": p.linkL4 = parsed; break;
-                    case "linkAngleDeg": p.linkAngleDeg = parsed; break;
-                    case "chassisM": p.chassisHeightM = parsed; break;
-                    case "trackM": p.trackWidthM = parsed; break;
-                    case "cabinM": p.cabinHeightM = parsed; break;
-                }
+                DimensionPreferences.setValue(p, field, parsed);
                 DimensionPreferences.save(this, p);
                 refreshDimensionValueLabels();
             });

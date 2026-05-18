@@ -21,7 +21,7 @@ import java.util.Locale;
 /**
  * Header bar component.
  *
- * Props in  : setMode(String), setConnected(boolean), setLinkLatencyMs(int)
+ * Props in  : setMode(String), setConnected(boolean)（接收机 UDP 链路）, setLinkLatencyMs(int)
  * Self-driven: clock; system battery level via {@link Intent#ACTION_BATTERY_CHANGED}
  *
  * Usage in XML:
@@ -35,6 +35,7 @@ import java.util.Locale;
 public class HeaderBarView extends LinearLayout {
 
     private TextView tvModeStatus;
+    private View pillConnected;
     private TextView tvHeaderConnection;
     private TextView tvCurrentTime;
     private TextView tvBatteryPercent;
@@ -86,6 +87,8 @@ public class HeaderBarView extends LinearLayout {
         setOrientation(VERTICAL);
         setBackgroundColor(0x4D000000);
         inflate(context, R.layout.view_header_bar, this);
+        pillConnected      = findViewById(R.id.pillConnected);
+        tvHeaderConnection = findViewById(R.id.tvConnectionStatus);
         tvCurrentTime      = findViewById(R.id.tvCurrentTime);
         tvBatteryPercent   = findViewById(R.id.tvBatteryPercent);
         tvLinkLatency      = findViewById(R.id.tvLinkLatency);
@@ -102,6 +105,7 @@ public class HeaderBarView extends LinearLayout {
         setRtkOnline(false);
         setImuStatus(0, 4, false);
         setLinkLatencyMs(-1);
+        setConnected(false);
     }
 
     /** 外部注册急停按钮点击回调。 */
@@ -116,18 +120,20 @@ public class HeaderBarView extends LinearLayout {
         if (tvModeStatus != null) tvModeStatus.setText(text);
     }
 
-    /** 更新连接状态显示（绿色已连接 / 红色未连接） */
+    /** 更新接收机链路状态（UDP/TCU 已连通为绿色「已连接」，否则红色「未连接」）。 */
     public void setConnected(boolean connected) {
-        int color = connected ? 0xFF4CAF50 : 0xFFFF6B6B;
+        int textColor = connected ? ONLINE_COLOR : OFFLINE_COLOR;
         if (tvHeaderConnection != null) {
             tvHeaderConnection.setText(connected ? "已连接" : "未连接");
-            tvHeaderConnection.setTextColor(color);
+            tvHeaderConnection.setTextColor(textColor);
+        }
+        if (pillConnected != null) {
+            pillConnected.setBackgroundResource(connected
+                    ? R.drawable.connected_pill_bg
+                    : R.drawable.disconnected_pill_bg);
         }
         if (connectionDot != null) {
-            GradientDrawable dot = new GradientDrawable();
-            dot.setShape(GradientDrawable.OVAL);
-            dot.setColor(color);
-            connectionDot.setBackground(dot);
+            setDotColor(connectionDot, textColor);
         }
     }
 

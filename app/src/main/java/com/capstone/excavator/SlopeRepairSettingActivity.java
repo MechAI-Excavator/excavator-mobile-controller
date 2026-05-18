@@ -1,6 +1,5 @@
 package com.capstone.excavator;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -37,6 +36,7 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
         selectedType = SlopeRepairTaskState.getRepairType();
         setupCards();
         setupActions();
+        SlopeRepairStepNavigation.bindStepBar(this);
     }
 
     private void bindViews() {
@@ -103,7 +103,7 @@ public class SlopeRepairSettingActivity extends ScaledAppCompatActivity {
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentState();
-                startActivity(new Intent(this, SlopeRepairSecondSettingActivity.class));
+                SlopeRepairStepNavigation.goToNext(this);
             });
         }
     }

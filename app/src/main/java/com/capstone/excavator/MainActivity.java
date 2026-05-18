@@ -146,7 +146,7 @@ public class MainActivity extends ScaledAppCompatActivity {
     private VerticalSpectrumGaugeView rightActivityGauge;
 
     // ── 度量条单位 / 每格分辨率配置 ──────────────────────────────────────
-    /** 与 {@link VerticalSpectrumGaugeView#SLOTS_PER_HALF} 保持一致（一侧的格子数）。 */
+    /** 与  保持一致（一侧的格子数）。 */
     private static final int GAUGE_SLOTS_PER_HALF = 19;
 
     /** 度量条单位：CM=长度（找平/挖渠），DEG=角度（其他场景）。 */
@@ -282,6 +282,9 @@ public class MainActivity extends ScaledAppCompatActivity {
         // UDP 已连且 onPause 时停过心跳：重新拉起。startHeartbeat 内部会幂等清理旧 runnable。
         if (udpPipeline != null && udpPipeline.isConnected()) {
             startHeartbeat();
+            setReceiverLinkConnected(true);
+        } else {
+            setReceiverLinkConnected(false);
         }
     }
 
@@ -508,8 +511,9 @@ public class MainActivity extends ScaledAppCompatActivity {
             }
         });
 
-        // 初始状态：未连接
+        // 初始状态：视频与接收机链路均未连接
         setVideoConnected(false);
+        setReceiverLinkConnected(false);
 
         applyTaskOverlayVisibility();
         setupActivityGaugeViews();
@@ -869,7 +873,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         if (mapView == null) return;
         // Fixed GPS location (requirement #1)
         //
-        mapView.setFixedLocation(SIM_RTK_DEFAULT_LAT, SIM_RTK_DEFAULT_LON);
+        mapView.setFixedLocation(SIM_RTK_DEFAULT_LAT, SIM_RTK_DEFAULT_LON, 0.0);
     }
     
     /**
@@ -973,9 +977,14 @@ public class MainActivity extends ScaledAppCompatActivity {
         fpvWidget.start();
     }
 
+    private void setReceiverLinkConnected(boolean connected) {
+        if (headerBar != null) {
+            headerBar.setConnected(connected);
+        }
+    }
+
     private void setVideoConnected(boolean connected) {
         if (bottomBar != null) bottomBar.setLiveStatus(connected);
-        if (headerBar != null) headerBar.setConnected(connected);
         if (videoPlaceholder != null)
             videoPlaceholder.setVisibility(connected ? View.GONE : View.VISIBLE);
         if (noLiveVideoOverlay != null)
@@ -1261,7 +1270,7 @@ public class MainActivity extends ScaledAppCompatActivity {
             lon = SIM_RTK_DEFAULT_LON;
         }
 
-        if (mapView != null) mapView.setFixedLocation(lat, lon);
+        if (mapView != null) mapView.setFixedLocation(lat, lon, 0.0);
         if (bottomBar != null) bottomBar.setRtkLatLon(lat, lon);
     }
 
@@ -1379,6 +1388,7 @@ public class MainActivity extends ScaledAppCompatActivity {
             public void onRcConnectFail(SkyException e) {
                 Log.e("MainActivity", "遥控器连接失败: " + (e != null ? e.getMessage() : "未知错误"));
                 runOnUiThread(() -> {
+                    setReceiverLinkConnected(false);
                     Toast.makeText(MainActivity.this, "遥控器连接失败", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -1387,6 +1397,7 @@ public class MainActivity extends ScaledAppCompatActivity {
             public void onRcDisconnect() {
                 Log.e("MainActivity", "遥控器断开连接");
                 runOnUiThread(() -> {
+                    setReceiverLinkConnected(false);
                     Toast.makeText(MainActivity.this, "遥控器断开连接", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -1440,6 +1451,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                             // 连接成功但不立即切换，等待收到数据后再切换
                             // useRealData 保持 false，直到收到第一个数据包
                             lastDataReceiveTime = System.currentTimeMillis();
+                            setReceiverLinkConnected(true);
                             Toast.makeText(MainActivity.this, "UDP连接成功，等待数据...", Toast.LENGTH_SHORT).show();
                             startHeartbeat(); // 开始定时发送心跳帧测量 RTT
                         }
@@ -1453,6 +1465,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         @Override
                         public void run() {
                             useRealData = false; // 连接失败，使用模拟数据
+                            setReceiverLinkConnected(false);
                             setSensorStatusesOffline();
                             notifyLinkLatencyMs(-1);
                             Toast.makeText(MainActivity.this, "UDP连接失败，使用模拟数据", Toast.LENGTH_SHORT).show();
@@ -1468,6 +1481,7 @@ public class MainActivity extends ScaledAppCompatActivity {
                         @Override
                         public void run() {
                             useRealData = false; // 切换回模拟数据
+                            setReceiverLinkConnected(false);
                             setSensorStatusesOffline();
                             notifyLinkLatencyMs(-1);
                             Toast.makeText(MainActivity.this, "UDP断开连接", Toast.LENGTH_SHORT).show();
@@ -1567,6 +1581,7 @@ public class MainActivity extends ScaledAppCompatActivity {
         } else {
             Log.e("UDP", "创建UDP管道失败");
             useRealData = false; // 创建失败，使用模拟数据
+            setReceiverLinkConnected(false);
             notifyLinkLatencyMs(-1);
             Toast.makeText(this, "创建UDP管道失败，使用模拟数据", Toast.LENGTH_SHORT).show();
         }

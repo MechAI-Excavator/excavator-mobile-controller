@@ -2,12 +2,14 @@ package com.capstone.excavator;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+
 
 /**
  * 挖沟 Step2：A 点参考点与 AB 距离。
@@ -29,6 +31,7 @@ public class DitchSettingPointAActivity extends ScaledAppCompatActivity {
     private TextView tvRefRightA;
     private TextView tvAbDistance;
     private int selectedRefA = DitchTaskState.REF_MIDDLE;
+    private ImageView imgDitchSectionType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +44,10 @@ public class DitchSettingPointAActivity extends ScaledAppCompatActivity {
         setupRefCards();
         setupInputs();
         setupActions();
-        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_POINT_A);
+        imgDitchSectionType = findViewById(R.id.imgDitchSectionType);
+        DitchStepNavigation.bindStepBar(this);
+
+        applyDitchSectionTypeImage();
     }
 
     private void bindViews() {
@@ -59,6 +65,15 @@ public class DitchSettingPointAActivity extends ScaledAppCompatActivity {
         tvAbDistance = findViewById(R.id.tvCurrentRef);
 
         numpad = new NumpadView(this);
+    }
+
+    private void applyDitchSectionTypeImage() {
+        if (imgDitchSectionType == null) {
+            return;
+        }
+        imgDitchSectionType.setImageResource(DitchTaskState.isSquareDitch()
+                ? R.drawable.ditch_step2a1
+                : R.drawable.ditch_step2a);
     }
 
     private void restoreFromState() {
@@ -138,13 +153,13 @@ public class DitchSettingPointAActivity extends ScaledAppCompatActivity {
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentState();
-                DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_POINT_A);
+                DitchStepNavigation.goToPrevious(this);
             });
         }
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentState();
-                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_POINT_A);
+                DitchStepNavigation.goToNext(this);
             });
         }
     }

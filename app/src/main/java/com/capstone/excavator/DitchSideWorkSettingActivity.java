@@ -58,18 +58,18 @@ public class DitchSideWorkSettingActivity extends ScaledAppCompatActivity {
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentInputs();
-                DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_SIDE);
+                DitchStepNavigation.goToPrevious(this);
             });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentInputs();
-                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_SIDE);
+                DitchStepNavigation.goToNext(this);
             });
         }
 
-        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_SIDE);
+        DitchStepNavigation.bindStepBar(this);
     }
 
     private void restoreInputsFromState() {

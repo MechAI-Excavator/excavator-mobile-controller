@@ -69,10 +69,9 @@ public class DitchPrecheckActivity extends ScaledAppCompatActivity {
 
         DitchStepNavigation.bindBackToMain(btnBack, this);
         if (btnPrev != null) {
-            btnPrev.setOnClickListener(v ->
-                    DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_PRECHECK));
+            btnPrev.setOnClickListener(v -> DitchStepNavigation.goToPrevious(this));
         }
-        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_PRECHECK);
+        DitchStepNavigation.bindStepBar(this);
         if (btnStart != null) {
             btnStart.setOnClickListener(v -> {
                 TaskTypeState.getInstance().setType(TaskTypeState.Type.DITCH);

@@ -172,19 +172,19 @@
 
                 </LinearLayout>
 
-                            <TextView
-                android:id="@+id/btnLevelNext"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/button_blue_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="下一步"
-                android:textColor="#FFFFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/btnLevelNext"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/button_blue_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="下一步"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
                 
             </LinearLayout>
         </LinearLayout>

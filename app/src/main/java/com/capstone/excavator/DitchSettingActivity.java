@@ -35,7 +35,7 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         restoreFromState();
         setupDitchTypeCards();
         setupActions();
-        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_TYPE);
+        DitchStepNavigation.bindStepBar(this);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class DitchSettingActivity extends ScaledAppCompatActivity {
         if (btnLevelNext != null) {
             btnLevelNext.setOnClickListener(v -> {
                 saveCurrentState();
-                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_TYPE);
+                DitchStepNavigation.goToNext(this);
             });
         }
     }

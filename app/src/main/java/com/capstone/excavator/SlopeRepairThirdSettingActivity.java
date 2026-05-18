@@ -1,6 +1,5 @@
 package com.capstone.excavator;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -46,6 +45,7 @@ public class SlopeRepairThirdSettingActivity extends ScaledAppCompatActivity {
         setupSlopeDirToggle();
         setupInputs();
         setupActions();
+        SlopeRepairStepNavigation.bindStepBar(this);
     }
 
     private void bindViews() {
@@ -168,24 +168,19 @@ public class SlopeRepairThirdSettingActivity extends ScaledAppCompatActivity {
     }
 
     private void setupActions() {
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                SlopeRepairTaskState.reset();
-                navigateToMain();
-            });
-        }
+        SlopeRepairStepNavigation.bindBackToMain(btnBack, this);
+
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentState();
-                startActivity(new Intent(this, SlopeRepairSecondSettingActivity.class));
-                finish();
+                SlopeRepairStepNavigation.goToPrevious(this);
             });
         }
 
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentState();
-                startActivity(new Intent(this, SlopeRepairPrecheckActivity.class));
+                SlopeRepairStepNavigation.goToNext(this);
             });
         }
     }

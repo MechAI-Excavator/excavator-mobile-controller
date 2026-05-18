@@ -71,13 +71,11 @@ public class SlopeRepairPrecheckActivity extends ScaledAppCompatActivity {
         );
         helpTooltip.attach(help);
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                SlopeRepairTaskState.reset();
-                navigateToMain();
-            });
+        SlopeRepairStepNavigation.bindBackToMain(btnBack, this);
+        if (btnPrev != null) {
+            btnPrev.setOnClickListener(v -> SlopeRepairStepNavigation.goToPrevious(this));
         }
-        if (btnPrev != null) btnPrev.setOnClickListener(v -> finish());
+        SlopeRepairStepNavigation.bindStepBar(this);
         if (btnStart != null) {
             btnStart.setOnClickListener(v -> {
                 TaskTypeState.getInstance().setType(TaskTypeState.Type.SLOPE);

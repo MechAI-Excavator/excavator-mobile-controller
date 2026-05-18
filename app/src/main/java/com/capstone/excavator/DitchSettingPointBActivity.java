@@ -2,6 +2,7 @@ package com.capstone.excavator;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -27,6 +28,7 @@ public class DitchSettingPointBActivity extends ScaledAppCompatActivity {
     private TextView tvRefMiddleB;
     private TextView tvRefRightB;
     private int selectedRefB = DitchTaskState.REF_MIDDLE;
+    private ImageView imgDitchSectionType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +40,9 @@ public class DitchSettingPointBActivity extends ScaledAppCompatActivity {
         restoreFromState();
         setupRefCards();
         setupActions();
-        DitchStepNavigation.bindStepBar(this, DitchStepNavigation.STEP_POINT_B);
+        imgDitchSectionType = findViewById(R.id.imgDitchSectionType);
+        DitchStepNavigation.bindStepBar(this);
+        applyDitchSectionTypeImage();
     }
 
     private void bindViews() {
@@ -116,15 +120,25 @@ public class DitchSettingPointBActivity extends ScaledAppCompatActivity {
         if (btnPrev != null) {
             btnPrev.setOnClickListener(v -> {
                 saveCurrentState();
-                DitchStepNavigation.goToPrevious(this, DitchStepNavigation.STEP_POINT_B);
+                DitchStepNavigation.goToPrevious(this);
             });
         }
         if (btnNext != null) {
             btnNext.setOnClickListener(v -> {
                 saveCurrentState();
-                DitchStepNavigation.goToNext(this, DitchStepNavigation.STEP_POINT_B);
+                DitchStepNavigation.goToNext(this);
             });
         }
+    }
+
+
+    private void applyDitchSectionTypeImage() {
+        if (imgDitchSectionType == null) {
+            return;
+        }
+        imgDitchSectionType.setImageResource(DitchTaskState.isSquareDitch()
+                ? R.drawable.ditch_step2b1
+                : R.drawable.ditch_step2b);
     }
 
     private void saveCurrentState() {

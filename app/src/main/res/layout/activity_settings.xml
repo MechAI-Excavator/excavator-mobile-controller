@@ -82,14 +82,21 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="horizontal">
 
         <!-- ── 左侧导航面板 ──────────────────────────────────────── -->
-        <LinearLayout
+        <FrameLayout
             android:layout_width="167dp"
             android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:background="#FFFFFFFF"
-            android:elevation="1dp"
             android:orientation="vertical"
             android:paddingTop="8dp"
             android:paddingBottom="16dp">
@@ -393,11 +400,23 @@
 
         </LinearLayout>
 
+        <!-- Figma: box-shadow 4px 4px 42.3px -1px #C9D3E854 -->
+        <View
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="@drawable/settings_nav_right_shadow"
+            android:importantForAccessibility="no"
+            android:translationX="4dp" />
+
+        </FrameLayout>
+
         <!-- ── 右侧内容区：各 page 叠放，只有当前 page 可见 ──── -->
         <FrameLayout
             android:id="@+id/settingsContentFrame"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:background="#FFF8FAFF"
             android:layout_weight="1">
 
             <include

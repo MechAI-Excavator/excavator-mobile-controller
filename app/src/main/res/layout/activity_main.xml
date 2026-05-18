@@ -282,6 +282,16 @@
                     android:layout_height="124dp"
                     android:background="@android:color/transparent"
                     >
+                    <ImageView
+                        android:layout_width="16.88dp"
+                        android:layout_height="16.88dp"
+                        android:layout_gravity="top|right"
+                        android:layout_marginEnd="15dp"
+                        android:layout_marginTop="8dp"
+                        android:src="@drawable/navigation_north"
+                        android:scaleType="fitCenter"
+                        android:adjustViewBounds="true" />
+
 
                     <com.capstone.excavator.ExcavatorMapWeb
                         android:id="@+id/mapView"

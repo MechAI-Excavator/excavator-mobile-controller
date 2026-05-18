@@ -682,7 +682,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Step 进度（底部）：第 4 步 -->
+    <!-- Step 进度（底部）：第 5 步 -->
     <LinearLayout
         android:id="@+id/levelStepBar"
         android:layout_width="match_parent"
@@ -693,30 +693,43 @@
         android:orientation="horizontal">
 
         <View
+            android:id="@+id/step1"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_active" />
 
-        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <Space android:layout_width="30dp" android:layout_height="1dp" />
 
         <View
+            android:id="@+id/step2"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_active" />
 
-        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <Space android:layout_width="30dp" android:layout_height="1dp" />
 
         <View
+            android:id="@+id/step3"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"
             android:background="@drawable/level_step_active" />
 
-        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <Space android:layout_width="30dp" android:layout_height="1dp" />
 
         <View
+            android:id="@+id/step4"
+            android:layout_width="0dp"
+            android:layout_height="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/level_step_active" />
+
+        <Space android:layout_width="30dp" android:layout_height="1dp" />
+
+        <View
+            android:id="@+id/step5"
             android:layout_width="0dp"
             android:layout_height="5dp"
             android:layout_weight="1"

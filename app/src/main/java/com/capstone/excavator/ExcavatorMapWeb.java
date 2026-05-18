@@ -20,7 +20,8 @@ public class ExcavatorMapWeb extends ExcavatorPostureView {
 
     private double lastLat = Double.NaN;
     private double lastLon = Double.NaN;
-
+    private double lastHeading = Double.NaN;
+    
     public ExcavatorMapWeb(Context context) {
         this(context, null);
     }
@@ -48,26 +49,29 @@ public class ExcavatorMapWeb extends ExcavatorPostureView {
     }
 
     /**
-     * 与 {@link MapView#setFixedLocation} 对应：通知 assets 内天地图页更新标记位置。
+     * 通知 assets 内天地图页更新车辆位置（{@code TiandituBridge.setVehiclePose}）。
      *
-     * <p>同坐标重复调用会被丢弃；坐标真正变化（&gt; {@link #MIN_DELTA_DEG}）才下发，避免每秒固定下发触发
+     * 同坐标重复调用会被丢弃；坐标真正变化（&gt; {@link #MIN_DELTA_DEG}）才下发，避免每秒固定下发触发
      * 天地图 {@code centerAndZoom} 内部的 layout/瓦片刷新。
      */
-    public void setFixedLocation(double lat, double lon) {
+    public void setFixedLocation(double lat, double lon, double headingDeg) {
         if (!Double.isFinite(lat) || !Double.isFinite(lon)) {
             return;
         }
         if (!Double.isNaN(lastLat) && !Double.isNaN(lastLon)
                 && Math.abs(lat - lastLat) < MIN_DELTA_DEG
-                && Math.abs(lon - lastLon) < MIN_DELTA_DEG) {
+                && Math.abs(lon - lastLon) < MIN_DELTA_DEG
+                && !Double.isNaN(lastHeading) && !Double.isNaN(headingDeg)
+                && Math.abs(headingDeg - lastHeading) < 0.01) {
             return;
         }
         lastLat = lat;
         lastLon = lon;
+        lastHeading = headingDeg;
         String js = String.format(Locale.US,
                 "(function(){if(window.TiandituBridge&&window.TiandituBridge.setVehiclePose){"
-                        + "window.TiandituBridge.setVehiclePose(%f,%f,0);}})();",
-                lat, lon);
+                        + "window.TiandituBridge.setVehiclePose(%f,%f,%f);}})();",
+                lat, lon, headingDeg);
         postJavascriptToWebView(js);
     }
 }
